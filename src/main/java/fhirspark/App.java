@@ -1,4 +1,4 @@
-package de.uzl.imi;
+package fhirspark;
 
 /**
  * Hello world!
