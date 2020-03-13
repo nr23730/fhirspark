@@ -10,6 +10,7 @@ import java.util.HashMap;
 public final class App {
 
     private static HashMap<String,String> cache = new HashMap<String,String>();
+    private static JsonFhirMapper jsonFhirMapper = new JsonFhirMapper();
 
     /**
      * Says hello to the world.
@@ -52,6 +53,7 @@ public final class App {
             res.type("application/json");
             res.header("Vary", "Origin, Access-Control-Request-Headers");
             cache.put(req.params(":id"), req.body());
+            jsonFhirMapper.fromJson(req.body());
             res.body(req.body());
             return res.body();
         });
