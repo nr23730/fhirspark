@@ -14,9 +14,11 @@ import org.hl7.fhir.r4.model.CarePlan;
 import org.hl7.fhir.r4.model.Identifier;
 import org.hl7.fhir.r4.model.Patient;
 import org.hl7.fhir.r4.model.Reference;
+import org.hl7.fhir.r4.model.Bundle.BundleEntryComponent;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
+import ca.uhn.fhir.rest.gclient.ReferenceClientParam;
 import ca.uhn.fhir.rest.gclient.TokenClientParam;
 
 public class JsonFhirMapper {
@@ -34,14 +36,15 @@ public class JsonFhirMapper {
 
         Patient patient = getOrCreatePatient(bundle, patientId);
 
-        List<HashMap<String,Object>> therapyRecommendations = jsonContext.read("$.therapyRecommendations.*");
+        List<HashMap<String, Object>> therapyRecommendations = jsonContext.read("$.therapyRecommendations.*");
 
-        for(HashMap<String,Object> therapyRecommendation : therapyRecommendations){
+        for (HashMap<String, Object> therapyRecommendation : therapyRecommendations) {
             CarePlan carePlan = new CarePlan();
             carePlan.setSubject(new Reference(patient));
 
-            carePlan.addIdentifier(new Identifier().setSystem("cbioportal").setValue((String)therapyRecommendation.get("id")));
-            carePlan.addNote(new Annotation().setText((String)therapyRecommendation.get("comment")));
+            carePlan.addIdentifier(
+                    new Identifier().setSystem("cbioportal").setValue((String) therapyRecommendation.get("id")));
+            carePlan.addNote(new Annotation().setText((String) therapyRecommendation.get("comment")));
 
             bundle.addEntry().setFullUrl(carePlan.getIdElement().getValue()).setResource(carePlan).getRequest()
                     .setUrl("CarePlan").setMethod(Bundle.HTTPVerb.POST);
@@ -55,15 +58,34 @@ public class JsonFhirMapper {
     }
 
     public String toJson(String patientId) {
-        HashMap<String,Object> jsonMap = new HashMap<String,Object>();
+        HashMap<String, Object> jsonMap = new HashMap<String, Object>();
+        HashMap<String, Object> therapyRecommendations = new HashMap<String, Object>();
 
-        jsonMap.put("id", "patientId");
+        jsonMap.put("id", patientId);
+        jsonMap.put("therapyRecommendations", therapyRecommendations);
 
-        Bundle b2 = (Bundle) client.search().forResource(CarePlan.class)
-        .where(new TokenClientParam("identifier").exactly().systemAndCode("cbioportal", patientId))
-        .prettyPrint().execute();
 
-        Patient p = (Patient) b2.getEntryFirstRep().getResource();
+        Bundle bPatient = (Bundle) client.search().forResource(Patient.class)
+                .where(new TokenClientParam("identifier").exactly().systemAndCode("cbioportal", patientId))
+                .prettyPrint().execute();
+
+        Patient patient = (Patient) bPatient.getEntryFirstRep().getResource();
+
+        System.out.println(patient.getId());
+
+        Bundle bCarePlans = (Bundle) client.search().forResource(CarePlan.class)
+                .where(new ReferenceClientParam("subject").hasId(patient.getIdElement())).prettyPrint().execute();
+
+        List<BundleEntryComponent> carePlans = bCarePlans.getEntry();
+        for(int i=0; i<carePlans.size(); i++) {
+            CarePlan carePlan = (CarePlan) carePlans.get(i).getResource();
+            
+            HashMap<String,Object> cPo = new HashMap<String,Object>();
+            HashMap<String,Object> cPi = new HashMap<String,Object>();
+            therapyRecommendations.put(String.valueOf(i), cPi);
+            cPi.put("id",carePlan.getIdentifierFirstRep().getValue());
+            cPi.put("comment",carePlan.getNoteFirstRep().getText());
+        }
 
         return JsonStream.serialize(jsonMap);
     }
