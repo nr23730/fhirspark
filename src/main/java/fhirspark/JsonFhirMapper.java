@@ -1,5 +1,6 @@
 package fhirspark;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -85,6 +86,15 @@ public class JsonFhirMapper {
             therapyRecommendations.put(String.valueOf(i), cPi);
             cPi.put("id",carePlan.getIdentifierFirstRep().getValue());
             cPi.put("comment",carePlan.getNoteFirstRep().getText());
+
+            ArrayList<HashMap<String,String>> treatments = new ArrayList<HashMap<String,String>>();
+            cPi.put("treatments", treatments);
+
+            HashMap<String,ArrayList<HashMap<String,String>>> reasoning = new HashMap<String,ArrayList<HashMap<String,String>>>();
+            cPi.put("reasoning", reasoning);
+
+            ArrayList<HashMap<String,String>> references = new ArrayList<HashMap<String,String>>();
+            cPi.put("references", references);
         }
 
         return JsonStream.serialize(jsonMap);
