@@ -9,7 +9,6 @@ import java.util.HashMap;
  */
 public final class App {
 
-    private static HashMap<String,String> cache = new HashMap<String,String>();
     private static JsonFhirMapper jsonFhirMapper = new JsonFhirMapper();
 
     /**
@@ -37,12 +36,7 @@ public final class App {
             res.header("Access-Control-Allow-Origin", req.headers("Origin"));
             res.type("application/json");
             res.header("Vary", "Origin, Access-Control-Request-Headers");
-            if(cache.containsKey(req.params(":id"))) {
-                System.out.println(cache.get(req.params(":id")));
-                res.body(cache.get(req.params(":id")));
-            } else {
-                res.body("{}");
-            }
+            res.body(jsonFhirMapper.toJson(req.params(":id")));
             return res.body();
         });
 
@@ -52,7 +46,6 @@ public final class App {
             res.header("Access-Control-Allow-Origin", req.headers("Origin"));
             res.type("application/json");
             res.header("Vary", "Origin, Access-Control-Request-Headers");
-            cache.put(req.params(":id"), req.body());
             jsonFhirMapper.fromJson(req.body());
             res.body(req.body());
             return res.body();
