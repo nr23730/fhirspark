@@ -2,19 +2,10 @@ package fhirspark;
 
 import static spark.Spark.*;
 
-import java.util.HashMap;
-
-/**
- * Hello world!
- */
-public final class App {
+public final class FhirSpark {
 
     private static JsonFhirMapper jsonFhirMapper = new JsonFhirMapper();
 
-    /**
-     * Says hello to the world.
-     * @param args The arguments of the program.
-     */
     public static void main(String[] args) { 
         port(3001);
         

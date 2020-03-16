@@ -6,7 +6,6 @@ import java.util.List;
 
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
-import com.jayway.jsonpath.internal.JsonContext;
 import com.jsoniter.output.JsonStream;
 
 import org.hl7.fhir.r4.model.Annotation;
