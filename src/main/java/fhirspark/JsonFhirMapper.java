@@ -71,7 +71,8 @@ public class JsonFhirMapper {
 
         Patient patient = (Patient) bPatient.getEntryFirstRep().getResource();
 
-        System.out.println(patient.getId());
+        if(patient == null)
+            return "{}";
 
         Bundle bCarePlans = (Bundle) client.search().forResource(CarePlan.class)
                 .where(new ReferenceClientParam("subject").hasId(patient.getIdElement())).prettyPrint().execute();
