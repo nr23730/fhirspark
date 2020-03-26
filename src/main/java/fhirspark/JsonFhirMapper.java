@@ -16,6 +16,7 @@ import org.hl7.fhir.r4.model.Identifier;
 import org.hl7.fhir.r4.model.Patient;
 import org.hl7.fhir.r4.model.Reference;
 import org.hl7.fhir.r4.model.Bundle.BundleEntryComponent;
+import org.hl7.fhir.r4.model.Bundle.BundleType;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
@@ -67,9 +68,6 @@ public class JsonFhirMapper {
         HashMap<String, Object> jsonMap = new HashMap<String, Object>();
         HashMap<String, Object> therapyRecommendations = new HashMap<String, Object>();
 
-        jsonMap.put("id", patientId);
-        jsonMap.put("therapyRecommendations", therapyRecommendations);
-
         Bundle bPatient = (Bundle) client.search().forResource(Patient.class)
                 .where(new TokenClientParam("identifier").exactly().systemAndCode("cbioportal", patientId))
                 .prettyPrint().execute();
@@ -83,6 +81,12 @@ public class JsonFhirMapper {
                 .where(new ReferenceClientParam("subject").hasId(patient.getIdElement())).prettyPrint().execute();
 
         List<BundleEntryComponent> carePlans = bCarePlans.getEntry();
+
+        if(carePlans.size() > 0) {
+            jsonMap.put("id", patientId);
+            jsonMap.put("therapyRecommendations", therapyRecommendations);
+        }
+
         for (int i = 0; i < carePlans.size(); i++) {
             CarePlan carePlan = (CarePlan) carePlans.get(i).getResource();
 
@@ -120,11 +124,16 @@ public class JsonFhirMapper {
             return p;
         } else {
 
+            Bundle patientBundle = new Bundle();
+            patientBundle.setType(BundleType.TRANSACTION);
+
             Patient patient = new Patient();
             patient.addIdentifier(new Identifier().setSystem("cbioportal").setValue(patientId));
-            b.addEntry().setFullUrl(patient.getIdElement().getValue()).setResource(patient).getRequest()
-                    .setUrl("Patient").setMethod(Bundle.HTTPVerb.POST);
-            return patient;
+            patientBundle.addEntry().setResource(patient).getRequest().setMethod(Bundle.HTTPVerb.POST);
+
+            Bundle resp = client.transaction().withBundle(patientBundle).execute();
+
+            return getOrCreatePatient(b, patientId);
         }
 
     }
