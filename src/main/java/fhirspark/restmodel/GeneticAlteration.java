@@ -1,11 +1,9 @@
 
 package fhirspark.restmodel;
 
-import java.io.Serializable;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import org.apache.commons.lang3.builder.ToStringBuilder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
@@ -13,8 +11,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
     "entrezGeneId",
     "proteinChange"
 })
-public class GeneticAlteration implements Serializable
-{
+public class GeneticAlteration {
 
     @JsonProperty("hugoSymbol")
     private String hugoSymbol;
@@ -22,7 +19,6 @@ public class GeneticAlteration implements Serializable
     private Integer entrezGeneId;
     @JsonProperty("proteinChange")
     private String proteinChange;
-    private final static long serialVersionUID = 5828381647233409131L;
 
     @JsonProperty("hugoSymbol")
     public String getHugoSymbol() {
@@ -52,11 +48,6 @@ public class GeneticAlteration implements Serializable
     @JsonProperty("proteinChange")
     public void setProteinChange(String proteinChange) {
         this.proteinChange = proteinChange;
-    }
-
-    @Override
-    public String toString() {
-        return new ToStringBuilder(this).append("hugoSymbol", hugoSymbol).append("entrezGeneId", entrezGeneId).append("proteinChange", proteinChange).toString();
     }
 
 }
