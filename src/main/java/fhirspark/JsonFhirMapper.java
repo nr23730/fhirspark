@@ -1,13 +1,12 @@
 package fhirspark;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.ListIterator;
 
-import com.jayway.jsonpath.DocumentContext;
-import com.jayway.jsonpath.JsonPath;
-import com.jsoniter.output.JsonStream;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.hl7.fhir.r4.model.Annotation;
 import org.hl7.fhir.r4.model.Bundle;
@@ -22,35 +21,35 @@ import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.gclient.ReferenceClientParam;
 import ca.uhn.fhir.rest.gclient.TokenClientParam;
-import net.minidev.json.JSONArray;
+import fhirspark.restmodel.TherapyRecommendation;
+import fhirspark.restmodel.Treatment;
+import fhirspark.restmodel.Reasoning;
+import fhirspark.restmodel.Therapy;
 
 public class JsonFhirMapper {
 
     FhirContext ctx = FhirContext.forR4();
     IGenericClient client = ctx.newRestfulGenericClient("http://localhost:8080/hapi-fhir-jpaserver/fhir/");
+    ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
 
-    public void fromJson(String jsonString) {
-
-        DocumentContext jsonContext = JsonPath.parse(jsonString);
-        String patientId = jsonContext.read("$.id");
+    public void fromJson(String jsonString) throws JsonMappingException, JsonProcessingException {
 
         Bundle bundle = new Bundle();
         bundle.setType(Bundle.BundleType.TRANSACTION);
 
-        Patient patient = getOrCreatePatient(bundle, patientId);
+        Therapy therapy = this.objectMapper.readValue(jsonString, Therapy.class);
 
-        List<HashMap<String, Object>> therapyRecommendations = jsonContext.read("$.therapyRecommendations.*");
+        Patient patient = getOrCreatePatient(bundle, therapy.getId());
 
-        for (HashMap<String, Object> therapyRecommendation : therapyRecommendations) {
+        for (TherapyRecommendation therapyRecommendation : therapy.getTherapyRecommendations()) {
             CarePlan carePlan = new CarePlan();
             carePlan.setSubject(new Reference(patient));
 
             carePlan.addIdentifier(
-                    new Identifier().setSystem("cbioportal").setValue((String) therapyRecommendation.get("id")));
+                    new Identifier().setSystem("cbioportal").setValue(therapyRecommendation.getId()));
             List<Annotation> notes = new ArrayList<Annotation>();
-            ListIterator<Object> comments = ((JSONArray) therapyRecommendation.get("comment")).listIterator();
-            while (comments.hasNext())
-                notes.add(new Annotation().setText((String) comments.next()));
+            for (String comment : therapyRecommendation.getComment())
+                notes.add(new Annotation().setText(comment));
             carePlan.setNote(notes);
 
             bundle.addEntry().setFullUrl(carePlan.getIdElement().getValue()).setResource(carePlan).getRequest()
@@ -64,9 +63,9 @@ public class JsonFhirMapper {
 
     }
 
-    public String toJson(String patientId) {
-        HashMap<String, Object> jsonMap = new HashMap<String, Object>();
-        HashMap<String, Object> therapyRecommendations = new HashMap<String, Object>();
+    public String toJson(String patientId) throws JsonProcessingException {
+        Therapy therapy = new Therapy();
+        List<TherapyRecommendation> therapyRecommendations = new ArrayList<TherapyRecommendation>();
 
         Bundle bPatient = (Bundle) client.search().forResource(Patient.class)
                 .where(new TokenClientParam("identifier").exactly().systemAndCode("cbioportal", patientId))
@@ -83,33 +82,32 @@ public class JsonFhirMapper {
         List<BundleEntryComponent> carePlans = bCarePlans.getEntry();
 
         if(carePlans.size() > 0) {
-            jsonMap.put("id", patientId);
-            jsonMap.put("therapyRecommendations", therapyRecommendations);
+            therapy.setId(patientId);
+            therapy.setTherapyRecommendations(therapyRecommendations);
         }
 
         for (int i = 0; i < carePlans.size(); i++) {
             CarePlan carePlan = (CarePlan) carePlans.get(i).getResource();
+            TherapyRecommendation therapyRecommendation = new TherapyRecommendation();
+            therapyRecommendations.add(therapyRecommendation);
 
-            HashMap<String, Object> cPo = new HashMap<String, Object>();
-            HashMap<String, Object> cPi = new HashMap<String, Object>();
-            therapyRecommendations.put(String.valueOf(i), cPi);
-            cPi.put("id", carePlan.getIdentifierFirstRep().getValue());
-            ArrayList<String> comments = new ArrayList<String>();
+            therapyRecommendation.setId(carePlan.getIdentifierFirstRep().getValue());
+            List<String> comments = new ArrayList<String>();
             for (Annotation annotation : carePlan.getNote())
                 comments.add(annotation.getText());
-            cPi.put("comment", comments);
+            therapyRecommendation.setComment(comments);
 
-            ArrayList<HashMap<String, String>> treatments = new ArrayList<HashMap<String, String>>();
-            cPi.put("treatments", treatments);
+            List<Treatment> treatments = new ArrayList<Treatment>();
+            therapyRecommendation.setTreatments(treatments);
 
-            HashMap<String, ArrayList<HashMap<String, String>>> reasoning = new HashMap<String, ArrayList<HashMap<String, String>>>();
-            cPi.put("reasoning", reasoning);
+            Reasoning reasoning = new Reasoning();
+            therapyRecommendation.setReasoning(reasoning);
 
-            ArrayList<HashMap<String, String>> references = new ArrayList<HashMap<String, String>>();
-            cPi.put("references", references);
+            List<fhirspark.restmodel.Reference> references = new ArrayList<fhirspark.restmodel.Reference>();
+            therapyRecommendation.setReferences(references);
         }
 
-        return JsonStream.serialize(jsonMap);
+        return this.objectMapper.writeValueAsString(therapy);
     }
 
     private Patient getOrCreatePatient(Bundle b, String patientId) {
