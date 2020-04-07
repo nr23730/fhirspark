@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.hl7.fhir.r4.model.Annotation;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.CarePlan;
+import org.hl7.fhir.r4.model.IdType;
 import org.hl7.fhir.r4.model.Identifier;
 import org.hl7.fhir.r4.model.Patient;
 import org.hl7.fhir.r4.model.Reference;
@@ -122,16 +123,12 @@ public class JsonFhirMapper {
             return p;
         } else {
 
-            Bundle patientBundle = new Bundle();
-            patientBundle.setType(BundleType.TRANSACTION);
-
             Patient patient = new Patient();
+            patient.setId(IdType.newRandomUuid());
             patient.addIdentifier(new Identifier().setSystem("cbioportal").setValue(patientId));
-            patientBundle.addEntry().setResource(patient).getRequest().setMethod(Bundle.HTTPVerb.POST);
+            b.addEntry().setFullUrl(patient.getIdElement().getValue()).setResource(patient).getRequest().setMethod(Bundle.HTTPVerb.POST);
 
-            Bundle resp = client.transaction().withBundle(patientBundle).execute();
-
-            return getOrCreatePatient(b, patientId);
+            return patient;
         }
 
     }
