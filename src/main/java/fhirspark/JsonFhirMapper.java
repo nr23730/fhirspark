@@ -16,7 +16,6 @@ import org.hl7.fhir.r4.model.Identifier;
 import org.hl7.fhir.r4.model.Patient;
 import org.hl7.fhir.r4.model.Reference;
 import org.hl7.fhir.r4.model.Bundle.BundleEntryComponent;
-import org.hl7.fhir.r4.model.Bundle.BundleType;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
@@ -24,6 +23,7 @@ import ca.uhn.fhir.rest.gclient.ReferenceClientParam;
 import ca.uhn.fhir.rest.gclient.TokenClientParam;
 import fhirspark.restmodel.TherapyRecommendation;
 import fhirspark.restmodel.Treatment;
+import fhirspark.restmodel.Modification;
 import fhirspark.restmodel.Reasoning;
 import fhirspark.restmodel.Therapy;
 
@@ -91,6 +91,8 @@ public class JsonFhirMapper {
             CarePlan carePlan = (CarePlan) carePlans.get(i).getResource();
             TherapyRecommendation therapyRecommendation = new TherapyRecommendation();
             therapyRecommendations.add(therapyRecommendation);
+            List<Modification> modifications = new ArrayList<Modification>();
+            therapyRecommendation.setModifications(modifications);
 
             therapyRecommendation.setId(carePlan.getIdentifierFirstRep().getValue());
             List<String> comments = new ArrayList<String>();
