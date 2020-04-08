@@ -52,6 +52,16 @@
             <artifactId>jackson-dataformat-yaml</artifactId>
             <version>2.10.3</version>
         </dependency>
+        <dependency>
+            <groupId>ca.uhn.hapi</groupId>
+            <artifactId>hapi-base</artifactId>
+            <version>2.3</version>
+        </dependency>
+        <dependency>
+            <groupId>ca.uhn.hapi</groupId>
+            <artifactId>hapi-structures-v281</artifactId>
+            <version>2.3</version>
+        </dependency>
     </dependencies>
     <build>
         <pluginManagement>
