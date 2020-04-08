@@ -1,0 +1,2 @@
+port: 3001
+fhirDbBase: http://localhost:8080/hapi-fhir-jpaserver/fhir/
