@@ -1,5 +1,6 @@
 package fhirspark;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,6 +22,15 @@ import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.gclient.ReferenceClientParam;
 import ca.uhn.fhir.rest.gclient.TokenClientParam;
+import ca.uhn.hl7v2.DefaultHapiContext;
+import ca.uhn.hl7v2.HL7Exception;
+import ca.uhn.hl7v2.HapiContext;
+import ca.uhn.hl7v2.app.Connection;
+import ca.uhn.hl7v2.model.v281.message.ADT_A01;
+import ca.uhn.hl7v2.model.v281.message.ORU_R01;
+import ca.uhn.hl7v2.model.v281.segment.MSH;
+import ca.uhn.hl7v2.model.v281.segment.PID;
+import ca.uhn.hl7v2.model.v281.segment.PTH;
 import fhirspark.restmodel.TherapyRecommendation;
 import fhirspark.restmodel.Treatment;
 import fhirspark.restmodel.Modification;
@@ -29,15 +39,18 @@ import fhirspark.restmodel.Therapy;
 
 public class JsonFhirMapper {
 
+    private Settings settings;
+
     FhirContext ctx = FhirContext.forR4();
     IGenericClient client;
     ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
 
     public JsonFhirMapper(Settings settings) {
+        this.settings = settings;
         this.client = ctx.newRestfulGenericClient(settings.getFhirDbBase());
     }
 
-    public void fromJson(String jsonString) throws JsonMappingException, JsonProcessingException {
+    public void fromJson(String jsonString) throws HL7Exception, IOException {
 
         Bundle bundle = new Bundle();
         bundle.setType(Bundle.BundleType.TRANSACTION);
@@ -61,10 +74,24 @@ public class JsonFhirMapper {
                     .setUrl("CarePlan").setMethod(Bundle.HTTPVerb.POST);
         }
 
-        Bundle resp = client.transaction().withBundle(bundle).execute();
+        //Bundle resp = client.transaction().withBundle(bundle).execute();
 
         // Log the response
-        System.out.println(ctx.newJsonParser().setPrettyPrint(true).encodeResourceToString(resp));
+        //System.out.println(ctx.newJsonParser().setPrettyPrint(true).encodeResourceToString(resp));
+
+        if(settings.getHl7v2config().get(0).getSendv2()) {
+
+            HapiContext context = new DefaultHapiContext();
+            //Connection connection = context.newClient(settings.getHl7v2config().get(0).getServer(), settings.getHl7v2config().get(0).getPort(), false);
+
+            ORU_R01 oru = new ORU_R01();
+            oru.initQuickstart("ORU", "R01", "T");
+
+            PID v2patient = oru.getPATIENT_RESULT().getPATIENT().getPID();
+            v2patient.getPid3_PatientIdentifierList(0).getIDNumber().setValue(patient.getIdentifierFirstRep().getValue());
+
+            System.out.println(oru.encode());
+        }
 
     }
 
