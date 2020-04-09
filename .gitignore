@@ -25,3 +25,8 @@ buildNumber.properties
 .classpath
 .project
 .vscode/
+
+#
+# HAPI v2
+#
+id_file
