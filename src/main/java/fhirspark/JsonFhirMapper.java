@@ -21,11 +21,7 @@ import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.gclient.ReferenceClientParam;
 import ca.uhn.fhir.rest.gclient.TokenClientParam;
-import ca.uhn.hl7v2.DefaultHapiContext;
 import ca.uhn.hl7v2.HL7Exception;
-import ca.uhn.hl7v2.HapiContext;
-import ca.uhn.hl7v2.model.v281.message.ORU_R01;
-import ca.uhn.hl7v2.model.v281.segment.PID;
 import fhirspark.restmodel.TherapyRecommendation;
 import fhirspark.restmodel.Treatment;
 import fhirspark.restmodel.CBioPortalPatient;
@@ -43,51 +39,6 @@ public class JsonFhirMapper {
     public JsonFhirMapper(Settings settings) {
         this.settings = settings;
         this.client = ctx.newRestfulGenericClient(settings.getFhirDbBase());
-    }
-
-    public void fromJson(String id, String jsonString) throws HL7Exception, IOException {
-
-        Bundle bundle = new Bundle();
-        bundle.setType(Bundle.BundleType.TRANSACTION);
-
-        CBioPortalPatient cBioPortalPatient = this.objectMapper.readValue(jsonString, CBioPortalPatient.class);
-
-        Patient fhirPatient = getOrCreatePatient(bundle, id);
-
-        for (TherapyRecommendation therapyRecommendation : cBioPortalPatient.getTherapyRecommendations()) {
-            CarePlan carePlan = new CarePlan();
-            carePlan.setSubject(new Reference(fhirPatient));
-
-            carePlan.addIdentifier(
-                    new Identifier().setSystem("cbioportal").setValue(therapyRecommendation.getId()));
-            List<Annotation> notes = new ArrayList<Annotation>();
-            for (String comment : therapyRecommendation.getComment())
-                notes.add(new Annotation().setText(comment));
-            carePlan.setNote(notes);
-
-            bundle.addEntry().setFullUrl(carePlan.getIdElement().getValue()).setResource(carePlan).getRequest()
-                    .setUrl("CarePlan").setMethod(Bundle.HTTPVerb.POST);
-        }
-
-        Bundle resp = client.transaction().withBundle(bundle).execute();
-
-        // Log the response
-        //System.out.println(ctx.newJsonParser().setPrettyPrint(true).encodeResourceToString(resp));
-
-        if(settings.getHl7v2config().get(0).getSendv2()) {
-
-            HapiContext context = new DefaultHapiContext();
-            //Connection connection = context.newClient(settings.getHl7v2config().get(0).getServer(), settings.getHl7v2config().get(0).getPort(), false);
-
-            ORU_R01 oru = new ORU_R01();
-            oru.initQuickstart("ORU", "R01", "T");
-
-            PID v2patient = oru.getPATIENT_RESULT().getPATIENT().getPID();
-            v2patient.getPid3_PatientIdentifierList(0).getIDNumber().setValue(fhirPatient.getIdentifierFirstRep().getValue());
-
-            System.out.println(oru.encode());
-        }
-
     }
 
     public String toJson(String patientId) throws JsonProcessingException {
@@ -137,6 +88,64 @@ public class JsonFhirMapper {
 
         return this.objectMapper.writeValueAsString(cBioPortalPatient);
     }
+
+    public void addTherapyRecommendation(String id, String jsonString) throws HL7Exception, IOException {
+
+        Bundle bundle = new Bundle();
+        bundle.setType(Bundle.BundleType.TRANSACTION);
+
+        TherapyRecommendation therapyRecommendation = this.objectMapper.readValue(jsonString, TherapyRecommendation.class);
+
+        Patient fhirPatient = getOrCreatePatient(bundle, id);
+
+        CarePlan carePlan = new CarePlan();
+        carePlan.setSubject(new Reference(fhirPatient));
+
+        carePlan.addIdentifier(
+                new Identifier().setSystem("cbioportal").setValue(therapyRecommendation.getId()));
+        List<Annotation> notes = new ArrayList<Annotation>();
+        for (String comment : therapyRecommendation.getComment())
+            notes.add(new Annotation().setText(comment));
+        carePlan.setNote(notes);
+
+        bundle.addEntry().setFullUrl(carePlan.getIdElement().getValue()).setResource(carePlan).getRequest()
+                .setUrl("CarePlan").setMethod(Bundle.HTTPVerb.POST);
+
+        Bundle resp = client.transaction().withBundle(bundle).execute();
+
+        // Log the response
+        System.out.println(ctx.newJsonParser().setPrettyPrint(true).encodeResourceToString(resp));
+
+        // if(settings.getHl7v2config().get(0).getSendv2()) {
+
+        //     HapiContext context = new DefaultHapiContext();
+        //     //Connection connection = context.newClient(settings.getHl7v2config().get(0).getServer(), settings.getHl7v2config().get(0).getPort(), false);
+
+        //     ORU_R01 oru = new ORU_R01();
+        //     oru.initQuickstart("ORU", "R01", "T");
+
+        //     PID v2patient = oru.getPATIENT_RESULT().getPATIENT().getPID();
+        //     v2patient.getPid3_PatientIdentifierList(0).getIDNumber().setValue(fhirPatient.getIdentifierFirstRep().getValue());
+
+        //     System.out.println(oru.encode());
+        // }
+
+    }
+
+	public void editTherapyRecommendation(String params, String params2, String body) {
+	}
+
+    public void deleteTherapyRecommendation(String params, String params2) {
+	}
+
+	public void editGeneticCounselingRecommendation(String params, String body) {
+	}
+
+	public void editRebiopsyRecommendation(String params, String body) {
+	}
+
+	public void editComment(String params, String body) {
+	}
 
     private Patient getOrCreatePatient(Bundle b, String patientId) {
 
