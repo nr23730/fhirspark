@@ -1,0 +1,46 @@
+{
+  "comment": "",
+  "geneticCounselingRecommended": false,
+  "id": "",
+  "rebiopsyRecommended": false,
+  "therapyRecommendations": [
+    {
+      "comment": [
+        ""
+      ],
+      "evidenceLevel": "",
+      "id": "",
+      "modifications": [
+        {
+          "modified": "",
+          "recommender": {
+            "credentials": ""
+          },
+          "timestamp": ""
+        }
+      ],
+      "reasoning": {
+        "geneticAlterations": [
+          {
+            "hugoSymbol": "",
+            "entrezGeneId": 0,
+            "proteinChange": ""
+          }
+        ]
+      },
+      "references": [
+        {
+          "pmid": 0,
+          "name": ""
+        }
+      ],
+      "treatments": [
+        {
+          "name": "",
+          "ncit_code": "",
+          "synonyms": ""
+        }
+      ]
+    }
+  ]
+}
