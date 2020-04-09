@@ -24,7 +24,7 @@ public final class FhirSpark {
 
         port(settings.getPort());
 
-        options("/patients/:id", (req, res) -> {
+        options("/patients/:patientId", (req, res) -> {
             res.status(204);
             res.header("Access-Control-Allow-Credentials", "true");
             res.header("Access-Control-Allow-Headers", req.headers("Access-Control-Request-Headers"));
@@ -36,23 +36,23 @@ public final class FhirSpark {
             return res;
         });
 
-        get("/patients/:id", (req, res) -> {
+        get("/patients/:patientId", (req, res) -> {
             res.status(200);
             res.header("Access-Control-Allow-Credentials", "true");
             res.header("Access-Control-Allow-Origin", req.headers("Origin"));
             res.type("application/json");
             res.header("Vary", "Origin, Access-Control-Request-Headers");
-            res.body(jsonFhirMapper.toJson(req.params(":id")));
+            res.body(jsonFhirMapper.toJson(req.params(":patientId")));
             return res.body();
         });
 
-        put("/patients/:id", (req, res) -> {
+        put("/patients/:patientId", (req, res) -> {
             res.status(200);
             res.header("Access-Control-Allow-Credentials", "true");
             res.header("Access-Control-Allow-Origin", req.headers("Origin"));
             res.type("application/json");
             res.header("Vary", "Origin, Access-Control-Request-Headers");
-            jsonFhirMapper.fromJson(req.body());
+            jsonFhirMapper.fromJson(req.params("patientId"), req.body());
             res.body(req.body());
             return res.body();
         });
