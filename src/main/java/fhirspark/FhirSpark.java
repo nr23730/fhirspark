@@ -2,13 +2,28 @@ package fhirspark;
 
 import static spark.Spark.*;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+
 public final class FhirSpark {
 
-    private static JsonFhirMapper jsonFhirMapper = new JsonFhirMapper();
+    private static JsonFhirMapper jsonFhirMapper;
 
-    public static void main(String[] args) { 
-        port(3001);
-        
+    public static void main(final String[] args) throws IOException {
+
+        final ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
+        InputStream settingsYaml = ClassLoader.getSystemClassLoader().getResourceAsStream("settings.yaml");
+        if(args.length == 1)
+            settingsYaml = new FileInputStream(args[0]);
+        final Settings settings = objectMapper.readValue(settingsYaml, Settings.class);
+        jsonFhirMapper = new JsonFhirMapper(settings);
+
+        port(settings.getPort());
+
         options("/patients/:id", (req, res) -> {
             res.status(204);
             res.header("Access-Control-Allow-Credentials", "true");
@@ -21,7 +36,7 @@ public final class FhirSpark {
             return res;
         });
 
-        get("/patients/:id", (req,res)->{
+        get("/patients/:id", (req, res) -> {
             res.status(200);
             res.header("Access-Control-Allow-Credentials", "true");
             res.header("Access-Control-Allow-Origin", req.headers("Origin"));
@@ -31,7 +46,7 @@ public final class FhirSpark {
             return res.body();
         });
 
-        put("/patients/:id", (req,res)->{
+        put("/patients/:id", (req, res) -> {
             res.status(200);
             res.header("Access-Control-Allow-Credentials", "true");
             res.header("Access-Control-Allow-Origin", req.headers("Origin"));

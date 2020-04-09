@@ -30,8 +30,12 @@ import fhirspark.restmodel.Therapy;
 public class JsonFhirMapper {
 
     FhirContext ctx = FhirContext.forR4();
-    IGenericClient client = ctx.newRestfulGenericClient("http://localhost:8080/hapi-fhir-jpaserver/fhir/");
+    IGenericClient client;
     ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
+
+    public JsonFhirMapper(Settings settings) {
+        this.client = ctx.newRestfulGenericClient(settings.getFhirDbBase());
+    }
 
     public void fromJson(String jsonString) throws JsonMappingException, JsonProcessingException {
 
