@@ -22,6 +22,9 @@ import org.hl7.fhir.r4.model.Reference;
 import org.hl7.fhir.r4.model.Bundle.BundleEntryComponent;
 import org.hl7.fhir.r4.model.CarePlan.CarePlanActivityComponent;
 import org.hl7.fhir.r4.model.CarePlan.CarePlanActivityDetailComponent;
+import org.hl7.fhir.r4.model.CarePlan.CarePlanActivityStatus;
+import org.hl7.fhir.r4.model.CarePlan.CarePlanIntent;
+import org.hl7.fhir.r4.model.CarePlan.CarePlanStatus;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
@@ -149,6 +152,9 @@ public class JsonFhirMapper {
 
         carePlan.addIdentifier(new Identifier().setSystem("cbioportal").setValue(therapyRecommendation.getId()));
 
+        carePlan.setStatus(CarePlanStatus.DRAFT);
+        carePlan.setIntent(CarePlanIntent.PLAN);
+
         therapyRecommendation.getModifications().forEach((mod) -> {
             if (mod.getModified().equals("Created")) {
                 DateTimeType created = new DateTimeType();
@@ -171,6 +177,8 @@ public class JsonFhirMapper {
         for (Treatment treatment : therapyRecommendation.getTreatments()) {
             CarePlanActivityComponent activity = new CarePlanActivityComponent();
             CarePlanActivityDetailComponent detail = new CarePlanActivityDetailComponent();
+
+            detail.setStatus(CarePlanActivityStatus.NOTSTARTED);
 
             detail.setProduct(
                     new CodeableConcept().addCoding(new Coding("ncit", treatment.getNcitCode(), treatment.getName()))
