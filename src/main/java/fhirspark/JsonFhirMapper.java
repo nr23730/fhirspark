@@ -90,6 +90,13 @@ public class JsonFhirMapper {
             therapyRecommendation.setReasoning(reasoning);
 
             List<fhirspark.restmodel.Reference> references = new ArrayList<fhirspark.restmodel.Reference>();
+            for (Reference reference : carePlan.getSupportingInfo()) {
+                fhirspark.restmodel.Reference cBioPortalReference = new fhirspark.restmodel.Reference();
+                cBioPortalReference.setName(reference.getDisplay());
+                cBioPortalReference.setPmid(
+                        Integer.parseInt(reference.getReference().replace("https://www.ncbi.nlm.nih.gov/pubmed/", "")));
+                references.add(cBioPortalReference);
+            }
             therapyRecommendation.setReferences(references);
         }
 
@@ -110,6 +117,16 @@ public class JsonFhirMapper {
         carePlan.setSubject(new Reference(fhirPatient));
 
         carePlan.addIdentifier(new Identifier().setSystem("cbioportal").setValue(therapyRecommendation.getId()));
+
+        List<Reference> supportingInfo = new ArrayList<Reference>();
+        for (fhirspark.restmodel.Reference reference : therapyRecommendation.getReferences()) {
+            Reference fhirReference = new Reference();
+            fhirReference.setReference("https://www.ncbi.nlm.nih.gov/pubmed/" + reference.getPmid());
+            fhirReference.setDisplay(reference.getName());
+            supportingInfo.add(fhirReference);
+        }
+        carePlan.setSupportingInfo(supportingInfo);
+        
         List<Annotation> notes = new ArrayList<Annotation>();
         for (String comment : therapyRecommendation.getComment())
             notes.add(new Annotation().setText(comment));
