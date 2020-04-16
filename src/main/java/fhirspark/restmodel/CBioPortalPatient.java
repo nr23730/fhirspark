@@ -14,7 +14,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "rebiopsyRecommended",
     "therapyRecommendations"
 })
-public class Therapy {
+public class CBioPortalPatient {
 
     @JsonProperty("comment")
     private String comment;

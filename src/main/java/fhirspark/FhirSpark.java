@@ -24,11 +24,11 @@ public final class FhirSpark {
 
         port(settings.getPort());
 
-        options("/patients/:id", (req, res) -> {
+        options("/patients/:patientId", (req, res) -> {
             res.status(204);
             res.header("Access-Control-Allow-Credentials", "true");
             res.header("Access-Control-Allow-Headers", req.headers("Access-Control-Request-Headers"));
-            res.header("Access-Control-Allow-Methods", "GET,HEAD,PUT,PATCH,POST,DELETE");
+            res.header("Access-Control-Allow-Methods", "GET");
             res.header("Access-Control-Allow-Origin", req.headers("Origin"));
             res.header("Content-Length", "0");
             res.header("Vary", "Origin, Access-Control-Request-Headers");
@@ -36,25 +36,141 @@ public final class FhirSpark {
             return res;
         });
 
-        get("/patients/:id", (req, res) -> {
+        get("/patients/:patientId", (req, res) -> {
             res.status(200);
             res.header("Access-Control-Allow-Credentials", "true");
             res.header("Access-Control-Allow-Origin", req.headers("Origin"));
             res.type("application/json");
             res.header("Vary", "Origin, Access-Control-Request-Headers");
-            res.body(jsonFhirMapper.toJson(req.params(":id")));
+            res.body(jsonFhirMapper.toJson(req.params(":patientId")));
             return res.body();
         });
 
-        put("/patients/:id", (req, res) -> {
+        options("/patients/:patientId/therapyRecommendation/:therapyRecommendation", (req, res) -> {
+            res.status(204);
+            res.header("Access-Control-Allow-Credentials", "true");
+            res.header("Access-Control-Allow-Headers", req.headers("Access-Control-Request-Headers"));
+            res.header("Access-Control-Allow-Methods", "DELETE,PUT");
+            res.header("Access-Control-Allow-Origin", req.headers("Origin"));
+            res.header("Content-Length", "0");
+            res.header("Vary", "Origin, Access-Control-Request-Headers");
+            res.header("Content-Type", "");
+            return res;
+        });
+
+        delete("/patients/:patientId/therapyRecommendation/:therapyRecommendation", (req, res) -> {
             res.status(200);
             res.header("Access-Control-Allow-Credentials", "true");
             res.header("Access-Control-Allow-Origin", req.headers("Origin"));
             res.type("application/json");
             res.header("Vary", "Origin, Access-Control-Request-Headers");
-            jsonFhirMapper.fromJson(req.body());
+            jsonFhirMapper.deleteTherapyRecommendation(req.params(":patientId"), req.params(":therapyRecommendation"));
             res.body(req.body());
             return res.body();
         });
+
+        put("/patients/:patientId/therapyRecommendation/:therapyRecommendation", (req, res) -> {
+            res.status(200);
+            res.header("Access-Control-Allow-Credentials", "true");
+            res.header("Access-Control-Allow-Origin", req.headers("Origin"));
+            res.type("application/json");
+            res.header("Vary", "Origin, Access-Control-Request-Headers");
+            jsonFhirMapper.editTherapyRecommendation(req.params(":patientId"), req.params(":therapyRecommendation"), req.body());
+            res.body(req.body());
+            return res.body();
+        });
+
+        options("/patients/:patientId/therapyRecommendation", (req, res) -> {
+            res.status(204);
+            res.header("Access-Control-Allow-Credentials", "true");
+            res.header("Access-Control-Allow-Headers", req.headers("Access-Control-Request-Headers"));
+            res.header("Access-Control-Allow-Methods", "POST");
+            res.header("Access-Control-Allow-Origin", req.headers("Origin"));
+            res.header("Content-Length", "0");
+            res.header("Vary", "Origin, Access-Control-Request-Headers");
+            res.header("Content-Type", "");
+            return res;
+        });
+
+        post("/patients/:patientId/therapyRecommendation", (req, res) -> {
+            res.status(201);
+            res.header("Access-Control-Allow-Credentials", "true");
+            res.header("Access-Control-Allow-Origin", req.headers("Origin"));
+            res.type("application/json");
+            res.header("Vary", "Origin, Access-Control-Request-Headers");
+            jsonFhirMapper.addTherapyRecommendation(req.params(":patientId"), req.body());
+            res.body(req.body());
+            return res.body();
+        });
+
+        options("/patients/:patientId/geneticCounselingRecommended", (req, res) -> {
+            res.status(204);
+            res.header("Access-Control-Allow-Credentials", "true");
+            res.header("Access-Control-Allow-Headers", req.headers("Access-Control-Request-Headers"));
+            res.header("Access-Control-Allow-Methods", "PUT");
+            res.header("Access-Control-Allow-Origin", req.headers("Origin"));
+            res.header("Content-Length", "0");
+            res.header("Vary", "Origin, Access-Control-Request-Headers");
+            res.header("Content-Type", "");
+            return res;
+        });
+
+        put("/patients/:patientId/geneticCounselingRecommended", (req, res) -> {
+            res.status(200);
+            res.header("Access-Control-Allow-Credentials", "true");
+            res.header("Access-Control-Allow-Origin", req.headers("Origin"));
+            res.type("application/json");
+            res.header("Vary", "Origin, Access-Control-Request-Headers");
+            jsonFhirMapper.editGeneticCounselingRecommendation(req.params(":patient"), req.body());
+            return res.body();
+        });
+
+        options("/patients/:patientId/rebiopsyRecommended", (req, res) -> {
+            res.status(204);
+            res.header("Access-Control-Allow-Credentials", "true");
+            res.header("Access-Control-Allow-Headers", req.headers("Access-Control-Request-Headers"));
+            res.header("Access-Control-Allow-Methods", "PUT");
+            res.header("Access-Control-Allow-Origin", req.headers("Origin"));
+            res.header("Content-Length", "0");
+            res.header("Vary", "Origin, Access-Control-Request-Headers");
+            res.header("Content-Type", "");
+            return res;
+        });
+
+        put("/patients/:patientId/rebiopsyRecommended", (req, res) -> {
+            res.status(200);
+            res.header("Access-Control-Allow-Credentials", "true");
+            res.header("Access-Control-Allow-Origin", req.headers("Origin"));
+            res.type("application/json");
+            res.header("Vary", "Origin, Access-Control-Request-Headers");
+            jsonFhirMapper.editRebiopsyRecommendation(req.params(":patient"), req.body());
+            res.body(req.body());
+            return res.body();
+        });
+
+        options("/patients/:patientId/comment", (req, res) -> {
+            res.status(204);
+            res.header("Access-Control-Allow-Credentials", "true");
+            res.header("Access-Control-Allow-Headers", req.headers("Access-Control-Request-Headers"));
+            res.header("Access-Control-Allow-Methods", "PUT");
+            res.header("Access-Control-Allow-Origin", req.headers("Origin"));
+            res.header("Content-Length", "0");
+            res.header("Vary", "Origin, Access-Control-Request-Headers");
+            res.header("Content-Type", "");
+            return res;
+        });
+
+        put("/patients/:patientId/comment", (req, res) -> {
+            res.status(200);
+            res.header("Access-Control-Allow-Credentials", "true");
+            res.header("Access-Control-Allow-Origin", req.headers("Origin"));
+            res.type("application/json");
+            res.header("Vary", "Origin, Access-Control-Request-Headers");
+            jsonFhirMapper.editComment(req.params(":patient"), req.body());
+            res.body(req.body());
+            return res.body();
+        });
+
     }
+    
 }
