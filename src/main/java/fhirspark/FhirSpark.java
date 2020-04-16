@@ -3,23 +3,21 @@ package fhirspark;
 import static spark.Spark.*;
 
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.InputStream;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
 public final class FhirSpark {
 
     private static JsonFhirMapper jsonFhirMapper;
 
-    public static void main(final String[] args) throws IOException {
-
-        final ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
+    public static void main(final String[] args) throws Exception {
         InputStream settingsYaml = ClassLoader.getSystemClassLoader().getResourceAsStream("settings.yaml");
         if(args.length == 1)
             settingsYaml = new FileInputStream(args[0]);
-        final Settings settings = objectMapper.readValue(settingsYaml, Settings.class);
+        //final Settings settings = objectMapper.readValue(settingsYaml, Settings.class);
+        ConfigurationLoader configLoader = new ConfigurationLoader();
+        final Settings settings =
+                configLoader.loadConfiguration(
+                    settingsYaml, Settings.class);
         jsonFhirMapper = new JsonFhirMapper(settings);
 
         port(settings.getPort());
