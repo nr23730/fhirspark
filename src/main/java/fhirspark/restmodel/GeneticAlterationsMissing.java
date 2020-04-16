@@ -7,18 +7,28 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "entrezGeneId",
     "hugoSymbol",
-    "alteration",
-    "entrezGeneId"
+    "alteration"
 })
-public class GeneticAlteration {
+public class GeneticAlterationsMissing {
 
+    @JsonProperty("entrezGeneId")
+    private Integer entrezGeneId;
     @JsonProperty("hugoSymbol")
     private String hugoSymbol;
     @JsonProperty("alteration")
     private String alteration;
+
     @JsonProperty("entrezGeneId")
-    private Integer entrezGeneId;
+    public Integer getEntrezGeneId() {
+        return entrezGeneId;
+    }
+
+    @JsonProperty("entrezGeneId")
+    public void setEntrezGeneId(Integer entrezGeneId) {
+        this.entrezGeneId = entrezGeneId;
+    }
 
     @JsonProperty("hugoSymbol")
     public String getHugoSymbol() {
@@ -38,16 +48,6 @@ public class GeneticAlteration {
     @JsonProperty("alteration")
     public void setAlteration(String alteration) {
         this.alteration = alteration;
-    }
-
-    @JsonProperty("entrezGeneId")
-    public Integer getEntrezGeneId() {
-        return entrezGeneId;
-    }
-
-    @JsonProperty("entrezGeneId")
-    public void setEntrezGeneId(Integer entrezGeneId) {
-        this.entrezGeneId = entrezGeneId;
     }
 
 }

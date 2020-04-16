@@ -22,8 +22,21 @@
         "geneticAlterations": [
           {
             "hugoSymbol": "",
+            "alteration": "",
+            "entrezGeneId": 0
+          }
+        ],
+        "geneticAlterationsMissing": [
+          {
             "entrezGeneId": 0,
-            "proteinChange": ""
+            "hugoSymbol": "",
+            "alteration": ""
+          }
+        ],
+        "clinicalData": [
+          {
+            "attribute": "",
+            "value": ""
           }
         ]
       },

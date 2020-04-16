@@ -10,7 +10,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonPropertyOrder({
     "comment",
     "geneticCounselingRecommended",
-    "id",
     "rebiopsyRecommended",
     "therapyRecommendations"
 })
@@ -20,8 +19,6 @@ public class CBioPortalPatient {
     private String comment;
     @JsonProperty("geneticCounselingRecommended")
     private Boolean geneticCounselingRecommended;
-    @JsonProperty("id")
-    private String id;
     @JsonProperty("rebiopsyRecommended")
     private Boolean rebiopsyRecommended;
     @JsonProperty("therapyRecommendations")
@@ -45,16 +42,6 @@ public class CBioPortalPatient {
     @JsonProperty("geneticCounselingRecommended")
     public void setGeneticCounselingRecommended(Boolean geneticCounselingRecommended) {
         this.geneticCounselingRecommended = geneticCounselingRecommended;
-    }
-
-    @JsonProperty("id")
-    public String getId() {
-        return id;
-    }
-
-    @JsonProperty("id")
-    public void setId(String id) {
-        this.id = id;
     }
 
     @JsonProperty("rebiopsyRecommended")
