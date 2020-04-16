@@ -125,11 +125,23 @@ public class JsonFhirMapper {
 
             List<fhirspark.restmodel.Reference> references = new ArrayList<fhirspark.restmodel.Reference>();
             for (Reference reference : carePlan.getSupportingInfo()) {
-                fhirspark.restmodel.Reference cBioPortalReference = new fhirspark.restmodel.Reference();
-                cBioPortalReference.setName(reference.getDisplay());
-                cBioPortalReference.setPmid(
-                        Integer.parseInt(reference.getReference().replace("https://www.ncbi.nlm.nih.gov/pubmed/", "")));
-                references.add(cBioPortalReference);
+                if (reference.hasType()) {
+                    switch (reference.getType()) {
+                        case "Observation":
+                            break;
+
+                        default:
+                            break;
+                    }
+                } else {
+                    if (reference.getReference().startsWith("https://www.ncbi.nlm.nih.gov/pubmed/")) {
+                        fhirspark.restmodel.Reference cBioPortalReference = new fhirspark.restmodel.Reference();
+                        cBioPortalReference.setName(reference.getDisplay());
+                        cBioPortalReference.setPmid(Integer.parseInt(
+                                reference.getReference().replace("https://www.ncbi.nlm.nih.gov/pubmed/", "")));
+                        references.add(cBioPortalReference);
+                    }
+                }
             }
             therapyRecommendation.setReferences(references);
         }
@@ -173,7 +185,7 @@ public class JsonFhirMapper {
             supportingInfo.add(fhirReference);
         }
         carePlan.setSupportingInfo(supportingInfo);
-        
+
         for (Treatment treatment : therapyRecommendation.getTreatments()) {
             CarePlanActivityComponent activity = new CarePlanActivityComponent();
             CarePlanActivityDetailComponent detail = new CarePlanActivityDetailComponent();
@@ -202,7 +214,7 @@ public class JsonFhirMapper {
         System.out.println(ctx.newJsonParser().setPrettyPrint(true).encodeResourceToString(resp));
 
         if (settings.getHl7v2config().get(0).getSendv2()) {
-            
+
             HapiContext context = new DefaultHapiContext();
             Connection connection = context.newClient(settings.getHl7v2config().get(0).getServer(),
                     settings.getHl7v2config().get(0).getPort(), false);
