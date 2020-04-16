@@ -11,11 +11,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.hl7.fhir.r4.model.Annotation;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.CarePlan;
+import org.hl7.fhir.r4.model.CodeableConcept;
+import org.hl7.fhir.r4.model.Coding;
 import org.hl7.fhir.r4.model.IdType;
 import org.hl7.fhir.r4.model.Identifier;
 import org.hl7.fhir.r4.model.Patient;
 import org.hl7.fhir.r4.model.Reference;
 import org.hl7.fhir.r4.model.Bundle.BundleEntryComponent;
+import org.hl7.fhir.r4.model.CarePlan.CarePlanActivityComponent;
+import org.hl7.fhir.r4.model.CarePlan.CarePlanActivityDetailComponent;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
@@ -84,6 +88,14 @@ public class JsonFhirMapper {
             therapyRecommendation.setComment(comments);
 
             List<Treatment> treatments = new ArrayList<Treatment>();
+            for (CarePlanActivityComponent activity : carePlan.getActivity()) {
+                Treatment treatment = new Treatment();
+                CodeableConcept product = (CodeableConcept) activity.getDetail().getProduct();
+                treatment.setName(product.getCodingFirstRep().getDisplay());
+                treatment.setNcitCode(product.getCodingFirstRep().getCode());
+                treatment.setSynonyms(product.getText());
+                treatments.add(treatment);
+            }
             therapyRecommendation.setTreatments(treatments);
 
             Reasoning reasoning = new Reasoning();
@@ -127,6 +139,18 @@ public class JsonFhirMapper {
         }
         carePlan.setSupportingInfo(supportingInfo);
         
+        for (Treatment treatment : therapyRecommendation.getTreatments()) {
+            CarePlanActivityComponent activity = new CarePlanActivityComponent();
+            CarePlanActivityDetailComponent detail = new CarePlanActivityDetailComponent();
+
+            detail.setProduct(
+                    new CodeableConcept().addCoding(new Coding("ncit", treatment.getNcitCode(), treatment.getName()))
+                            .setText(treatment.getSynonyms()));
+
+            activity.setDetail(detail);
+            carePlan.addActivity(activity);
+        }
+
         List<Annotation> notes = new ArrayList<Annotation>();
         for (String comment : therapyRecommendation.getComment())
             notes.add(new Annotation().setText(comment));
