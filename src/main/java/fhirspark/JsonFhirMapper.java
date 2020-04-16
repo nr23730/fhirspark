@@ -13,9 +13,11 @@ import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.CarePlan;
 import org.hl7.fhir.r4.model.CodeableConcept;
 import org.hl7.fhir.r4.model.Coding;
+import org.hl7.fhir.r4.model.DateTimeType;
 import org.hl7.fhir.r4.model.IdType;
 import org.hl7.fhir.r4.model.Identifier;
 import org.hl7.fhir.r4.model.Patient;
+import org.hl7.fhir.r4.model.Practitioner;
 import org.hl7.fhir.r4.model.Reference;
 import org.hl7.fhir.r4.model.Bundle.BundleEntryComponent;
 import org.hl7.fhir.r4.model.CarePlan.CarePlanActivityComponent;
@@ -38,6 +40,7 @@ import fhirspark.restmodel.Treatment;
 import fhirspark.restmodel.CBioPortalPatient;
 import fhirspark.restmodel.Modification;
 import fhirspark.restmodel.Reasoning;
+import fhirspark.restmodel.Recommender;
 
 public class JsonFhirMapper {
 
@@ -78,7 +81,23 @@ public class JsonFhirMapper {
             CarePlan carePlan = (CarePlan) carePlans.get(i).getResource();
             TherapyRecommendation therapyRecommendation = new TherapyRecommendation();
             therapyRecommendations.add(therapyRecommendation);
+
             List<Modification> modifications = new ArrayList<Modification>();
+            Modification created = new Modification();
+            created.setModified("Created");
+            created.setTimestamp(carePlan.getCreatedElement().asStringValue());
+            Recommender recommender = new Recommender();
+            if (carePlan.hasAuthor()) {
+                Bundle b2 = (Bundle) client.search().forResource(Practitioner.class)
+                        .where(new TokenClientParam("_id").exactly().code(carePlan.getAuthor().getId())).prettyPrint()
+                        .execute();
+                Practitioner author = (Practitioner) b2.getEntryFirstRep().getResource();
+
+                recommender.setCredentials(author.getIdentifierFirstRep().getValue());
+            }
+
+            created.setRecommender(recommender);
+            modifications.add(created);
             therapyRecommendation.setModifications(modifications);
 
             therapyRecommendation.setId(carePlan.getIdentifierFirstRep().getValue());
@@ -129,6 +148,16 @@ public class JsonFhirMapper {
         carePlan.setSubject(new Reference(fhirPatient));
 
         carePlan.addIdentifier(new Identifier().setSystem("cbioportal").setValue(therapyRecommendation.getId()));
+
+        therapyRecommendation.getModifications().forEach((mod) -> {
+            if (mod.getModified().equals("Created")) {
+                DateTimeType created = new DateTimeType();
+                created.setValueAsString(mod.getTimestamp());
+                carePlan.setCreatedElement(created);
+                Practitioner author = getOrCreatePractitioner(bundle, mod.getRecommender().getCredentials());
+                carePlan.setAuthor(new Reference(author));
+            }
+        });
 
         List<Reference> supportingInfo = new ArrayList<Reference>();
         for (fhirspark.restmodel.Reference reference : therapyRecommendation.getReferences()) {
@@ -221,6 +250,29 @@ public class JsonFhirMapper {
                     .setMethod(Bundle.HTTPVerb.POST);
 
             return patient;
+        }
+
+    }
+
+    private Practitioner getOrCreatePractitioner(Bundle b, String credentials) {
+
+        Bundle b2 = (Bundle) client.search().forResource(Practitioner.class)
+                .where(new TokenClientParam("identifier").exactly().systemAndCode("cbioportal", credentials))
+                .prettyPrint().execute();
+
+        Practitioner p = (Practitioner) b2.getEntryFirstRep().getResource();
+
+        if (p != null && p.getIdentifierFirstRep().hasValue()) {
+            return p;
+        } else {
+
+            Practitioner practitioner = new Practitioner();
+            practitioner.setId(IdType.newRandomUuid());
+            practitioner.addIdentifier(new Identifier().setSystem("cbioportal").setValue(credentials));
+            b.addEntry().setFullUrl(practitioner.getIdElement().getValue()).setResource(practitioner).getRequest()
+                    .setMethod(Bundle.HTTPVerb.POST);
+
+            return practitioner;
         }
 
     }
