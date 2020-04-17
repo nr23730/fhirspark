@@ -63,7 +63,7 @@ public class JsonFhirMapper {
         List<TherapyRecommendation> therapyRecommendations = new ArrayList<TherapyRecommendation>();
 
         Bundle bPatient = (Bundle) client.search().forResource(Patient.class)
-                .where(new TokenClientParam("identifier").exactly().systemAndCode("cbioportal", patientId))
+                .where(new TokenClientParam("identifier").exactly().systemAndCode("https://cbioportal.org/patient", patientId))
                 .prettyPrint().execute();
 
         Patient fhirPatient = (Patient) bPatient.getEntryFirstRep().getResource();
@@ -160,9 +160,10 @@ public class JsonFhirMapper {
         Patient fhirPatient = getOrCreatePatient(bundle, id);
 
         CarePlan carePlan = new CarePlan();
+        carePlan.setId(IdType.newRandomUuid());
         carePlan.setSubject(new Reference(fhirPatient));
 
-        carePlan.addIdentifier(new Identifier().setSystem("cbioportal").setValue(therapyRecommendation.getId()));
+        carePlan.addIdentifier(new Identifier().setSystem("https://cbioportal.org/patient/").setValue(therapyRecommendation.getId()));
 
         carePlan.setStatus(CarePlanStatus.DRAFT);
         carePlan.setIntent(CarePlanIntent.PLAN);
@@ -193,7 +194,7 @@ public class JsonFhirMapper {
             detail.setStatus(CarePlanActivityStatus.NOTSTARTED);
 
             detail.setProduct(
-                    new CodeableConcept().addCoding(new Coding("ncit", treatment.getNcitCode(), treatment.getName()))
+                    new CodeableConcept().addCoding(new Coding("https://www.cancer.gov/research/resources/terminology/ncpdp", treatment.getNcitCode(), treatment.getName()))
                             .setText(treatment.getSynonyms()));
 
             activity.setDetail(detail);
@@ -254,7 +255,7 @@ public class JsonFhirMapper {
     private Patient getOrCreatePatient(Bundle b, String patientId) {
 
         Bundle b2 = (Bundle) client.search().forResource(Patient.class)
-                .where(new TokenClientParam("identifier").exactly().systemAndCode("cbioportal", patientId))
+                .where(new TokenClientParam("identifier").exactly().systemAndCode("https://cbioportal.org/patient/", patientId))
                 .prettyPrint().execute();
 
         Patient p = (Patient) b2.getEntryFirstRep().getResource();
@@ -265,9 +266,9 @@ public class JsonFhirMapper {
 
             Patient patient = new Patient();
             patient.setId(IdType.newRandomUuid());
-            patient.addIdentifier(new Identifier().setSystem("cbioportal").setValue(patientId));
+            patient.addIdentifier(new Identifier().setSystem("https://cbioportal.org/patient/").setValue(patientId));
             b.addEntry().setFullUrl(patient.getIdElement().getValue()).setResource(patient).getRequest()
-                    .setMethod(Bundle.HTTPVerb.POST);
+                    .setUrl("Patient").setMethod(Bundle.HTTPVerb.POST);
 
             return patient;
         }
@@ -277,7 +278,7 @@ public class JsonFhirMapper {
     private Practitioner getOrCreatePractitioner(Bundle b, String credentials) {
 
         Bundle b2 = (Bundle) client.search().forResource(Practitioner.class)
-                .where(new TokenClientParam("identifier").exactly().systemAndCode("cbioportal", credentials))
+                .where(new TokenClientParam("identifier").exactly().systemAndCode("https://cbioportal.org/patient/", credentials))
                 .prettyPrint().execute();
 
         Practitioner p = (Practitioner) b2.getEntryFirstRep().getResource();
@@ -288,9 +289,9 @@ public class JsonFhirMapper {
 
             Practitioner practitioner = new Practitioner();
             practitioner.setId(IdType.newRandomUuid());
-            practitioner.addIdentifier(new Identifier().setSystem("cbioportal").setValue(credentials));
+            practitioner.addIdentifier(new Identifier().setSystem("https://cbioportal.org/patient/").setValue(credentials));
             b.addEntry().setFullUrl(practitioner.getIdElement().getValue()).setResource(practitioner).getRequest()
-                    .setMethod(Bundle.HTTPVerb.POST);
+                    .setUrl("Practitioner").setMethod(Bundle.HTTPVerb.POST);
 
             return practitioner;
         }
