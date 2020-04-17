@@ -63,7 +63,7 @@ public class JsonFhirMapper {
         List<TherapyRecommendation> therapyRecommendations = new ArrayList<TherapyRecommendation>();
 
         Bundle bPatient = (Bundle) client.search().forResource(Patient.class)
-                .where(new TokenClientParam("identifier").exactly().systemAndCode("https://cbioportal.org/patient", patientId))
+                .where(new TokenClientParam("identifier").exactly().systemAndCode("https://cbioportal.org/patient/", patientId))
                 .prettyPrint().execute();
 
         Patient fhirPatient = (Patient) bPatient.getEntryFirstRep().getResource();
