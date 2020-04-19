@@ -7,24 +7,37 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "attribute",
+    "attributeId",
+    "attributeName",
     "value"
 })
 public class ClinicalData {
 
-    @JsonProperty("attribute")
-    private String attribute;
+    @JsonProperty("attributeId")
+    private String attributeId;
+    @JsonProperty("attributeName")
+    private String attributeName;
     @JsonProperty("value")
     private String value;
 
-    @JsonProperty("attribute")
-    public String getAttribute() {
-        return attribute;
+    @JsonProperty("attributeId")
+    public String getAttributeId() {
+        return attributeId;
     }
 
-    @JsonProperty("attribute")
-    public void setAttribute(String attribute) {
-        this.attribute = attribute;
+    @JsonProperty("attributeId")
+    public void setAttributeId(String attributeId) {
+        this.attributeId = attributeId;
+    }
+
+    @JsonProperty("attributeName")
+    public String getAttributeName() {
+        return attributeName;
+    }
+
+    @JsonProperty("attributeName")
+    public void setAttributeName(String attributeName) {
+        this.attributeName = attributeName;
     }
 
     @JsonProperty("value")
