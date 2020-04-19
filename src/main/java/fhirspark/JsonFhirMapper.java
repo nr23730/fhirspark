@@ -194,7 +194,7 @@ public class JsonFhirMapper {
             detail.setStatus(CarePlanActivityStatus.NOTSTARTED);
 
             detail.setProduct(
-                    new CodeableConcept().addCoding(new Coding("https://www.cancer.gov/research/resources/terminology/ncpdp", treatment.getNcitCode(), treatment.getName()))
+                    new CodeableConcept().addCoding(new Coding("http://ncithesaurus-stage.nci.nih.gov", treatment.getNcitCode(), treatment.getName()))
                             .setText(treatment.getSynonyms()));
 
             activity.setDetail(detail);
