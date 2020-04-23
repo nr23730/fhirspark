@@ -240,7 +240,9 @@ public class JsonFhirMapper {
     public void editTherapyRecommendation(String params, String params2, String body) {
     }
 
-    public void deleteTherapyRecommendation(String params, String params2) {
+    public void deleteTherapyRecommendation(String patientId, String therapyRecommendationId) {
+        assert(therapyRecommendationId.startsWith(patientId));
+        client.delete().resourceConditionalByUrl("CarePlan?identifier=https://cbioportal.org/patient/|" + therapyRecommendationId).execute();
     }
 
     public void editGeneticCounselingRecommendation(String params, String body) {
