@@ -8,6 +8,7 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import org.hl7.fhir.instance.model.api.IAnyResource;
 import org.hl7.fhir.r4.model.Annotation;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.CarePlan;
@@ -72,7 +73,7 @@ public class JsonFhirMapper {
             return "{}";
 
         Bundle bCarePlans = (Bundle) client.search().forResource(CarePlan.class)
-                .where(new ReferenceClientParam("subject").hasId(fhirPatient.getIdElement())).prettyPrint().execute();
+                .where(new ReferenceClientParam("subject").hasId(harmonizeId(fhirPatient))).prettyPrint().execute();
 
         List<BundleEntryComponent> carePlans = bCarePlans.getEntry();
 
@@ -161,7 +162,7 @@ public class JsonFhirMapper {
 
         CarePlan carePlan = new CarePlan();
         carePlan.setId(IdType.newRandomUuid());
-        carePlan.setSubject(new Reference(fhirPatient));
+        carePlan.setSubject(new Reference(harmonizeId(fhirPatient)));
 
         carePlan.addIdentifier(new Identifier().setSystem("https://cbioportal.org/patient/").setValue(therapyRecommendation.getId()));
 
@@ -174,7 +175,7 @@ public class JsonFhirMapper {
                 created.setValueAsString(mod.getTimestamp());
                 carePlan.setCreatedElement(created);
                 Practitioner author = getOrCreatePractitioner(bundle, mod.getRecommender().getCredentials());
-                carePlan.setAuthor(new Reference(author));
+                carePlan.setAuthor(new Reference(harmonizeId(author)));
             }
         });
 
@@ -240,7 +241,9 @@ public class JsonFhirMapper {
     public void editTherapyRecommendation(String params, String params2, String body) {
     }
 
-    public void deleteTherapyRecommendation(String params, String params2) {
+    public void deleteTherapyRecommendation(String patientId, String therapyRecommendationId) {
+        assert(therapyRecommendationId.startsWith(patientId));
+        client.delete().resourceConditionalByUrl("CarePlan?identifier=https://cbioportal.org/patient/|" + therapyRecommendationId).execute();
     }
 
     public void editGeneticCounselingRecommendation(String params, String body) {
@@ -296,6 +299,13 @@ public class JsonFhirMapper {
             return practitioner;
         }
 
+    }
+
+    private String harmonizeId(IAnyResource resource) {
+        if(resource.getIdElement().getValue().startsWith("urn:uuid:"))
+            return resource.getIdElement().getValue();
+        else
+            return resource.getIdElement().getResourceType() + "/" + resource.getIdElement().getIdPart();
     }
 
 }
