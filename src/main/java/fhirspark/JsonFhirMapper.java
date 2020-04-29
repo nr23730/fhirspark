@@ -150,7 +150,7 @@ public class JsonFhirMapper {
         return this.objectMapper.writeValueAsString(cBioPortalPatient);
     }
 
-    public void addTherapyRecommendation(String id, String jsonString) throws HL7Exception, IOException, LLPException {
+    public void addTherapyRecommendation(String patientId, String jsonString) throws HL7Exception, IOException, LLPException {
 
         Bundle bundle = new Bundle();
         bundle.setType(Bundle.BundleType.TRANSACTION);
@@ -158,7 +158,7 @@ public class JsonFhirMapper {
         TherapyRecommendation therapyRecommendation = this.objectMapper.readValue(jsonString,
                 TherapyRecommendation.class);
 
-        Patient fhirPatient = getOrCreatePatient(bundle, id);
+        Patient fhirPatient = getOrCreatePatient(bundle, patientId);
 
         CarePlan carePlan = new CarePlan();
         carePlan.setId(IdType.newRandomUuid());
@@ -238,7 +238,7 @@ public class JsonFhirMapper {
 
     }
 
-    public void editTherapyRecommendation(String params, String params2, String body) {
+    public void editTherapyRecommendation(String patientId, String therapyRecommendationId, String jsonString) {
     }
 
     public void deleteTherapyRecommendation(String patientId, String therapyRecommendationId) {
@@ -246,13 +246,13 @@ public class JsonFhirMapper {
         client.delete().resourceConditionalByUrl("CarePlan?identifier=https://cbioportal.org/patient/|" + therapyRecommendationId).execute();
     }
 
-    public void editGeneticCounselingRecommendation(String params, String body) {
+    public void editGeneticCounselingRecommendation(String patientId, String geneticCounselingRecommendation) {
     }
 
-    public void editRebiopsyRecommendation(String params, String body) {
+    public void editRebiopsyRecommendation(String patientId, String rebiopsyRecommendation) {
     }
 
-    public void editComment(String params, String body) {
+    public void editComment(String patientId, String commend) {
     }
 
     private Patient getOrCreatePatient(Bundle b, String patientId) {
