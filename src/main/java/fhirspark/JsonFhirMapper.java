@@ -42,6 +42,7 @@ import ca.uhn.hl7v2.llp.LLPException;
 import ca.uhn.hl7v2.model.Message;
 import ca.uhn.hl7v2.model.v281.message.ORU_R01;
 import ca.uhn.hl7v2.model.v281.segment.PID;
+import fhirspark.resolver.OncoKbDrug;
 import fhirspark.restmodel.CBioPortalPatient;
 import fhirspark.restmodel.ClinicalData;
 import fhirspark.restmodel.Modification;
@@ -57,6 +58,7 @@ public class JsonFhirMapper {
     FhirContext ctx = FhirContext.forR4();
     IGenericClient client;
     ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
+    OncoKbDrug drugResolver = new OncoKbDrug();
 
     public JsonFhirMapper(Settings settings) {
         this.settings = settings;
@@ -227,8 +229,9 @@ public class JsonFhirMapper {
 
             detail.setStatus(CarePlanActivityStatus.NOTSTARTED);
 
+            String ncitCode = treatment.getNcitCode() != null ? treatment.getNcitCode() : drugResolver.resolveDrug(treatment.getName()).getNcitCode();
             detail.setProduct(
-                    new CodeableConcept().addCoding(new Coding("http://ncithesaurus-stage.nci.nih.gov", treatment.getNcitCode(), treatment.getName()))
+                    new CodeableConcept().addCoding(new Coding("http://ncithesaurus-stage.nci.nih.gov", ncitCode, treatment.getName()))
                             .setText(treatment.getSynonyms()));
 
             activity.setDetail(detail);
