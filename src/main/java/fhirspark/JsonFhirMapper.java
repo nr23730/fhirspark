@@ -43,6 +43,7 @@ import ca.uhn.hl7v2.model.Message;
 import ca.uhn.hl7v2.model.v281.message.ORU_R01;
 import ca.uhn.hl7v2.model.v281.segment.PID;
 import fhirspark.resolver.OncoKbDrug;
+import fhirspark.resolver.PubmedPublication;
 import fhirspark.restmodel.CBioPortalPatient;
 import fhirspark.restmodel.ClinicalData;
 import fhirspark.restmodel.Modification;
@@ -59,6 +60,7 @@ public class JsonFhirMapper {
     IGenericClient client;
     ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
     OncoKbDrug drugResolver = new OncoKbDrug();
+    PubmedPublication pubmedResolver = new PubmedPublication();
 
     public JsonFhirMapper(Settings settings) {
         this.settings = settings;
@@ -218,7 +220,8 @@ public class JsonFhirMapper {
         for (fhirspark.restmodel.Reference reference : therapyRecommendation.getReferences()) {
             Reference fhirReference = new Reference();
             fhirReference.setReference("https://www.ncbi.nlm.nih.gov/pubmed/" + reference.getPmid());
-            fhirReference.setDisplay(reference.getName());
+            String title = reference.getName() != null ? reference.getName() : pubmedResolver.resolvePublication(reference.getPmid());
+            fhirReference.setDisplay(title);
             supportingInfo.add(fhirReference);
         }
         carePlan.setSupportingInfo(supportingInfo);
