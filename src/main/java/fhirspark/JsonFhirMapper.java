@@ -1,6 +1,8 @@
 package fhirspark;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,7 +13,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.hl7.fhir.instance.model.api.IAnyResource;
 import org.hl7.fhir.r4.model.Annotation;
 import org.hl7.fhir.r4.model.Bundle;
+import org.hl7.fhir.r4.model.Bundle.BundleEntryComponent;
 import org.hl7.fhir.r4.model.CarePlan;
+import org.hl7.fhir.r4.model.CarePlan.CarePlanActivityComponent;
+import org.hl7.fhir.r4.model.CarePlan.CarePlanActivityDetailComponent;
+import org.hl7.fhir.r4.model.CarePlan.CarePlanActivityStatus;
+import org.hl7.fhir.r4.model.CarePlan.CarePlanIntent;
+import org.hl7.fhir.r4.model.CarePlan.CarePlanStatus;
 import org.hl7.fhir.r4.model.CodeableConcept;
 import org.hl7.fhir.r4.model.Coding;
 import org.hl7.fhir.r4.model.DateTimeType;
@@ -20,12 +28,7 @@ import org.hl7.fhir.r4.model.Identifier;
 import org.hl7.fhir.r4.model.Patient;
 import org.hl7.fhir.r4.model.Practitioner;
 import org.hl7.fhir.r4.model.Reference;
-import org.hl7.fhir.r4.model.Bundle.BundleEntryComponent;
-import org.hl7.fhir.r4.model.CarePlan.CarePlanActivityComponent;
-import org.hl7.fhir.r4.model.CarePlan.CarePlanActivityDetailComponent;
-import org.hl7.fhir.r4.model.CarePlan.CarePlanActivityStatus;
-import org.hl7.fhir.r4.model.CarePlan.CarePlanIntent;
-import org.hl7.fhir.r4.model.CarePlan.CarePlanStatus;
+import org.hl7.fhir.r4.model.Resource;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
@@ -39,12 +42,15 @@ import ca.uhn.hl7v2.llp.LLPException;
 import ca.uhn.hl7v2.model.Message;
 import ca.uhn.hl7v2.model.v281.message.ORU_R01;
 import ca.uhn.hl7v2.model.v281.segment.PID;
-import fhirspark.restmodel.TherapyRecommendation;
-import fhirspark.restmodel.Treatment;
+import fhirspark.resolver.OncoKbDrug;
+import fhirspark.resolver.PubmedPublication;
 import fhirspark.restmodel.CBioPortalPatient;
+import fhirspark.restmodel.ClinicalData;
 import fhirspark.restmodel.Modification;
 import fhirspark.restmodel.Reasoning;
 import fhirspark.restmodel.Recommender;
+import fhirspark.restmodel.TherapyRecommendation;
+import fhirspark.restmodel.Treatment;
 
 public class JsonFhirMapper {
 
@@ -53,6 +59,8 @@ public class JsonFhirMapper {
     FhirContext ctx = FhirContext.forR4();
     IGenericClient client;
     ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
+    OncoKbDrug drugResolver = new OncoKbDrug();
+    PubmedPublication pubmedResolver = new PubmedPublication();
 
     public JsonFhirMapper(Settings settings) {
         this.settings = settings;
@@ -63,9 +71,8 @@ public class JsonFhirMapper {
         CBioPortalPatient cBioPortalPatient = new CBioPortalPatient();
         List<TherapyRecommendation> therapyRecommendations = new ArrayList<TherapyRecommendation>();
 
-        Bundle bPatient = (Bundle) client.search().forResource(Patient.class)
-                .where(new TokenClientParam("identifier").exactly().systemAndCode("https://cbioportal.org/patient/", patientId))
-                .prettyPrint().execute();
+        Bundle bPatient = (Bundle) client.search().forResource(Patient.class).where(new TokenClientParam("identifier")
+                .exactly().systemAndCode("https://cbioportal.org/patient/", patientId)).prettyPrint().execute();
 
         Patient fhirPatient = (Patient) bPatient.getEntryFirstRep().getResource();
 
@@ -164,7 +171,8 @@ public class JsonFhirMapper {
         carePlan.setId(IdType.newRandomUuid());
         carePlan.setSubject(new Reference(harmonizeId(fhirPatient)));
 
-        carePlan.addIdentifier(new Identifier().setSystem("https://cbioportal.org/patient/").setValue(therapyRecommendation.getId()));
+        carePlan.addIdentifier(
+                new Identifier().setSystem("https://cbioportal.org/patient/").setValue(therapyRecommendation.getId()));
 
         carePlan.setStatus(CarePlanStatus.DRAFT);
         carePlan.setIntent(CarePlanIntent.PLAN);
@@ -180,10 +188,40 @@ public class JsonFhirMapper {
         });
 
         List<Reference> supportingInfo = new ArrayList<Reference>();
+        therapyRecommendation.getReasoning().getClinicalData().forEach(clinical -> {
+            try {
+                Method m = Class.forName("fhirspark.clinicaldata." + clinical.getAttributeId()).getMethod("process",
+                        ClinicalData.class);
+                Resource clinicalFhir = (Resource) m.invoke(null, clinical);
+                bundle.addEntry().setFullUrl(clinicalFhir.getIdElement().getValue()).setResource(clinicalFhir).getRequest()
+                .setUrl(clinicalFhir.getIdElement().getResourceType()).setMethod(Bundle.HTTPVerb.POST);
+                supportingInfo.add(new Reference(clinicalFhir));
+            } catch (ClassNotFoundException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            } catch (NoSuchMethodException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            } catch (SecurityException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            } catch (IllegalAccessException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            } catch (IllegalArgumentException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            } catch (InvocationTargetException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        });
+
         for (fhirspark.restmodel.Reference reference : therapyRecommendation.getReferences()) {
             Reference fhirReference = new Reference();
             fhirReference.setReference("https://www.ncbi.nlm.nih.gov/pubmed/" + reference.getPmid());
-            fhirReference.setDisplay(reference.getName());
+            String title = reference.getName() != null ? reference.getName() : pubmedResolver.resolvePublication(reference.getPmid());
+            fhirReference.setDisplay(title);
             supportingInfo.add(fhirReference);
         }
         carePlan.setSupportingInfo(supportingInfo);
@@ -194,8 +232,9 @@ public class JsonFhirMapper {
 
             detail.setStatus(CarePlanActivityStatus.NOTSTARTED);
 
+            String ncitCode = treatment.getNcitCode() != null ? treatment.getNcitCode() : drugResolver.resolveDrug(treatment.getName()).getNcitCode();
             detail.setProduct(
-                    new CodeableConcept().addCoding(new Coding("http://ncithesaurus-stage.nci.nih.gov", treatment.getNcitCode(), treatment.getName()))
+                    new CodeableConcept().addCoding(new Coding("http://ncithesaurus-stage.nci.nih.gov", ncitCode, treatment.getName()))
                             .setText(treatment.getSynonyms()));
 
             activity.setDetail(detail);

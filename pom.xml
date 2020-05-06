@@ -62,6 +62,11 @@
             <artifactId>hapi-structures-v281</artifactId>
             <version>2.3</version>
         </dependency>
+        <dependency>
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>jersey-client</artifactId>
+            <version>1.19.4</version>
+        </dependency>
     </dependencies>
     <build>
         <pluginManagement>
