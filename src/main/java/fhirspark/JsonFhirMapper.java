@@ -42,10 +42,13 @@ import ca.uhn.hl7v2.llp.LLPException;
 import ca.uhn.hl7v2.model.Message;
 import ca.uhn.hl7v2.model.v281.message.ORU_R01;
 import ca.uhn.hl7v2.model.v281.segment.PID;
+import fhirspark.geneticalternations.GeneticAlternationsAdapter;
+import fhirspark.geneticalternations.GeneticAlternationsMissingAdapter;
 import fhirspark.resolver.OncoKbDrug;
 import fhirspark.resolver.PubmedPublication;
 import fhirspark.restmodel.CBioPortalPatient;
 import fhirspark.restmodel.ClinicalData;
+import fhirspark.restmodel.GeneticAlterationsMissing;
 import fhirspark.restmodel.Modification;
 import fhirspark.restmodel.Reasoning;
 import fhirspark.restmodel.Recommender;
@@ -61,6 +64,8 @@ public class JsonFhirMapper {
     ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
     OncoKbDrug drugResolver = new OncoKbDrug();
     PubmedPublication pubmedResolver = new PubmedPublication();
+    GeneticAlternationsAdapter geneticAlterationsAdapter = new GeneticAlternationsAdapter();
+    GeneticAlternationsMissingAdapter geneticAlterationsMissingAdapter = new GeneticAlternationsMissingAdapter();
 
     public JsonFhirMapper(Settings settings) {
         this.settings = settings;
@@ -157,7 +162,8 @@ public class JsonFhirMapper {
         return this.objectMapper.writeValueAsString(cBioPortalPatient);
     }
 
-    public void addTherapyRecommendation(String patientId, String jsonString) throws HL7Exception, IOException, LLPException {
+    public void addTherapyRecommendation(String patientId, String jsonString)
+            throws HL7Exception, IOException, LLPException {
 
         Bundle bundle = new Bundle();
         bundle.setType(Bundle.BundleType.TRANSACTION);
@@ -188,13 +194,33 @@ public class JsonFhirMapper {
         });
 
         List<Reference> supportingInfo = new ArrayList<Reference>();
+
+        if (therapyRecommendation.getReasoning().getGeneticAlterations() != null) {
+            Resource geneticAlternations = geneticAlterationsAdapter
+                    .process(therapyRecommendation.getReasoning().getGeneticAlterations());
+            bundle.addEntry().setFullUrl(geneticAlternations.getIdElement().getValue()).setResource(geneticAlternations)
+                    .getRequest().setUrl(geneticAlternations.getIdElement().getResourceType())
+                    .setMethod(Bundle.HTTPVerb.POST);
+            supportingInfo.add(new Reference(geneticAlternations));
+        }
+
+        if (therapyRecommendation.getReasoning().getGeneticAlterationsMissing() != null) {
+            Resource geneticAlterationsMissing = geneticAlterationsMissingAdapter
+                    .process(therapyRecommendation.getReasoning().getGeneticAlterationsMissing());
+            bundle.addEntry().setFullUrl(geneticAlterationsMissing.getIdElement().getValue())
+                    .setResource(geneticAlterationsMissing).getRequest()
+                    .setUrl(geneticAlterationsMissing.getIdElement().getResourceType()).setMethod(Bundle.HTTPVerb.POST);
+            supportingInfo.add(new Reference(geneticAlterationsMissing));
+        }
+
         therapyRecommendation.getReasoning().getClinicalData().forEach(clinical -> {
             try {
                 Method m = Class.forName("fhirspark.clinicaldata." + clinical.getAttributeId()).getMethod("process",
                         ClinicalData.class);
                 Resource clinicalFhir = (Resource) m.invoke(null, clinical);
-                bundle.addEntry().setFullUrl(clinicalFhir.getIdElement().getValue()).setResource(clinicalFhir).getRequest()
-                .setUrl(clinicalFhir.getIdElement().getResourceType()).setMethod(Bundle.HTTPVerb.POST);
+                bundle.addEntry().setFullUrl(clinicalFhir.getIdElement().getValue()).setResource(clinicalFhir)
+                        .getRequest().setUrl(clinicalFhir.getIdElement().getResourceType())
+                        .setMethod(Bundle.HTTPVerb.POST);
                 supportingInfo.add(new Reference(clinicalFhir));
             } catch (ClassNotFoundException e) {
                 // TODO Auto-generated catch block
@@ -220,7 +246,8 @@ public class JsonFhirMapper {
         for (fhirspark.restmodel.Reference reference : therapyRecommendation.getReferences()) {
             Reference fhirReference = new Reference();
             fhirReference.setReference("https://www.ncbi.nlm.nih.gov/pubmed/" + reference.getPmid());
-            String title = reference.getName() != null ? reference.getName() : pubmedResolver.resolvePublication(reference.getPmid());
+            String title = reference.getName() != null ? reference.getName()
+                    : pubmedResolver.resolvePublication(reference.getPmid());
             fhirReference.setDisplay(title);
             supportingInfo.add(fhirReference);
         }
@@ -232,10 +259,11 @@ public class JsonFhirMapper {
 
             detail.setStatus(CarePlanActivityStatus.NOTSTARTED);
 
-            String ncitCode = treatment.getNcitCode() != null ? treatment.getNcitCode() : drugResolver.resolveDrug(treatment.getName()).getNcitCode();
-            detail.setProduct(
-                    new CodeableConcept().addCoding(new Coding("http://ncithesaurus-stage.nci.nih.gov", ncitCode, treatment.getName()))
-                            .setText(treatment.getSynonyms()));
+            String ncitCode = treatment.getNcitCode() != null ? treatment.getNcitCode()
+                    : drugResolver.resolveDrug(treatment.getName()).getNcitCode();
+            detail.setProduct(new CodeableConcept()
+                    .addCoding(new Coding("http://ncithesaurus-stage.nci.nih.gov", ncitCode, treatment.getName()))
+                    .setText(treatment.getSynonyms()));
 
             activity.setDetail(detail);
             carePlan.addActivity(activity);
@@ -281,8 +309,9 @@ public class JsonFhirMapper {
     }
 
     public void deleteTherapyRecommendation(String patientId, String therapyRecommendationId) {
-        assert(therapyRecommendationId.startsWith(patientId));
-        client.delete().resourceConditionalByUrl("CarePlan?identifier=https://cbioportal.org/patient/|" + therapyRecommendationId).execute();
+        assert (therapyRecommendationId.startsWith(patientId));
+        client.delete().resourceConditionalByUrl(
+                "CarePlan?identifier=https://cbioportal.org/patient/|" + therapyRecommendationId).execute();
     }
 
     public void editGeneticCounselingRecommendation(String patientId, String geneticCounselingRecommendation) {
@@ -296,9 +325,8 @@ public class JsonFhirMapper {
 
     private Patient getOrCreatePatient(Bundle b, String patientId) {
 
-        Bundle b2 = (Bundle) client.search().forResource(Patient.class)
-                .where(new TokenClientParam("identifier").exactly().systemAndCode("https://cbioportal.org/patient/", patientId))
-                .prettyPrint().execute();
+        Bundle b2 = (Bundle) client.search().forResource(Patient.class).where(new TokenClientParam("identifier")
+                .exactly().systemAndCode("https://cbioportal.org/patient/", patientId)).prettyPrint().execute();
 
         Patient p = (Patient) b2.getEntryFirstRep().getResource();
 
@@ -319,9 +347,8 @@ public class JsonFhirMapper {
 
     private Practitioner getOrCreatePractitioner(Bundle b, String credentials) {
 
-        Bundle b2 = (Bundle) client.search().forResource(Practitioner.class)
-                .where(new TokenClientParam("identifier").exactly().systemAndCode("https://cbioportal.org/patient/", credentials))
-                .prettyPrint().execute();
+        Bundle b2 = (Bundle) client.search().forResource(Practitioner.class).where(new TokenClientParam("identifier")
+                .exactly().systemAndCode("https://cbioportal.org/patient/", credentials)).prettyPrint().execute();
 
         Practitioner p = (Practitioner) b2.getEntryFirstRep().getResource();
 
@@ -331,7 +358,8 @@ public class JsonFhirMapper {
 
             Practitioner practitioner = new Practitioner();
             practitioner.setId(IdType.newRandomUuid());
-            practitioner.addIdentifier(new Identifier().setSystem("https://cbioportal.org/patient/").setValue(credentials));
+            practitioner
+                    .addIdentifier(new Identifier().setSystem("https://cbioportal.org/patient/").setValue(credentials));
             b.addEntry().setFullUrl(practitioner.getIdElement().getValue()).setResource(practitioner).getRequest()
                     .setUrl("Practitioner").setMethod(Bundle.HTTPVerb.POST);
 
@@ -341,7 +369,7 @@ public class JsonFhirMapper {
     }
 
     private String harmonizeId(IAnyResource resource) {
-        if(resource.getIdElement().getValue().startsWith("urn:uuid:"))
+        if (resource.getIdElement().getValue().startsWith("urn:uuid:"))
             return resource.getIdElement().getValue();
         else
             return resource.getIdElement().getResourceType() + "/" + resource.getIdElement().getIdPart();
