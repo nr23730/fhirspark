@@ -22,7 +22,7 @@ public class OncoKbDrug {
 
     public Drug resolveDrug(String name) {
         WebResource webResource = client
-                .resource("https://oncokb.org:443/api/v1/drugs/lookup?synonym=" + name + "&exactMatch=true");
+                .resource("https://oncokb.org:443/api/v1/drugs/lookup?name=" + name + "&exactMatch=true");
         ClientResponse response = webResource.accept("application/json").get(ClientResponse.class);
         if (response.getStatus() != 200) {
             throw new RuntimeException("HTTP Error: " + response.getStatus());
