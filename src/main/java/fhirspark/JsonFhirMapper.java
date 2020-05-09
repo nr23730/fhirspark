@@ -213,35 +213,37 @@ public class JsonFhirMapper {
             supportingInfo.add(new Reference(geneticAlterationsMissing));
         }
 
-        therapyRecommendation.getReasoning().getClinicalData().forEach(clinical -> {
-            try {
-                Method m = Class.forName("fhirspark.clinicaldata." + clinical.getAttributeId()).getMethod("process",
-                        ClinicalData.class);
-                Resource clinicalFhir = (Resource) m.invoke(null, clinical);
-                bundle.addEntry().setFullUrl(clinicalFhir.getIdElement().getValue()).setResource(clinicalFhir)
-                        .getRequest().setUrl(clinicalFhir.getIdElement().getResourceType())
-                        .setMethod(Bundle.HTTPVerb.POST);
-                supportingInfo.add(new Reference(clinicalFhir));
-            } catch (ClassNotFoundException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            } catch (NoSuchMethodException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            } catch (SecurityException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            } catch (IllegalAccessException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            } catch (IllegalArgumentException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            } catch (InvocationTargetException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-        });
+        if (therapyRecommendation.getReasoning().getClinicalData() != null) {
+            therapyRecommendation.getReasoning().getClinicalData().forEach(clinical -> {
+                try {
+                    Method m = Class.forName("fhirspark.clinicaldata." + clinical.getAttributeId()).getMethod("process",
+                            ClinicalData.class);
+                    Resource clinicalFhir = (Resource) m.invoke(null, clinical);
+                    bundle.addEntry().setFullUrl(clinicalFhir.getIdElement().getValue()).setResource(clinicalFhir)
+                            .getRequest().setUrl(clinicalFhir.getIdElement().getResourceType())
+                            .setMethod(Bundle.HTTPVerb.POST);
+                    supportingInfo.add(new Reference(clinicalFhir));
+                } catch (ClassNotFoundException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                } catch (NoSuchMethodException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                } catch (SecurityException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                } catch (IllegalAccessException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                } catch (IllegalArgumentException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                } catch (InvocationTargetException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+            });
+        }
 
         for (fhirspark.restmodel.Reference reference : therapyRecommendation.getReferences()) {
             Reference fhirReference = new Reference();
