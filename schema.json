@@ -1,59 +1,67 @@
-{
-  "comment": "",
-  "geneticCounselingRecommended": false,
-  "rebiopsyRecommended": false,
-  "therapyRecommendations": [
-    {
-      "comment": [
-        ""
-      ],
-      "evidenceLevel": "",
-      "id": "",
-      "modifications": [
-        {
-          "modified": "",
-          "recommender": {
-            "credentials": ""
-          },
-          "timestamp": ""
-        }
-      ],
-      "reasoning": {
-        "geneticAlterations": [
+[
+  {
+    "date": "",
+    "generalRecommendation": "",
+    "geneticCounselingRecommendation": false,
+    "id": "",
+    "mtbState": "",
+    "rebiopsyRecommendation": false,
+    "samples": [
+      ""
+    ],
+    "therapyRecommendations": [
+      {
+        "comment": [
+          ""
+        ],
+        "evidenceLevel": "",
+        "id": "",
+        "modifications": [
           {
-            "hugoSymbol": "",
-            "alteration": "",
-            "entrezGeneId": 0
+            "modified": "",
+            "recommender": {
+              "credentials": ""
+            },
+            "timestamp": ""
           }
         ],
-        "geneticAlterationsMissing": [
+        "reasoning": {
+          "geneticAlterations": [
+            {
+              "hugoSymbol": "",
+              "alteration": "",
+              "entrezGeneId": 0
+            }
+          ],
+          "geneticAlterationsMissing": [
+            {
+              "entrezGeneId": 0,
+              "hugoSymbol": "",
+              "alteration": ""
+            }
+          ],
+          "clinicalData": [
+            {
+              "attributeId": "",
+              "attributeName": "",
+              "value": ""
+            }
+          ]
+        },
+        "references": [
           {
-            "entrezGeneId": 0,
-            "hugoSymbol": "",
-            "alteration": ""
+            "pmid": 0,
+            "name": ""
           }
         ],
-        "clinicalData": [
+        "treatments": [
           {
-            "attributeId": "",
-            "attributeName": "",
-            "value": ""
+            "name": "",
+            "ncit_code": "",
+            "synonyms": ""
           }
         ]
-      },
-      "references": [
-        {
-          "pmid": 0,
-          "name": ""
-        }
-      ],
-      "treatments": [
-        {
-          "name": "",
-          "ncit_code": "",
-          "synonyms": ""
-        }
-      ]
-    }
-  ]
-}
+      }
+    ]
+  }
+]

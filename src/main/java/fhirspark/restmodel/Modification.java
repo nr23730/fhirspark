@@ -30,6 +30,11 @@ public class Modification {
         this.modified = modified;
     }
 
+    public Modification withModified(String modified) {
+        this.modified = modified;
+        return this;
+    }
+
     @JsonProperty("recommender")
     public Recommender getRecommender() {
         return recommender;
@@ -40,6 +45,11 @@ public class Modification {
         this.recommender = recommender;
     }
 
+    public Modification withRecommender(Recommender recommender) {
+        this.recommender = recommender;
+        return this;
+    }
+
     @JsonProperty("timestamp")
     public String getTimestamp() {
         return timestamp;
@@ -48,6 +58,11 @@ public class Modification {
     @JsonProperty("timestamp")
     public void setTimestamp(String timestamp) {
         this.timestamp = timestamp;
+    }
+
+    public Modification withTimestamp(String timestamp) {
+        this.timestamp = timestamp;
+        return this;
     }
 
 }

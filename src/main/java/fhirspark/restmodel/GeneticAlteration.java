@@ -30,6 +30,11 @@ public class GeneticAlteration {
         this.hugoSymbol = hugoSymbol;
     }
 
+    public GeneticAlteration withHugoSymbol(String hugoSymbol) {
+        this.hugoSymbol = hugoSymbol;
+        return this;
+    }
+
     @JsonProperty("alteration")
     public String getAlteration() {
         return alteration;
@@ -40,6 +45,11 @@ public class GeneticAlteration {
         this.alteration = alteration;
     }
 
+    public GeneticAlteration withAlteration(String alteration) {
+        this.alteration = alteration;
+        return this;
+    }
+
     @JsonProperty("entrezGeneId")
     public Integer getEntrezGeneId() {
         return entrezGeneId;
@@ -48,6 +58,11 @@ public class GeneticAlteration {
     @JsonProperty("entrezGeneId")
     public void setEntrezGeneId(Integer entrezGeneId) {
         this.entrezGeneId = entrezGeneId;
+    }
+
+    public GeneticAlteration withEntrezGeneId(Integer entrezGeneId) {
+        this.entrezGeneId = entrezGeneId;
+        return this;
     }
 
 }

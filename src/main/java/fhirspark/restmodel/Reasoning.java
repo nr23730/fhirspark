@@ -31,6 +31,11 @@ public class Reasoning {
         this.geneticAlterations = geneticAlterations;
     }
 
+    public Reasoning withGeneticAlterations(List<GeneticAlteration> geneticAlterations) {
+        this.geneticAlterations = geneticAlterations;
+        return this;
+    }
+
     @JsonProperty("geneticAlterationsMissing")
     public List<GeneticAlterationsMissing> getGeneticAlterationsMissing() {
         return geneticAlterationsMissing;
@@ -41,6 +46,11 @@ public class Reasoning {
         this.geneticAlterationsMissing = geneticAlterationsMissing;
     }
 
+    public Reasoning withGeneticAlterationsMissing(List<GeneticAlterationsMissing> geneticAlterationsMissing) {
+        this.geneticAlterationsMissing = geneticAlterationsMissing;
+        return this;
+    }
+
     @JsonProperty("clinicalData")
     public List<ClinicalData> getClinicalData() {
         return clinicalData;
@@ -49,6 +59,11 @@ public class Reasoning {
     @JsonProperty("clinicalData")
     public void setClinicalData(List<ClinicalData> clinicalData) {
         this.clinicalData = clinicalData;
+    }
+
+    public Reasoning withClinicalData(List<ClinicalData> clinicalData) {
+        this.clinicalData = clinicalData;
+        return this;
     }
 
 }

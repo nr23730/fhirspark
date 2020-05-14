@@ -24,4 +24,9 @@ public class Recommender {
         this.credentials = credentials;
     }
 
+    public Recommender withCredentials(String credentials) {
+        this.credentials = credentials;
+        return this;
+    }
+
 }

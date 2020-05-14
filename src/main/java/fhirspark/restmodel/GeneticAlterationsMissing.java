@@ -30,6 +30,11 @@ public class GeneticAlterationsMissing {
         this.entrezGeneId = entrezGeneId;
     }
 
+    public GeneticAlterationsMissing withEntrezGeneId(Integer entrezGeneId) {
+        this.entrezGeneId = entrezGeneId;
+        return this;
+    }
+
     @JsonProperty("hugoSymbol")
     public String getHugoSymbol() {
         return hugoSymbol;
@@ -40,6 +45,11 @@ public class GeneticAlterationsMissing {
         this.hugoSymbol = hugoSymbol;
     }
 
+    public GeneticAlterationsMissing withHugoSymbol(String hugoSymbol) {
+        this.hugoSymbol = hugoSymbol;
+        return this;
+    }
+
     @JsonProperty("alteration")
     public String getAlteration() {
         return alteration;
@@ -48,6 +58,11 @@ public class GeneticAlterationsMissing {
     @JsonProperty("alteration")
     public void setAlteration(String alteration) {
         this.alteration = alteration;
+    }
+
+    public GeneticAlterationsMissing withAlteration(String alteration) {
+        this.alteration = alteration;
+        return this;
     }
 
 }
