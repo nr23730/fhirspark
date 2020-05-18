@@ -12,6 +12,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "generalRecommendation",
     "geneticCounselingRecommendation",
     "id",
+    "modifications",
     "mtbState",
     "rebiopsyRecommendation",
     "samples",
@@ -27,6 +28,8 @@ public class Mtb {
     private Boolean geneticCounselingRecommendation;
     @JsonProperty("id")
     private String id;
+    @JsonProperty("modifications")
+    private List<Modification> modifications = null;
     @JsonProperty("mtbState")
     private String mtbState;
     @JsonProperty("rebiopsyRecommendation")
@@ -93,6 +96,21 @@ public class Mtb {
 
     public Mtb withId(String id) {
         this.id = id;
+        return this;
+    }
+
+    @JsonProperty("modifications")
+    public List<Modification> getModifications() {
+        return modifications;
+    }
+
+    @JsonProperty("modifications")
+    public void setModifications(List<Modification> modifications) {
+        this.modifications = modifications;
+    }
+
+    public Mtb withModifications(List<Modification> modifications) {
+        this.modifications = modifications;
         return this;
     }
 

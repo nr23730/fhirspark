@@ -44,11 +44,9 @@ import ca.uhn.hl7v2.model.Message;
 import ca.uhn.hl7v2.model.v281.message.ORU_R01;
 import ca.uhn.hl7v2.model.v281.segment.PID;
 import fhirspark.geneticalternations.GeneticAlternationsAdapter;
-import fhirspark.geneticalternations.GeneticAlternationsMissingAdapter;
 import fhirspark.resolver.OncoKbDrug;
 import fhirspark.resolver.PubmedPublication;
 import fhirspark.restmodel.ClinicalData;
-import fhirspark.restmodel.GeneticAlterationsMissing;
 import fhirspark.restmodel.Modification;
 import fhirspark.restmodel.Mtb;
 import fhirspark.restmodel.Reasoning;
@@ -66,7 +64,6 @@ public class JsonFhirMapper {
     OncoKbDrug drugResolver = new OncoKbDrug();
     PubmedPublication pubmedResolver = new PubmedPublication();
     GeneticAlternationsAdapter geneticAlterationsAdapter = new GeneticAlternationsAdapter();
-    GeneticAlternationsMissingAdapter geneticAlterationsMissingAdapter = new GeneticAlternationsMissingAdapter();
 
     public JsonFhirMapper(Settings settings) {
         this.settings = settings;
@@ -207,15 +204,6 @@ public class JsonFhirMapper {
                         .getRequest().setUrl(geneticAlternations.getIdElement().getResourceType())
                         .setMethod(Bundle.HTTPVerb.POST);
                 supportingInfo.add(new Reference(geneticAlternations));
-            }
-    
-            if (therapyRecommendation.getReasoning().getGeneticAlterationsMissing() != null) {
-                Resource geneticAlterationsMissing = geneticAlterationsMissingAdapter
-                        .process(therapyRecommendation.getReasoning().getGeneticAlterationsMissing());
-                bundle.addEntry().setFullUrl(geneticAlterationsMissing.getIdElement().getValue())
-                        .setResource(geneticAlterationsMissing).getRequest()
-                        .setUrl(geneticAlterationsMissing.getIdElement().getResourceType()).setMethod(Bundle.HTTPVerb.POST);
-                supportingInfo.add(new Reference(geneticAlterationsMissing));
             }
     
             if (therapyRecommendation.getReasoning().getClinicalData() != null) {

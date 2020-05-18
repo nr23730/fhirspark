@@ -8,48 +8,15 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "geneticAlterations",
-    "geneticAlterationsMissing",
-    "clinicalData"
+    "clinicalData",
+    "geneticAlterations"
 })
 public class Reasoning {
 
-    @JsonProperty("geneticAlterations")
-    private List<GeneticAlteration> geneticAlterations = null;
-    @JsonProperty("geneticAlterationsMissing")
-    private List<GeneticAlterationsMissing> geneticAlterationsMissing = null;
     @JsonProperty("clinicalData")
     private List<ClinicalData> clinicalData = null;
-
     @JsonProperty("geneticAlterations")
-    public List<GeneticAlteration> getGeneticAlterations() {
-        return geneticAlterations;
-    }
-
-    @JsonProperty("geneticAlterations")
-    public void setGeneticAlterations(List<GeneticAlteration> geneticAlterations) {
-        this.geneticAlterations = geneticAlterations;
-    }
-
-    public Reasoning withGeneticAlterations(List<GeneticAlteration> geneticAlterations) {
-        this.geneticAlterations = geneticAlterations;
-        return this;
-    }
-
-    @JsonProperty("geneticAlterationsMissing")
-    public List<GeneticAlterationsMissing> getGeneticAlterationsMissing() {
-        return geneticAlterationsMissing;
-    }
-
-    @JsonProperty("geneticAlterationsMissing")
-    public void setGeneticAlterationsMissing(List<GeneticAlterationsMissing> geneticAlterationsMissing) {
-        this.geneticAlterationsMissing = geneticAlterationsMissing;
-    }
-
-    public Reasoning withGeneticAlterationsMissing(List<GeneticAlterationsMissing> geneticAlterationsMissing) {
-        this.geneticAlterationsMissing = geneticAlterationsMissing;
-        return this;
-    }
+    private List<GeneticAlteration> geneticAlterations = null;
 
     @JsonProperty("clinicalData")
     public List<ClinicalData> getClinicalData() {
@@ -63,6 +30,21 @@ public class Reasoning {
 
     public Reasoning withClinicalData(List<ClinicalData> clinicalData) {
         this.clinicalData = clinicalData;
+        return this;
+    }
+
+    @JsonProperty("geneticAlterations")
+    public List<GeneticAlteration> getGeneticAlterations() {
+        return geneticAlterations;
+    }
+
+    @JsonProperty("geneticAlterations")
+    public void setGeneticAlterations(List<GeneticAlteration> geneticAlterations) {
+        this.geneticAlterations = geneticAlterations;
+    }
+
+    public Reasoning withGeneticAlterations(List<GeneticAlteration> geneticAlterations) {
+        this.geneticAlterations = geneticAlterations;
         return this;
     }
 

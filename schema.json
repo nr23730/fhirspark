@@ -4,6 +4,15 @@
     "generalRecommendation": "",
     "geneticCounselingRecommendation": false,
     "id": "",
+    "modifications": [
+      {
+        "modified": "",
+        "recommender": {
+          "credentials": ""
+        },
+        "timestamp": ""
+      }
+    ],
     "mtbState": "",
     "rebiopsyRecommendation": false,
     "samples": [
@@ -26,25 +35,18 @@
           }
         ],
         "reasoning": {
-          "geneticAlterations": [
-            {
-              "hugoSymbol": "",
-              "alteration": "",
-              "entrezGeneId": 0
-            }
-          ],
-          "geneticAlterationsMissing": [
-            {
-              "entrezGeneId": 0,
-              "hugoSymbol": "",
-              "alteration": ""
-            }
-          ],
           "clinicalData": [
             {
               "attributeId": "",
               "attributeName": "",
               "value": ""
+            }
+          ],
+          "geneticAlterations": [
+            {
+              "hugoSymbol": "",
+              "alteration": "",
+              "entrezGeneId": 0
             }
           ]
         },
