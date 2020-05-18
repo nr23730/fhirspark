@@ -30,6 +30,11 @@ public class ClinicalData {
         this.attributeId = attributeId;
     }
 
+    public ClinicalData withAttributeId(String attributeId) {
+        this.attributeId = attributeId;
+        return this;
+    }
+
     @JsonProperty("attributeName")
     public String getAttributeName() {
         return attributeName;
@@ -40,6 +45,11 @@ public class ClinicalData {
         this.attributeName = attributeName;
     }
 
+    public ClinicalData withAttributeName(String attributeName) {
+        this.attributeName = attributeName;
+        return this;
+    }
+
     @JsonProperty("value")
     public String getValue() {
         return value;
@@ -48,6 +58,11 @@ public class ClinicalData {
     @JsonProperty("value")
     public void setValue(String value) {
         this.value = value;
+    }
+
+    public ClinicalData withValue(String value) {
+        this.value = value;
+        return this;
     }
 
 }

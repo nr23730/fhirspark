@@ -8,6 +8,7 @@ import java.util.List;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.hl7.fhir.instance.model.api.IAnyResource;
@@ -25,6 +26,7 @@ import org.hl7.fhir.r4.model.Coding;
 import org.hl7.fhir.r4.model.DateTimeType;
 import org.hl7.fhir.r4.model.IdType;
 import org.hl7.fhir.r4.model.Identifier;
+import org.hl7.fhir.r4.model.Observation;
 import org.hl7.fhir.r4.model.Patient;
 import org.hl7.fhir.r4.model.Practitioner;
 import org.hl7.fhir.r4.model.Reference;
@@ -42,11 +44,13 @@ import ca.uhn.hl7v2.llp.LLPException;
 import ca.uhn.hl7v2.model.Message;
 import ca.uhn.hl7v2.model.v281.message.ORU_R01;
 import ca.uhn.hl7v2.model.v281.segment.PID;
+import fhirspark.geneticalternations.GeneticAlternationsAdapter;
 import fhirspark.resolver.OncoKbDrug;
 import fhirspark.resolver.PubmedPublication;
-import fhirspark.restmodel.CBioPortalPatient;
 import fhirspark.restmodel.ClinicalData;
+import fhirspark.restmodel.GeneticAlteration;
 import fhirspark.restmodel.Modification;
+import fhirspark.restmodel.Mtb;
 import fhirspark.restmodel.Reasoning;
 import fhirspark.restmodel.Recommender;
 import fhirspark.restmodel.TherapyRecommendation;
@@ -61,6 +65,7 @@ public class JsonFhirMapper {
     ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
     OncoKbDrug drugResolver = new OncoKbDrug();
     PubmedPublication pubmedResolver = new PubmedPublication();
+    GeneticAlternationsAdapter geneticAlterationsAdapter = new GeneticAlternationsAdapter();
 
     public JsonFhirMapper(Settings settings) {
         this.settings = settings;
@@ -68,7 +73,10 @@ public class JsonFhirMapper {
     }
 
     public String toJson(String patientId) throws JsonProcessingException {
-        CBioPortalPatient cBioPortalPatient = new CBioPortalPatient();
+        List<Mtb> mtbs = new ArrayList<Mtb>();
+        Mtb mtb = new Mtb();
+        mtb.setSamples(new ArrayList<String>());
+        mtbs.add(mtb);
         List<TherapyRecommendation> therapyRecommendations = new ArrayList<TherapyRecommendation>();
 
         Bundle bPatient = (Bundle) client.search().forResource(Patient.class).where(new TokenClientParam("identifier")
@@ -85,7 +93,7 @@ public class JsonFhirMapper {
         List<BundleEntryComponent> carePlans = bCarePlans.getEntry();
 
         if (carePlans.size() > 0) {
-            cBioPortalPatient.setTherapyRecommendations(therapyRecommendations);
+            mtb.setTherapyRecommendations(therapyRecommendations);
         }
 
         for (int i = 0; i < carePlans.size(); i++) {
@@ -129,151 +137,192 @@ public class JsonFhirMapper {
             therapyRecommendation.setTreatments(treatments);
 
             Reasoning reasoning = new Reasoning();
+            List<GeneticAlteration> geneticAlterations = new ArrayList<GeneticAlteration>();
+            reasoning.setGeneticAlterations(geneticAlterations);
             therapyRecommendation.setReasoning(reasoning);
 
             List<fhirspark.restmodel.Reference> references = new ArrayList<fhirspark.restmodel.Reference>();
             for (Reference reference : carePlan.getSupportingInfo()) {
-                if (reference.hasType()) {
-                    switch (reference.getType()) {
-                        case "Observation":
-                            break;
+                if (reference.getReference().startsWith("https://www.ncbi.nlm.nih.gov/pubmed/")) {
+                    fhirspark.restmodel.Reference cBioPortalReference = new fhirspark.restmodel.Reference();
+                    cBioPortalReference.setName(reference.getDisplay());
+                    cBioPortalReference.setPmid(Integer
+                            .parseInt(reference.getReference().replace("https://www.ncbi.nlm.nih.gov/pubmed/", "")));
+                    references.add(cBioPortalReference);
+                } else if (reference.getReference().startsWith("Observation")) {
+                    Bundle bObservation = (Bundle) client.search().forResource(Observation.class).where(
+                            new TokenClientParam("_id").exactly().code(reference.getReferenceElement().getIdPart()))
+                            .prettyPrint().execute();
+                    List<Observation> observations = new ArrayList<Observation>();
+                    bObservation.getEntry().forEach(entry -> observations.add((Observation) entry.getResource()));
 
-                        default:
-                            break;
-                    }
-                } else {
-                    if (reference.getReference().startsWith("https://www.ncbi.nlm.nih.gov/pubmed/")) {
-                        fhirspark.restmodel.Reference cBioPortalReference = new fhirspark.restmodel.Reference();
-                        cBioPortalReference.setName(reference.getDisplay());
-                        cBioPortalReference.setPmid(Integer.parseInt(
-                                reference.getReference().replace("https://www.ncbi.nlm.nih.gov/pubmed/", "")));
-                        references.add(cBioPortalReference);
-                    }
+                    observations.forEach(observation -> {
+                        GeneticAlteration g = new GeneticAlteration();
+                        observation.getComponent().forEach(variant -> {
+                            switch (variant.getCode().getCodingFirstRep().getCode()) {
+                                case "48005-3":
+                                    g.setAlteration(variant.getValueCodeableConcept().getCodingFirstRep().getCode()
+                                            .replaceFirst("p.", ""));
+                                    break;
+                                case "81252-9":
+                                    g.setEntrezGeneId(Integer
+                                            .valueOf(variant.getValueCodeableConcept().getCodingFirstRep().getCode()));
+                                    break;
+                                case "48018-6":
+                                    g.setHugoSymbol(variant.getValueCodeableConcept().getCodingFirstRep().getDisplay());
+                                    break;
+                            }
+                        });
+                        geneticAlterations.add(g);
+                    });
                 }
             }
             therapyRecommendation.setReferences(references);
         }
 
-        return this.objectMapper.writeValueAsString(cBioPortalPatient);
+        return this.objectMapper.writeValueAsString(mtbs);
+
     }
 
-    public void addTherapyRecommendation(String patientId, String jsonString) throws HL7Exception, IOException, LLPException {
+    public void addTherapyRecommendation(String patientId, String jsonString)
+            throws HL7Exception, IOException, LLPException {
 
         Bundle bundle = new Bundle();
         bundle.setType(Bundle.BundleType.TRANSACTION);
 
-        TherapyRecommendation therapyRecommendation = this.objectMapper.readValue(jsonString,
-                TherapyRecommendation.class);
+        List<Mtb> mtbs = this.objectMapper.readValue(jsonString, new TypeReference<List<Mtb>>() {
+        });
 
         Patient fhirPatient = getOrCreatePatient(bundle, patientId);
 
-        CarePlan carePlan = new CarePlan();
-        carePlan.setId(IdType.newRandomUuid());
-        carePlan.setSubject(new Reference(harmonizeId(fhirPatient)));
+        mtbs.forEach(mtb -> {
+            TherapyRecommendation therapyRecommendation = mtb.getTherapyRecommendations().get(0);
+            CarePlan carePlan = new CarePlan();
+            carePlan.setId(IdType.newRandomUuid());
+            carePlan.setSubject(new Reference(harmonizeId(fhirPatient)));
 
-        carePlan.addIdentifier(
-                new Identifier().setSystem("https://cbioportal.org/patient/").setValue(therapyRecommendation.getId()));
+            carePlan.addIdentifier(new Identifier().setSystem("https://cbioportal.org/patient/")
+                    .setValue(therapyRecommendation.getId()));
 
-        carePlan.setStatus(CarePlanStatus.DRAFT);
-        carePlan.setIntent(CarePlanIntent.PLAN);
+            carePlan.setStatus(CarePlanStatus.DRAFT);
+            carePlan.setIntent(CarePlanIntent.PLAN);
 
-        therapyRecommendation.getModifications().forEach((mod) -> {
-            if (mod.getModified().equals("Created")) {
-                DateTimeType created = new DateTimeType();
-                created.setValueAsString(mod.getTimestamp());
-                carePlan.setCreatedElement(created);
-                Practitioner author = getOrCreatePractitioner(bundle, mod.getRecommender().getCredentials());
-                carePlan.setAuthor(new Reference(harmonizeId(author)));
+            therapyRecommendation.getModifications().forEach((mod) -> {
+                if (mod.getModified().equals("Created")) {
+                    DateTimeType created = new DateTimeType();
+                    created.setValueAsString(mod.getTimestamp());
+                    carePlan.setCreatedElement(created);
+                    Practitioner author = getOrCreatePractitioner(bundle, mod.getRecommender().getCredentials());
+                    carePlan.setAuthor(new Reference(harmonizeId(author)));
+                }
+            });
+
+            List<Reference> supportingInfo = new ArrayList<Reference>();
+
+            if (therapyRecommendation.getReasoning().getGeneticAlterations() != null) {
+                therapyRecommendation.getReasoning().getGeneticAlterations().forEach(geneticAlteration -> {
+                    Resource geneticVariant = geneticAlterationsAdapter.process(geneticAlteration);
+                    geneticVariant.setId(IdType.newRandomUuid());
+                    bundle.addEntry().setFullUrl(geneticVariant.getIdElement().getValue()).setResource(geneticVariant)
+                            .getRequest().setUrl("Observation").setMethod(Bundle.HTTPVerb.POST);
+                    supportingInfo.add(new Reference(geneticVariant));
+                });
             }
+
+            if (therapyRecommendation.getReasoning().getClinicalData() != null) {
+                therapyRecommendation.getReasoning().getClinicalData().forEach(clinical -> {
+                    try {
+                        Method m = Class.forName("fhirspark.clinicaldata." + clinical.getAttributeId())
+                                .getMethod("process", ClinicalData.class);
+                        Resource clinicalFhir = (Resource) m.invoke(null, clinical);
+                        bundle.addEntry().setFullUrl(clinicalFhir.getIdElement().getValue()).setResource(clinicalFhir)
+                                .getRequest().setUrl(clinicalFhir.getIdElement().getResourceType())
+                                .setMethod(Bundle.HTTPVerb.POST);
+                        supportingInfo.add(new Reference(clinicalFhir));
+                    } catch (ClassNotFoundException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    } catch (NoSuchMethodException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    } catch (SecurityException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    } catch (IllegalAccessException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    } catch (IllegalArgumentException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    } catch (InvocationTargetException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    }
+                });
+            }
+
+            for (fhirspark.restmodel.Reference reference : therapyRecommendation.getReferences()) {
+                Reference fhirReference = new Reference();
+                fhirReference.setReference("https://www.ncbi.nlm.nih.gov/pubmed/" + reference.getPmid());
+                String title = reference.getName() != null ? reference.getName()
+                        : pubmedResolver.resolvePublication(reference.getPmid());
+                fhirReference.setDisplay(title);
+                supportingInfo.add(fhirReference);
+            }
+            carePlan.setSupportingInfo(supportingInfo);
+
+            for (Treatment treatment : therapyRecommendation.getTreatments()) {
+                CarePlanActivityComponent activity = new CarePlanActivityComponent();
+                CarePlanActivityDetailComponent detail = new CarePlanActivityDetailComponent();
+
+                detail.setStatus(CarePlanActivityStatus.NOTSTARTED);
+
+                String ncitCode = treatment.getNcitCode() != null ? treatment.getNcitCode()
+                        : drugResolver.resolveDrug(treatment.getName()).getNcitCode();
+                detail.setProduct(new CodeableConcept()
+                        .addCoding(new Coding("http://ncithesaurus-stage.nci.nih.gov", ncitCode, treatment.getName()))
+                        .setText(treatment.getSynonyms()));
+
+                activity.setDetail(detail);
+                carePlan.addActivity(activity);
+            }
+
+            List<Annotation> notes = new ArrayList<Annotation>();
+            for (String comment : therapyRecommendation.getComment())
+                notes.add(new Annotation().setText(comment));
+            carePlan.setNote(notes);
+
+            bundle.addEntry().setFullUrl(carePlan.getIdElement().getValue()).setResource(carePlan).getRequest()
+                    .setUrl("CarePlan").setMethod(Bundle.HTTPVerb.POST);
+
+            Bundle resp = client.transaction().withBundle(bundle).execute();
+
+            // Log the response
+            System.out.println(ctx.newJsonParser().setPrettyPrint(true).encodeResourceToString(resp));
         });
 
-        List<Reference> supportingInfo = new ArrayList<Reference>();
-        therapyRecommendation.getReasoning().getClinicalData().forEach(clinical -> {
-            try {
-                Method m = Class.forName("fhirspark.clinicaldata." + clinical.getAttributeId()).getMethod("process",
-                        ClinicalData.class);
-                Resource clinicalFhir = (Resource) m.invoke(null, clinical);
-                bundle.addEntry().setFullUrl(clinicalFhir.getIdElement().getValue()).setResource(clinicalFhir).getRequest()
-                .setUrl(clinicalFhir.getIdElement().getResourceType()).setMethod(Bundle.HTTPVerb.POST);
-                supportingInfo.add(new Reference(clinicalFhir));
-            } catch (ClassNotFoundException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            } catch (NoSuchMethodException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            } catch (SecurityException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            } catch (IllegalAccessException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            } catch (IllegalArgumentException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            } catch (InvocationTargetException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-        });
+        // if (settings.getHl7v2config().get(0).getSendv2()) {
 
-        for (fhirspark.restmodel.Reference reference : therapyRecommendation.getReferences()) {
-            Reference fhirReference = new Reference();
-            fhirReference.setReference("https://www.ncbi.nlm.nih.gov/pubmed/" + reference.getPmid());
-            String title = reference.getName() != null ? reference.getName() : pubmedResolver.resolvePublication(reference.getPmid());
-            fhirReference.setDisplay(title);
-            supportingInfo.add(fhirReference);
-        }
-        carePlan.setSupportingInfo(supportingInfo);
+        // HapiContext context = new DefaultHapiContext();
+        // Connection connection =
+        // context.newClient(settings.getHl7v2config().get(0).getServer(),
+        // settings.getHl7v2config().get(0).getPort(), false);
 
-        for (Treatment treatment : therapyRecommendation.getTreatments()) {
-            CarePlanActivityComponent activity = new CarePlanActivityComponent();
-            CarePlanActivityDetailComponent detail = new CarePlanActivityDetailComponent();
+        // ORU_R01 oru = new ORU_R01();
+        // oru.initQuickstart("ORU", "R01", "T");
 
-            detail.setStatus(CarePlanActivityStatus.NOTSTARTED);
+        // PID v2patient = oru.getPATIENT_RESULT().getPATIENT().getPID();
+        // v2patient.getPid3_PatientIdentifierList(0).getIDNumber()
+        // .setValue(fhirPatient.getIdentifierFirstRep().getValue());
 
-            String ncitCode = treatment.getNcitCode() != null ? treatment.getNcitCode() : drugResolver.resolveDrug(treatment.getName()).getNcitCode();
-            detail.setProduct(
-                    new CodeableConcept().addCoding(new Coding("http://ncithesaurus-stage.nci.nih.gov", ncitCode, treatment.getName()))
-                            .setText(treatment.getSynonyms()));
+        // Message response =
+        // connection.getInitiator().sendAndReceive(oru.getMessage());
 
-            activity.setDetail(detail);
-            carePlan.addActivity(activity);
-        }
+        // System.out.println(oru.encode());
+        // System.out.println(response.encode());
 
-        List<Annotation> notes = new ArrayList<Annotation>();
-        for (String comment : therapyRecommendation.getComment())
-            notes.add(new Annotation().setText(comment));
-        carePlan.setNote(notes);
-
-        bundle.addEntry().setFullUrl(carePlan.getIdElement().getValue()).setResource(carePlan).getRequest()
-                .setUrl("CarePlan").setMethod(Bundle.HTTPVerb.POST);
-
-        Bundle resp = client.transaction().withBundle(bundle).execute();
-
-        // Log the response
-        System.out.println(ctx.newJsonParser().setPrettyPrint(true).encodeResourceToString(resp));
-
-        if (settings.getHl7v2config().get(0).getSendv2()) {
-
-            HapiContext context = new DefaultHapiContext();
-            Connection connection = context.newClient(settings.getHl7v2config().get(0).getServer(),
-                    settings.getHl7v2config().get(0).getPort(), false);
-
-            ORU_R01 oru = new ORU_R01();
-            oru.initQuickstart("ORU", "R01", "T");
-
-            PID v2patient = oru.getPATIENT_RESULT().getPATIENT().getPID();
-            v2patient.getPid3_PatientIdentifierList(0).getIDNumber()
-                    .setValue(fhirPatient.getIdentifierFirstRep().getValue());
-
-            Message response = connection.getInitiator().sendAndReceive(oru.getMessage());
-
-            System.out.println(oru.encode());
-            System.out.println(response.encode());
-
-            context.close();
-        }
+        // context.close();
+        // }
 
     }
 
@@ -281,8 +330,9 @@ public class JsonFhirMapper {
     }
 
     public void deleteTherapyRecommendation(String patientId, String therapyRecommendationId) {
-        assert(therapyRecommendationId.startsWith(patientId));
-        client.delete().resourceConditionalByUrl("CarePlan?identifier=https://cbioportal.org/patient/|" + therapyRecommendationId).execute();
+        assert (therapyRecommendationId.startsWith(patientId));
+        client.delete().resourceConditionalByUrl(
+                "CarePlan?identifier=https://cbioportal.org/patient/|" + therapyRecommendationId).execute();
     }
 
     public void editGeneticCounselingRecommendation(String patientId, String geneticCounselingRecommendation) {
@@ -296,9 +346,8 @@ public class JsonFhirMapper {
 
     private Patient getOrCreatePatient(Bundle b, String patientId) {
 
-        Bundle b2 = (Bundle) client.search().forResource(Patient.class)
-                .where(new TokenClientParam("identifier").exactly().systemAndCode("https://cbioportal.org/patient/", patientId))
-                .prettyPrint().execute();
+        Bundle b2 = (Bundle) client.search().forResource(Patient.class).where(new TokenClientParam("identifier")
+                .exactly().systemAndCode("https://cbioportal.org/patient/", patientId)).prettyPrint().execute();
 
         Patient p = (Patient) b2.getEntryFirstRep().getResource();
 
@@ -319,9 +368,8 @@ public class JsonFhirMapper {
 
     private Practitioner getOrCreatePractitioner(Bundle b, String credentials) {
 
-        Bundle b2 = (Bundle) client.search().forResource(Practitioner.class)
-                .where(new TokenClientParam("identifier").exactly().systemAndCode("https://cbioportal.org/patient/", credentials))
-                .prettyPrint().execute();
+        Bundle b2 = (Bundle) client.search().forResource(Practitioner.class).where(new TokenClientParam("identifier")
+                .exactly().systemAndCode("https://cbioportal.org/patient/", credentials)).prettyPrint().execute();
 
         Practitioner p = (Practitioner) b2.getEntryFirstRep().getResource();
 
@@ -331,7 +379,8 @@ public class JsonFhirMapper {
 
             Practitioner practitioner = new Practitioner();
             practitioner.setId(IdType.newRandomUuid());
-            practitioner.addIdentifier(new Identifier().setSystem("https://cbioportal.org/patient/").setValue(credentials));
+            practitioner
+                    .addIdentifier(new Identifier().setSystem("https://cbioportal.org/patient/").setValue(credentials));
             b.addEntry().setFullUrl(practitioner.getIdElement().getValue()).setResource(practitioner).getRequest()
                     .setUrl("Practitioner").setMethod(Bundle.HTTPVerb.POST);
 
@@ -341,7 +390,7 @@ public class JsonFhirMapper {
     }
 
     private String harmonizeId(IAnyResource resource) {
-        if(resource.getIdElement().getValue().startsWith("urn:uuid:"))
+        if (resource.getIdElement().getValue().startsWith("urn:uuid:"))
             return resource.getIdElement().getValue();
         else
             return resource.getIdElement().getResourceType() + "/" + resource.getIdElement().getIdPart();

@@ -27,6 +27,11 @@ public class Reference {
         this.pmid = pmid;
     }
 
+    public Reference withPmid(Integer pmid) {
+        this.pmid = pmid;
+        return this;
+    }
+
     @JsonProperty("name")
     public String getName() {
         return name;
@@ -35,6 +40,11 @@ public class Reference {
     @JsonProperty("name")
     public void setName(String name) {
         this.name = name;
+    }
+
+    public Reference withName(String name) {
+        this.name = name;
+        return this;
     }
 
 }

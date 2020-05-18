@@ -22,11 +22,11 @@ public final class FhirSpark {
 
         port(settings.getPort());
 
-        options("/therapyRecommendation/:patientId", (req, res) -> {
+        options("/mtb/:patientId", (req, res) -> {
             res.status(204);
             res.header("Access-Control-Allow-Credentials", "true");
             res.header("Access-Control-Allow-Headers", req.headers("Access-Control-Request-Headers"));
-            res.header("Access-Control-Allow-Methods", "GET");
+            res.header("Access-Control-Allow-Methods", "GET, PUT");
             res.header("Access-Control-Allow-Origin", req.headers("Origin"));
             res.header("Content-Length", "0");
             res.header("Vary", "Origin, Access-Control-Request-Headers");
@@ -34,7 +34,7 @@ public final class FhirSpark {
             return res;
         });
 
-        get("/therapyRecommendation/:patientId", (req, res) -> {
+        get("/mtb/:patientId", (req, res) -> {
             res.status(200);
             res.header("Access-Control-Allow-Credentials", "true");
             res.header("Access-Control-Allow-Origin", req.headers("Origin"));
@@ -44,7 +44,7 @@ public final class FhirSpark {
             return res.body();
         });
 
-        options("/therapyRecommendation/:patientId/therapyRecommendation/:therapyRecommendation", (req, res) -> {
+        options("/mtb/:patientId/mtb/:therapyRecommendation", (req, res) -> {
             res.status(204);
             res.header("Access-Control-Allow-Credentials", "true");
             res.header("Access-Control-Allow-Headers", req.headers("Access-Control-Request-Headers"));
@@ -56,7 +56,7 @@ public final class FhirSpark {
             return res;
         });
 
-        delete("/therapyRecommendation/:patientId/therapyRecommendation/:therapyRecommendation", (req, res) -> {
+        delete("/mtb/:patientId/mtb/:therapyRecommendation", (req, res) -> {
             res.status(200);
             res.header("Access-Control-Allow-Credentials", "true");
             res.header("Access-Control-Allow-Origin", req.headers("Origin"));
@@ -67,7 +67,7 @@ public final class FhirSpark {
             return res.body();
         });
 
-        put("/therapyRecommendation/:patientId/therapyRecommendation/:therapyRecommendation", (req, res) -> {
+        put("/mtb/:patientId/mtb/:therapyRecommendation", (req, res) -> {
             res.status(200);
             res.header("Access-Control-Allow-Credentials", "true");
             res.header("Access-Control-Allow-Origin", req.headers("Origin"));
@@ -78,7 +78,7 @@ public final class FhirSpark {
             return res.body();
         });
 
-        options("/therapyRecommendation/:patientId/therapyRecommendation", (req, res) -> {
+        options("/mtb/:patientId/therapyRecommendation", (req, res) -> {
             res.status(204);
             res.header("Access-Control-Allow-Credentials", "true");
             res.header("Access-Control-Allow-Headers", req.headers("Access-Control-Request-Headers"));
@@ -90,7 +90,7 @@ public final class FhirSpark {
             return res;
         });
 
-        post("/therapyRecommendation/:patientId/therapyRecommendation", (req, res) -> {
+        put("/mtb/:patientId", (req, res) -> {
             res.status(201);
             res.header("Access-Control-Allow-Credentials", "true");
             res.header("Access-Control-Allow-Origin", req.headers("Origin"));
@@ -101,7 +101,7 @@ public final class FhirSpark {
             return res.body();
         });
 
-        options("/therapyRecommendation/:patientId/geneticCounselingRecommended", (req, res) -> {
+        options("/mtb/:patientId/geneticCounselingRecommended", (req, res) -> {
             res.status(204);
             res.header("Access-Control-Allow-Credentials", "true");
             res.header("Access-Control-Allow-Headers", req.headers("Access-Control-Request-Headers"));
@@ -113,7 +113,7 @@ public final class FhirSpark {
             return res;
         });
 
-        put("/therapyRecommendation/:patientId/geneticCounselingRecommended", (req, res) -> {
+        put("/mtb/:patientId/geneticCounselingRecommended", (req, res) -> {
             res.status(200);
             res.header("Access-Control-Allow-Credentials", "true");
             res.header("Access-Control-Allow-Origin", req.headers("Origin"));
@@ -123,7 +123,7 @@ public final class FhirSpark {
             return res.body();
         });
 
-        options("/therapyRecommendation/:patientId/rebiopsyRecommended", (req, res) -> {
+        options("/mtb/:patientId/rebiopsyRecommended", (req, res) -> {
             res.status(204);
             res.header("Access-Control-Allow-Credentials", "true");
             res.header("Access-Control-Allow-Headers", req.headers("Access-Control-Request-Headers"));
@@ -135,7 +135,7 @@ public final class FhirSpark {
             return res;
         });
 
-        put("/therapyRecommendation/:patientId/rebiopsyRecommended", (req, res) -> {
+        put("/mtb/:patientId/rebiopsyRecommended", (req, res) -> {
             res.status(200);
             res.header("Access-Control-Allow-Credentials", "true");
             res.header("Access-Control-Allow-Origin", req.headers("Origin"));
@@ -146,7 +146,7 @@ public final class FhirSpark {
             return res.body();
         });
 
-        options("/therapyRecommendation/:patientId/comment", (req, res) -> {
+        options("/mtb/:patientId/comment", (req, res) -> {
             res.status(204);
             res.header("Access-Control-Allow-Credentials", "true");
             res.header("Access-Control-Allow-Headers", req.headers("Access-Control-Request-Headers"));
@@ -158,7 +158,7 @@ public final class FhirSpark {
             return res;
         });
 
-        put("/therapyRecommendation/:patientId/comment", (req, res) -> {
+        put("/mtb/:patientId/comment", (req, res) -> {
             res.status(200);
             res.header("Access-Control-Allow-Credentials", "true");
             res.header("Access-Control-Allow-Origin", req.headers("Origin"));

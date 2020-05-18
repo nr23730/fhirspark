@@ -9,7 +9,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonPropertyOrder({
     "credentials"
 })
-public class Recommender {
+public class Recommender_ {
 
     @JsonProperty("credentials")
     private String credentials;
@@ -24,7 +24,7 @@ public class Recommender {
         this.credentials = credentials;
     }
 
-    public Recommender withCredentials(String credentials) {
+    public Recommender_ withCredentials(String credentials) {
         this.credentials = credentials;
         return this;
     }

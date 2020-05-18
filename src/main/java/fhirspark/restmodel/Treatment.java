@@ -30,6 +30,11 @@ public class Treatment {
         this.name = name;
     }
 
+    public Treatment withName(String name) {
+        this.name = name;
+        return this;
+    }
+
     @JsonProperty("ncit_code")
     public String getNcitCode() {
         return ncitCode;
@@ -40,6 +45,11 @@ public class Treatment {
         this.ncitCode = ncitCode;
     }
 
+    public Treatment withNcitCode(String ncitCode) {
+        this.ncitCode = ncitCode;
+        return this;
+    }
+
     @JsonProperty("synonyms")
     public String getSynonyms() {
         return synonyms;
@@ -48,6 +58,11 @@ public class Treatment {
     @JsonProperty("synonyms")
     public void setSynonyms(String synonyms) {
         this.synonyms = synonyms;
+    }
+
+    public Treatment withSynonyms(String synonyms) {
+        this.synonyms = synonyms;
+        return this;
     }
 
 }
