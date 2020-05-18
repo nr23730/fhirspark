@@ -169,7 +169,8 @@ public class JsonFhirMapper {
         Bundle bundle = new Bundle();
         bundle.setType(Bundle.BundleType.TRANSACTION);
 
-        List<Mtb> mtbs = this.objectMapper.readValue(jsonString, new TypeReference<List<Mtb>>(){});
+        List<Mtb> mtbs = this.objectMapper.readValue(jsonString, new TypeReference<List<Mtb>>() {
+        });
 
         Patient fhirPatient = getOrCreatePatient(bundle, patientId);
 
@@ -178,13 +179,13 @@ public class JsonFhirMapper {
             CarePlan carePlan = new CarePlan();
             carePlan.setId(IdType.newRandomUuid());
             carePlan.setSubject(new Reference(harmonizeId(fhirPatient)));
-    
-            carePlan.addIdentifier(
-                    new Identifier().setSystem("https://cbioportal.org/patient/").setValue(therapyRecommendation.getId()));
-    
+
+            carePlan.addIdentifier(new Identifier().setSystem("https://cbioportal.org/patient/")
+                    .setValue(therapyRecommendation.getId()));
+
             carePlan.setStatus(CarePlanStatus.DRAFT);
             carePlan.setIntent(CarePlanIntent.PLAN);
-    
+
             therapyRecommendation.getModifications().forEach((mod) -> {
                 if (mod.getModified().equals("Created")) {
                     DateTimeType created = new DateTimeType();
@@ -194,23 +195,26 @@ public class JsonFhirMapper {
                     carePlan.setAuthor(new Reference(harmonizeId(author)));
                 }
             });
-    
+
             List<Reference> supportingInfo = new ArrayList<Reference>();
-    
+
             if (therapyRecommendation.getReasoning().getGeneticAlterations() != null) {
-                Resource geneticAlternations = geneticAlterationsAdapter
-                        .process(therapyRecommendation.getReasoning().getGeneticAlterations());
-                bundle.addEntry().setFullUrl(geneticAlternations.getIdElement().getValue()).setResource(geneticAlternations)
-                        .getRequest().setUrl(geneticAlternations.getIdElement().getResourceType())
-                        .setMethod(Bundle.HTTPVerb.POST);
-                supportingInfo.add(new Reference(geneticAlternations));
+                therapyRecommendation.getReasoning().getGeneticAlterations().forEach(geneticAlteration -> {
+                    Resource geneticVariant = geneticAlterationsAdapter
+                            .process(geneticAlteration);
+                    bundle.addEntry().setFullUrl(geneticVariant.getIdElement().getValue())
+                            .setResource(geneticVariant).getRequest()
+                            .setUrl(geneticVariant.getIdElement().getResourceType())
+                            .setMethod(Bundle.HTTPVerb.POST);
+                    supportingInfo.add(new Reference(geneticVariant));
+                });
             }
-    
+
             if (therapyRecommendation.getReasoning().getClinicalData() != null) {
                 therapyRecommendation.getReasoning().getClinicalData().forEach(clinical -> {
                     try {
-                        Method m = Class.forName("fhirspark.clinicaldata." + clinical.getAttributeId()).getMethod("process",
-                                ClinicalData.class);
+                        Method m = Class.forName("fhirspark.clinicaldata." + clinical.getAttributeId())
+                                .getMethod("process", ClinicalData.class);
                         Resource clinicalFhir = (Resource) m.invoke(null, clinical);
                         bundle.addEntry().setFullUrl(clinicalFhir.getIdElement().getValue()).setResource(clinicalFhir)
                                 .getRequest().setUrl(clinicalFhir.getIdElement().getResourceType())
@@ -237,7 +241,7 @@ public class JsonFhirMapper {
                     }
                 });
             }
-    
+
             for (fhirspark.restmodel.Reference reference : therapyRecommendation.getReferences()) {
                 Reference fhirReference = new Reference();
                 fhirReference.setReference("https://www.ncbi.nlm.nih.gov/pubmed/" + reference.getPmid());
@@ -247,58 +251,58 @@ public class JsonFhirMapper {
                 supportingInfo.add(fhirReference);
             }
             carePlan.setSupportingInfo(supportingInfo);
-    
+
             for (Treatment treatment : therapyRecommendation.getTreatments()) {
                 CarePlanActivityComponent activity = new CarePlanActivityComponent();
                 CarePlanActivityDetailComponent detail = new CarePlanActivityDetailComponent();
-    
+
                 detail.setStatus(CarePlanActivityStatus.NOTSTARTED);
-    
+
                 String ncitCode = treatment.getNcitCode() != null ? treatment.getNcitCode()
                         : drugResolver.resolveDrug(treatment.getName()).getNcitCode();
                 detail.setProduct(new CodeableConcept()
                         .addCoding(new Coding("http://ncithesaurus-stage.nci.nih.gov", ncitCode, treatment.getName()))
                         .setText(treatment.getSynonyms()));
-    
+
                 activity.setDetail(detail);
                 carePlan.addActivity(activity);
             }
-    
+
             List<Annotation> notes = new ArrayList<Annotation>();
             for (String comment : therapyRecommendation.getComment())
                 notes.add(new Annotation().setText(comment));
             carePlan.setNote(notes);
-    
+
             bundle.addEntry().setFullUrl(carePlan.getIdElement().getValue()).setResource(carePlan).getRequest()
                     .setUrl("CarePlan").setMethod(Bundle.HTTPVerb.POST);
-    
+
             Bundle resp = client.transaction().withBundle(bundle).execute();
-    
+
             // Log the response
             System.out.println(ctx.newJsonParser().setPrettyPrint(true).encodeResourceToString(resp));
         });
 
-        
-
         // if (settings.getHl7v2config().get(0).getSendv2()) {
 
-        //     HapiContext context = new DefaultHapiContext();
-        //     Connection connection = context.newClient(settings.getHl7v2config().get(0).getServer(),
-        //             settings.getHl7v2config().get(0).getPort(), false);
+        // HapiContext context = new DefaultHapiContext();
+        // Connection connection =
+        // context.newClient(settings.getHl7v2config().get(0).getServer(),
+        // settings.getHl7v2config().get(0).getPort(), false);
 
-        //     ORU_R01 oru = new ORU_R01();
-        //     oru.initQuickstart("ORU", "R01", "T");
+        // ORU_R01 oru = new ORU_R01();
+        // oru.initQuickstart("ORU", "R01", "T");
 
-        //     PID v2patient = oru.getPATIENT_RESULT().getPATIENT().getPID();
-        //     v2patient.getPid3_PatientIdentifierList(0).getIDNumber()
-        //             .setValue(fhirPatient.getIdentifierFirstRep().getValue());
+        // PID v2patient = oru.getPATIENT_RESULT().getPATIENT().getPID();
+        // v2patient.getPid3_PatientIdentifierList(0).getIDNumber()
+        // .setValue(fhirPatient.getIdentifierFirstRep().getValue());
 
-        //     Message response = connection.getInitiator().sendAndReceive(oru.getMessage());
+        // Message response =
+        // connection.getInitiator().sendAndReceive(oru.getMessage());
 
-        //     System.out.println(oru.encode());
-        //     System.out.println(response.encode());
+        // System.out.println(oru.encode());
+        // System.out.println(response.encode());
 
-        //     context.close();
+        // context.close();
         // }
 
     }
