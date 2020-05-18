@@ -12,7 +12,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.hl7.fhir.instance.model.api.IAnyResource;
-import org.hl7.fhir.instance.model.api.IIdType;
 import org.hl7.fhir.r4.model.Annotation;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Bundle.BundleEntryComponent;
@@ -27,6 +26,7 @@ import org.hl7.fhir.r4.model.Coding;
 import org.hl7.fhir.r4.model.DateTimeType;
 import org.hl7.fhir.r4.model.IdType;
 import org.hl7.fhir.r4.model.Identifier;
+import org.hl7.fhir.r4.model.Observation;
 import org.hl7.fhir.r4.model.Patient;
 import org.hl7.fhir.r4.model.Practitioner;
 import org.hl7.fhir.r4.model.Reference;
@@ -48,6 +48,7 @@ import fhirspark.geneticalternations.GeneticAlternationsAdapter;
 import fhirspark.resolver.OncoKbDrug;
 import fhirspark.resolver.PubmedPublication;
 import fhirspark.restmodel.ClinicalData;
+import fhirspark.restmodel.GeneticAlteration;
 import fhirspark.restmodel.Modification;
 import fhirspark.restmodel.Mtb;
 import fhirspark.restmodel.Reasoning;
@@ -136,32 +137,51 @@ public class JsonFhirMapper {
             therapyRecommendation.setTreatments(treatments);
 
             Reasoning reasoning = new Reasoning();
+            List<GeneticAlteration> geneticAlterations = new ArrayList<GeneticAlteration>();
+            reasoning.setGeneticAlterations(geneticAlterations);
             therapyRecommendation.setReasoning(reasoning);
 
             List<fhirspark.restmodel.Reference> references = new ArrayList<fhirspark.restmodel.Reference>();
             for (Reference reference : carePlan.getSupportingInfo()) {
-                if (reference.hasType()) {
-                    switch (reference.getType()) {
-                        case "Observation":
-                            break;
+                if (reference.getReference().startsWith("https://www.ncbi.nlm.nih.gov/pubmed/")) {
+                    fhirspark.restmodel.Reference cBioPortalReference = new fhirspark.restmodel.Reference();
+                    cBioPortalReference.setName(reference.getDisplay());
+                    cBioPortalReference.setPmid(Integer
+                            .parseInt(reference.getReference().replace("https://www.ncbi.nlm.nih.gov/pubmed/", "")));
+                    references.add(cBioPortalReference);
+                } else if (reference.getReference().startsWith("Observation")) {
+                    Bundle bObservation = (Bundle) client.search().forResource(Observation.class).where(
+                            new TokenClientParam("_id").exactly().code(reference.getReferenceElement().getIdPart()))
+                            .prettyPrint().execute();
+                    List<Observation> observations = new ArrayList<Observation>();
+                    bObservation.getEntry().forEach(entry -> observations.add((Observation) entry.getResource()));
 
-                        default:
-                            break;
-                    }
-                } else {
-                    if (reference.getReference().startsWith("https://www.ncbi.nlm.nih.gov/pubmed/")) {
-                        fhirspark.restmodel.Reference cBioPortalReference = new fhirspark.restmodel.Reference();
-                        cBioPortalReference.setName(reference.getDisplay());
-                        cBioPortalReference.setPmid(Integer.parseInt(
-                                reference.getReference().replace("https://www.ncbi.nlm.nih.gov/pubmed/", "")));
-                        references.add(cBioPortalReference);
-                    }
+                    observations.forEach(observation -> {
+                        GeneticAlteration g = new GeneticAlteration();
+                        observation.getComponent().forEach(variant -> {
+                            switch (variant.getCode().getCodingFirstRep().getCode()) {
+                                case "48005-3":
+                                    g.setAlteration(variant.getValueCodeableConcept().getCodingFirstRep().getCode()
+                                            .replaceFirst("p.", ""));
+                                    break;
+                                case "81252-9":
+                                    g.setEntrezGeneId(Integer
+                                            .valueOf(variant.getValueCodeableConcept().getCodingFirstRep().getCode()));
+                                    break;
+                                case "48018-6":
+                                    g.setHugoSymbol(variant.getValueCodeableConcept().getCodingFirstRep().getDisplay());
+                                    break;
+                            }
+                        });
+                        geneticAlterations.add(g);
+                    });
                 }
             }
             therapyRecommendation.setReferences(references);
         }
 
         return this.objectMapper.writeValueAsString(mtbs);
+
     }
 
     public void addTherapyRecommendation(String patientId, String jsonString)
@@ -201,13 +221,10 @@ public class JsonFhirMapper {
 
             if (therapyRecommendation.getReasoning().getGeneticAlterations() != null) {
                 therapyRecommendation.getReasoning().getGeneticAlterations().forEach(geneticAlteration -> {
-                    Resource geneticVariant = geneticAlterationsAdapter
-                            .process(geneticAlteration);
+                    Resource geneticVariant = geneticAlterationsAdapter.process(geneticAlteration);
                     geneticVariant.setId(IdType.newRandomUuid());
-                    bundle.addEntry().setFullUrl(geneticVariant.getIdElement().getValue())
-                            .setResource(geneticVariant).getRequest()
-                            .setUrl("Observation")
-                            .setMethod(Bundle.HTTPVerb.POST);
+                    bundle.addEntry().setFullUrl(geneticVariant.getIdElement().getValue()).setResource(geneticVariant)
+                            .getRequest().setUrl("Observation").setMethod(Bundle.HTTPVerb.POST);
                     supportingInfo.add(new Reference(geneticVariant));
                 });
             }
