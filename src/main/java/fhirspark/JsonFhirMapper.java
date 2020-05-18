@@ -12,6 +12,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.hl7.fhir.instance.model.api.IAnyResource;
+import org.hl7.fhir.instance.model.api.IIdType;
 import org.hl7.fhir.r4.model.Annotation;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Bundle.BundleEntryComponent;
@@ -202,9 +203,10 @@ public class JsonFhirMapper {
                 therapyRecommendation.getReasoning().getGeneticAlterations().forEach(geneticAlteration -> {
                     Resource geneticVariant = geneticAlterationsAdapter
                             .process(geneticAlteration);
+                    geneticVariant.setId(IdType.newRandomUuid());
                     bundle.addEntry().setFullUrl(geneticVariant.getIdElement().getValue())
                             .setResource(geneticVariant).getRequest()
-                            .setUrl(geneticVariant.getIdElement().getResourceType())
+                            .setUrl("Observation")
                             .setMethod(Bundle.HTTPVerb.POST);
                     supportingInfo.add(new Reference(geneticVariant));
                 });

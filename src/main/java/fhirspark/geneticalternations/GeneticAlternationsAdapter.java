@@ -4,8 +4,10 @@ import org.hl7.fhir.r4.model.CodeableConcept;
 import org.hl7.fhir.r4.model.Coding;
 import org.hl7.fhir.r4.model.Meta;
 import org.hl7.fhir.r4.model.Observation;
+import org.hl7.fhir.r4.model.Reference;
 import org.hl7.fhir.r4.model.Resource;
 import org.hl7.fhir.r4.model.Observation.ObservationComponentComponent;
+import org.hl7.fhir.r4.model.Observation.ObservationStatus;
 import org.hl7.fhir.r4.model.codesystems.ObservationCategory;
 
 import fhirspark.resolver.HgncGeneName;
@@ -20,6 +22,8 @@ public class GeneticAlternationsAdapter {
 
         Observation variant = new Observation();
         variant.setMeta(new Meta().addProfile("http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/variant"));
+
+        variant.setStatus(ObservationStatus.FINAL);
 
         variant.addCategory(new CodeableConcept(new Coding(ObservationCategory.LABORATORY.getSystem(),
                 ObservationCategory.LABORATORY.toCode(), ObservationCategory.LABORATORY.getDisplay())));
