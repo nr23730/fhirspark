@@ -100,13 +100,13 @@ public class JsonFhirMapper {
 
             switch (mtbCarePlan.getStatus().toCode()) {
                 case "draft":
-                    mtb.setMtbState("DRAFT");
+                    mtb.setMtbState("Draft");
                     break;
                 case "active":
-                    mtb.setMtbState("COMPLETED");
+                    mtb.setMtbState("Completed");
                     break;
                 case "revoked":
-                    mtb.setMtbState("ARCHIVED");
+                    mtb.setMtbState("Archived");
                     break;
             }
 
@@ -230,13 +230,13 @@ public class JsonFhirMapper {
                     .addIdentifier(new Identifier().setSystem("https://cbioportal.org/patient/").setValue(mtb.getId()));
 
             switch (mtb.getMtbState()) {
-                case "DRAFT":
+                case "Draft":
                     mtbCarePlan.setStatus(CarePlanStatus.DRAFT);
                     break;
-                case "COMPLETED":
+                case "Completed":
                     mtbCarePlan.setStatus(CarePlanStatus.ACTIVE);
                     break;
-                case "ARCHIVED":
+                case "Archived":
                     mtbCarePlan.setStatus(CarePlanStatus.REVOKED);
             }
             mtbCarePlan.setIntent(CarePlanIntent.PLAN);
