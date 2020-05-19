@@ -101,6 +101,18 @@ public class JsonFhirMapper {
             TherapyRecommendation therapyRecommendation = new TherapyRecommendation();
             therapyRecommendations.add(therapyRecommendation);
 
+            switch(carePlan.getStatus().toCode()) {
+                case "draft":
+                    mtb.setMtbState("Draft");
+                    break;
+                case "active":
+                    mtb.setMtbState("Completed");
+                    break;
+                case "revoked":
+                    mtb.setMtbState("Archived");
+                    break;
+            }
+
             List<Modification> modifications = new ArrayList<Modification>();
             Modification created = new Modification();
             created.setModified("Created");
@@ -204,7 +216,16 @@ public class JsonFhirMapper {
             carePlan.addIdentifier(new Identifier().setSystem("https://cbioportal.org/patient/")
                     .setValue(therapyRecommendation.getId()));
 
-            carePlan.setStatus(CarePlanStatus.DRAFT);
+            switch(mtb.getMtbState()) {
+                case "Draft":
+                    carePlan.setStatus(CarePlanStatus.DRAFT);
+                    break;
+                case "Completed":
+                    carePlan.setStatus(CarePlanStatus.ACTIVE);
+                    break;
+                case "Archived":
+                    carePlan.setStatus(CarePlanStatus.REVOKED);
+            }
             carePlan.setIntent(CarePlanIntent.PLAN);
 
             therapyRecommendation.getModifications().forEach((mod) -> {
