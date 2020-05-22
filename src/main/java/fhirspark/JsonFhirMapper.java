@@ -271,10 +271,6 @@ public class JsonFhirMapper {
                 if (therapyRecommendation.getReasoning().getGeneticAlterations() != null) {
                     therapyRecommendation.getReasoning().getGeneticAlterations().forEach(geneticAlteration -> {
                         Resource geneticVariant = geneticAlterationsAdapter.process(geneticAlteration);
-                        geneticVariant.setId(IdType.newRandomUuid());
-                        bundle.addEntry().setFullUrl(geneticVariant.getIdElement().getValue())
-                                .setResource(geneticVariant).getRequest().setUrl("Observation")
-                                .setMethod(Bundle.HTTPVerb.POST);
                         supportingInfo.add(new Reference(geneticVariant));
                     });
                 }
@@ -285,10 +281,6 @@ public class JsonFhirMapper {
                             Method m = Class.forName("fhirspark.clinicaldata." + clinical.getAttributeId())
                                     .getMethod("process", ClinicalData.class);
                             Resource clinicalFhir = (Resource) m.invoke(null, clinical);
-                            bundle.addEntry().setFullUrl(clinicalFhir.getIdElement().getValue())
-                                    .setResource(clinicalFhir).getRequest()
-                                    .setUrl(clinicalFhir.getIdElement().getResourceType())
-                                    .setMethod(Bundle.HTTPVerb.POST);
                             supportingInfo.add(new Reference(clinicalFhir));
                         } catch (ClassNotFoundException e) {
                             // TODO Auto-generated catch block
@@ -296,13 +288,7 @@ public class JsonFhirMapper {
                         } catch (NoSuchMethodException e) {
                             // TODO Auto-generated catch block
                             e.printStackTrace();
-                        } catch (SecurityException e) {
-                            // TODO Auto-generated catch block
-                            e.printStackTrace();
                         } catch (IllegalAccessException e) {
-                            // TODO Auto-generated catch block
-                            e.printStackTrace();
-                        } catch (IllegalArgumentException e) {
                             // TODO Auto-generated catch block
                             e.printStackTrace();
                         } catch (InvocationTargetException e) {
