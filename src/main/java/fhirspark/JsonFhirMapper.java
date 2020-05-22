@@ -346,12 +346,16 @@ public class JsonFhirMapper {
 
                 bundle.addEntry().setFullUrl(therapyRecommendationCarePlan.getIdElement().getValue())
                         .setResource(therapyRecommendationCarePlan).getRequest().setUrl("CarePlan")
-                        .setMethod(Bundle.HTTPVerb.POST);
+                        .setUrl("CarePlan?identifier=https://cbioportal.org/patient/|" + therapyRecommendation.getId())
+                        .setIfNoneExist("identifier=https://cbioportal.org/patient/|" + therapyRecommendation.getId())
+                        .setMethod(Bundle.HTTPVerb.PUT);
 
             });
 
             bundle.addEntry().setFullUrl(mtbCarePlan.getIdElement().getValue()).setResource(mtbCarePlan).getRequest()
-                    .setUrl("CarePlan").setMethod(Bundle.HTTPVerb.POST);
+                    .setUrl("CarePlan?identifier=https://cbioportal.org/patient/|" + mtb.getId())
+                    .setIfNoneExist("identifier=https://cbioportal.org/patient/|" + mtb.getId())
+                    .setMethod(Bundle.HTTPVerb.PUT);
 
         });
 
