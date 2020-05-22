@@ -171,33 +171,24 @@ public class JsonFhirMapper {
                         cBioPortalReference.setPmid(Integer.parseInt(
                                 reference.getReference().replace("https://www.ncbi.nlm.nih.gov/pubmed/", "")));
                         references.add(cBioPortalReference);
-                    } else if (reference.getReference().startsWith("Observation")) {
-                        Bundle bObservation = (Bundle) client.search().forResource(Observation.class).where(
-                                new TokenClientParam("_id").exactly().code(reference.getReferenceElement().getIdPart()))
-                                .prettyPrint().execute();
-                        List<Observation> observations = new ArrayList<Observation>();
-                        bObservation.getEntry().forEach(entry -> observations.add((Observation) entry.getResource()));
-
-                        observations.forEach(observation -> {
-                            GeneticAlteration g = new GeneticAlteration();
-                            observation.getComponent().forEach(variant -> {
-                                switch (variant.getCode().getCodingFirstRep().getCode()) {
-                                    case "48005-3":
-                                        g.setAlteration(variant.getValueCodeableConcept().getCodingFirstRep().getCode()
-                                                .replaceFirst("p.", ""));
-                                        break;
-                                    case "81252-9":
-                                        g.setEntrezGeneId(Integer.valueOf(
-                                                variant.getValueCodeableConcept().getCodingFirstRep().getCode()));
-                                        break;
-                                    case "48018-6":
-                                        g.setHugoSymbol(
-                                                variant.getValueCodeableConcept().getCodingFirstRep().getDisplay());
-                                        break;
-                                }
-                            });
-                            geneticAlterations.add(g);
+                    } else if (reference.getResource() != null && reference.getResource() instanceof Observation)  {
+                        GeneticAlteration g = new GeneticAlteration();
+                        ((Observation) reference.getResource()).getComponent().forEach(variant -> {
+                            switch (variant.getCode().getCodingFirstRep().getCode()) {
+                                case "48005-3":
+                                    g.setAlteration(variant.getValueCodeableConcept().getCodingFirstRep().getCode()
+                                            .replaceFirst("p.", ""));
+                                    break;
+                                case "81252-9":
+                                    g.setEntrezGeneId(Integer
+                                            .valueOf(variant.getValueCodeableConcept().getCodingFirstRep().getCode()));
+                                    break;
+                                case "48018-6":
+                                    g.setHugoSymbol(variant.getValueCodeableConcept().getCodingFirstRep().getDisplay());
+                                    break;
+                            }
                         });
+                        geneticAlterations.add(g);
                     }
                 }
                 therapyRecommendation.setReferences(references);
