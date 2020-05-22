@@ -209,7 +209,7 @@ public class JsonFhirMapper {
 
     }
 
-    public void addTherapyRecommendation(String patientId, String jsonString)
+    public void addOrEditTherapyRecommendation(String patientId, String jsonString)
             throws HL7Exception, IOException, LLPException {
 
         Bundle bundle = new Bundle();
@@ -385,22 +385,10 @@ public class JsonFhirMapper {
 
     }
 
-    public void editTherapyRecommendation(String patientId, String therapyRecommendationId, String jsonString) {
-    }
-
     public void deleteTherapyRecommendation(String patientId, String therapyRecommendationId) {
         assert (therapyRecommendationId.startsWith(patientId));
         client.delete().resourceConditionalByUrl(
                 "CarePlan?identifier=https://cbioportal.org/patient/|" + therapyRecommendationId).execute();
-    }
-
-    public void editGeneticCounselingRecommendation(String patientId, String geneticCounselingRecommendation) {
-    }
-
-    public void editRebiopsyRecommendation(String patientId, String rebiopsyRecommendation) {
-    }
-
-    public void editComment(String patientId, String commend) {
     }
 
     private Patient getOrCreatePatient(Bundle b, String patientId) {
