@@ -393,46 +393,26 @@ public class JsonFhirMapper {
 
     private Patient getOrCreatePatient(Bundle b, String patientId) {
 
-        Bundle b2 = (Bundle) client.search().forResource(Patient.class).where(new TokenClientParam("identifier")
-                .exactly().systemAndCode("https://cbioportal.org/patient/", patientId)).prettyPrint().execute();
+        Patient patient = new Patient();
+        patient.setId(IdType.newRandomUuid());
+        patient.addIdentifier(new Identifier().setSystem("https://cbioportal.org/patient/").setValue(patientId));
+        b.addEntry().setFullUrl(patient.getIdElement().getValue()).setResource(patient).getRequest().setUrl("Patient")
+                .setIfNoneExist("identifier=https://cbioportal.org/patient/|" + patientId)
+                .setMethod(Bundle.HTTPVerb.POST);
 
-        Patient p = (Patient) b2.getEntryFirstRep().getResource();
-
-        if (p != null && p.getIdentifierFirstRep().hasValue()) {
-            return p;
-        } else {
-
-            Patient patient = new Patient();
-            patient.setId(IdType.newRandomUuid());
-            patient.addIdentifier(new Identifier().setSystem("https://cbioportal.org/patient/").setValue(patientId));
-            b.addEntry().setFullUrl(patient.getIdElement().getValue()).setResource(patient).getRequest()
-                    .setUrl("Patient").setMethod(Bundle.HTTPVerb.POST);
-
-            return patient;
-        }
-
+        return patient;
     }
 
     private Practitioner getOrCreatePractitioner(Bundle b, String credentials) {
 
-        Bundle b2 = (Bundle) client.search().forResource(Practitioner.class).where(new TokenClientParam("identifier")
-                .exactly().systemAndCode("https://cbioportal.org/patient/", credentials)).prettyPrint().execute();
+        Practitioner practitioner = new Practitioner();
+        practitioner.setId(IdType.newRandomUuid());
+        practitioner.addIdentifier(new Identifier().setSystem("https://cbioportal.org/patient/").setValue(credentials));
+        b.addEntry().setFullUrl(practitioner.getIdElement().getValue()).setResource(practitioner).getRequest()
+                .setUrl("Practitioner").setIfNoneExist("identifier=https://cbioportal.org/patient/|" + credentials)
+                .setMethod(Bundle.HTTPVerb.POST);
 
-        Practitioner p = (Practitioner) b2.getEntryFirstRep().getResource();
-
-        if (p != null && p.getIdentifierFirstRep().hasValue()) {
-            return p;
-        } else {
-
-            Practitioner practitioner = new Practitioner();
-            practitioner.setId(IdType.newRandomUuid());
-            practitioner
-                    .addIdentifier(new Identifier().setSystem("https://cbioportal.org/patient/").setValue(credentials));
-            b.addEntry().setFullUrl(practitioner.getIdElement().getValue()).setResource(practitioner).getRequest()
-                    .setUrl("Practitioner").setMethod(Bundle.HTTPVerb.POST);
-
-            return practitioner;
-        }
+        return practitioner;
 
     }
 
