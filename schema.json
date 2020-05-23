@@ -4,15 +4,7 @@
     "generalRecommendation": "",
     "geneticCounselingRecommendation": false,
     "id": "",
-    "modifications": [
-      {
-        "modified": "",
-        "recommender": {
-          "credentials": ""
-        },
-        "timestamp": ""
-      }
-    ],
+    "author": "",
     "mtbState": "",
     "rebiopsyRecommendation": false,
     "samples": [
@@ -25,15 +17,7 @@
         ],
         "evidenceLevel": "",
         "id": "",
-        "modifications": [
-          {
-            "modified": "",
-            "recommender": {
-              "credentials": ""
-            },
-            "timestamp": ""
-          }
-        ],
+        "author": "",
         "reasoning": {
           "clinicalData": [
             {

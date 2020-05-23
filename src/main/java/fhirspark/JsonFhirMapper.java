@@ -49,10 +49,8 @@ import fhirspark.resolver.OncoKbDrug;
 import fhirspark.resolver.PubmedPublication;
 import fhirspark.restmodel.ClinicalData;
 import fhirspark.restmodel.GeneticAlteration;
-import fhirspark.restmodel.Modification;
 import fhirspark.restmodel.Mtb;
 import fhirspark.restmodel.Reasoning;
-import fhirspark.restmodel.Recommender;
 import fhirspark.restmodel.TherapyRecommendation;
 import fhirspark.restmodel.Treatment;
 
@@ -110,6 +108,17 @@ public class JsonFhirMapper {
                     break;
             }
 
+            
+            if (mtbCarePlan.hasAuthor()) {
+                Bundle b2 = (Bundle) client.search().forResource(Practitioner.class)
+                        .where(new TokenClientParam("_id").exactly()
+                                .code(mtbCarePlan.getAuthor().getId()))
+                        .prettyPrint().execute();
+                Practitioner author = (Practitioner) b2.getEntryFirstRep().getResource();
+
+                mtb.setAuthor(author.getIdentifierFirstRep().getValue());
+            }
+
             List<TherapyRecommendation> therapyRecommendations = new ArrayList<TherapyRecommendation>();
             mtb.setTherapyRecommendations(therapyRecommendations);
 
@@ -122,11 +131,6 @@ public class JsonFhirMapper {
                 TherapyRecommendation therapyRecommendation = new TherapyRecommendation();
                 therapyRecommendations.add(therapyRecommendation);
 
-                List<Modification> modifications = new ArrayList<Modification>();
-                Modification created = new Modification();
-                created.setModified("Created");
-                created.setTimestamp(therapyRecommendationCarePlan.getCreatedElement().asStringValue());
-                Recommender recommender = new Recommender();
                 if (therapyRecommendationCarePlan.hasAuthor()) {
                     Bundle b2 = (Bundle) client.search().forResource(Practitioner.class)
                             .where(new TokenClientParam("_id").exactly()
@@ -134,12 +138,8 @@ public class JsonFhirMapper {
                             .prettyPrint().execute();
                     Practitioner author = (Practitioner) b2.getEntryFirstRep().getResource();
 
-                    recommender.setCredentials(author.getIdentifierFirstRep().getValue());
+                    therapyRecommendation.setAuthor(author.getIdentifierFirstRep().getValue());
                 }
-
-                created.setRecommender(recommender);
-                modifications.add(created);
-                therapyRecommendation.setModifications(modifications);
 
                 therapyRecommendation.setId(therapyRecommendationCarePlan.getIdentifierFirstRep().getValue());
                 List<String> comments = new ArrayList<String>();
@@ -232,15 +232,8 @@ public class JsonFhirMapper {
             }
             mtbCarePlan.setIntent(CarePlanIntent.PLAN);
 
-            mtb.getModifications().forEach((mod) -> {
-                if (mod.getModified().equals("Created")) {
-                    DateTimeType created = new DateTimeType();
-                    created.setValueAsString(mod.getTimestamp());
-                    mtbCarePlan.setCreatedElement(created);
-                    Practitioner author = getOrCreatePractitioner(bundle, mod.getRecommender().getCredentials());
-                    mtbCarePlan.setAuthor(new Reference(harmonizeId(author)));
-                }
-            });
+            Practitioner author = getOrCreatePractitioner(bundle, mtb.getAuthor());
+            mtbCarePlan.setAuthor(new Reference(harmonizeId(author)));
 
             mtbCarePlan.addNote(new Annotation().setText(mtb.getGeneralRecommendation()));
 
@@ -251,6 +244,9 @@ public class JsonFhirMapper {
                 therapyRecommendationCarePlan.addPartOf(new Reference(harmonizeId(mtbCarePlan)));
                 therapyRecommendationCarePlan.setSubject(mtbCarePlan.getSubject());
                 therapyRecommendationCarePlan.setIntent(mtbCarePlan.getIntent());
+
+                Practitioner therapyRecommendationAuthor = getOrCreatePractitioner(bundle, therapyRecommendation.getAuthor());
+                mtbCarePlan.setAuthor(new Reference(harmonizeId(therapyRecommendationAuthor)));
 
                 therapyRecommendationCarePlan.addIdentifier(new Identifier()
                         .setSystem("https://cbioportal.org/patient/").setValue(therapyRecommendation.getId()));
