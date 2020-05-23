@@ -3,7 +3,11 @@ package fhirspark;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import com.fasterxml.jackson.core.JsonFactory;
@@ -108,16 +112,17 @@ public class JsonFhirMapper {
                     break;
             }
 
-            
             if (mtbCarePlan.hasAuthor()) {
                 Bundle b2 = (Bundle) client.search().forResource(Practitioner.class)
-                        .where(new TokenClientParam("_id").exactly()
-                                .code(mtbCarePlan.getAuthor().getId()))
+                        .where(new TokenClientParam("_id").exactly().code(mtbCarePlan.getAuthor().getId()))
                         .prettyPrint().execute();
                 Practitioner author = (Practitioner) b2.getEntryFirstRep().getResource();
 
                 mtb.setAuthor(author.getIdentifierFirstRep().getValue());
             }
+
+            SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd");
+            mtb.setDate(f.format(mtbCarePlan.getCreated()));
 
             List<TherapyRecommendation> therapyRecommendations = new ArrayList<TherapyRecommendation>();
             mtb.setTherapyRecommendations(therapyRecommendations);
@@ -171,7 +176,7 @@ public class JsonFhirMapper {
                         cBioPortalReference.setPmid(Integer.parseInt(
                                 reference.getReference().replace("https://www.ncbi.nlm.nih.gov/pubmed/", "")));
                         references.add(cBioPortalReference);
-                    } else if (reference.getResource() != null && reference.getResource() instanceof Observation)  {
+                    } else if (reference.getResource() != null && reference.getResource() instanceof Observation) {
                         GeneticAlteration g = new GeneticAlteration();
                         ((Observation) reference.getResource()).getComponent().forEach(variant -> {
                             switch (variant.getCode().getCodingFirstRep().getCode()) {
@@ -234,6 +239,8 @@ public class JsonFhirMapper {
 
             mtbCarePlan.setAuthor(new Reference(getOrCreatePractitioner(bundle, mtb.getAuthor())));
 
+            mtbCarePlan.setCreatedElement(new DateTimeType(mtb.getDate()));
+
             mtbCarePlan.addNote(new Annotation().setText(mtb.getGeneralRecommendation()));
 
             mtb.getTherapyRecommendations().forEach(therapyRecommendation -> {
@@ -244,7 +251,8 @@ public class JsonFhirMapper {
                 therapyRecommendationCarePlan.setSubject(mtbCarePlan.getSubject());
                 therapyRecommendationCarePlan.setIntent(mtbCarePlan.getIntent());
 
-                therapyRecommendationCarePlan.setAuthor(new Reference(getOrCreatePractitioner(bundle, therapyRecommendation.getAuthor())));
+                therapyRecommendationCarePlan
+                        .setAuthor(new Reference(getOrCreatePractitioner(bundle, therapyRecommendation.getAuthor())));
 
                 therapyRecommendationCarePlan.addIdentifier(new Identifier()
                         .setSystem("https://cbioportal.org/patient/").setValue(therapyRecommendation.getId()));
