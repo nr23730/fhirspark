@@ -215,7 +215,7 @@ public class JsonFhirMapper {
 
             CarePlan mtbCarePlan = new CarePlan();
             mtbCarePlan.setId(IdType.newRandomUuid());
-            mtbCarePlan.setSubject(new Reference(harmonizeId(fhirPatient)));
+            mtbCarePlan.setSubject(new Reference(fhirPatient));
 
             mtbCarePlan
                     .addIdentifier(new Identifier().setSystem("https://cbioportal.org/patient/").setValue(mtb.getId()));
@@ -232,8 +232,7 @@ public class JsonFhirMapper {
             }
             mtbCarePlan.setIntent(CarePlanIntent.PLAN);
 
-            Practitioner author = getOrCreatePractitioner(bundle, mtb.getAuthor());
-            mtbCarePlan.setAuthor(new Reference(harmonizeId(author)));
+            mtbCarePlan.setAuthor(new Reference(getOrCreatePractitioner(bundle, mtb.getAuthor())));
 
             mtbCarePlan.addNote(new Annotation().setText(mtb.getGeneralRecommendation()));
 
@@ -241,12 +240,11 @@ public class JsonFhirMapper {
 
                 CarePlan therapyRecommendationCarePlan = new CarePlan();
                 therapyRecommendationCarePlan.setId(IdType.newRandomUuid());
-                therapyRecommendationCarePlan.addPartOf(new Reference(harmonizeId(mtbCarePlan)));
+                therapyRecommendationCarePlan.addPartOf(new Reference(mtbCarePlan));
                 therapyRecommendationCarePlan.setSubject(mtbCarePlan.getSubject());
                 therapyRecommendationCarePlan.setIntent(mtbCarePlan.getIntent());
 
-                Practitioner therapyRecommendationAuthor = getOrCreatePractitioner(bundle, therapyRecommendation.getAuthor());
-                mtbCarePlan.setAuthor(new Reference(harmonizeId(therapyRecommendationAuthor)));
+                therapyRecommendationCarePlan.setAuthor(new Reference(getOrCreatePractitioner(bundle, therapyRecommendation.getAuthor())));
 
                 therapyRecommendationCarePlan.addIdentifier(new Identifier()
                         .setSystem("https://cbioportal.org/patient/").setValue(therapyRecommendation.getId()));
