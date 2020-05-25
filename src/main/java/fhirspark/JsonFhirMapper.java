@@ -4,15 +4,11 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
-import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.hl7.fhir.instance.model.api.IAnyResource;
@@ -51,6 +47,7 @@ import ca.uhn.hl7v2.model.v281.segment.PID;
 import fhirspark.geneticalternations.GeneticAlternationsAdapter;
 import fhirspark.resolver.OncoKbDrug;
 import fhirspark.resolver.PubmedPublication;
+import fhirspark.restmodel.CbioportalRest;
 import fhirspark.restmodel.ClinicalData;
 import fhirspark.restmodel.GeneticAlteration;
 import fhirspark.restmodel.Mtb;
@@ -201,7 +198,7 @@ public class JsonFhirMapper {
 
         }
 
-        return this.objectMapper.writeValueAsString(mtbs);
+        return this.objectMapper.writeValueAsString(new CbioportalRest().withId(patientId).withMtbs(mtbs));
 
     }
 
@@ -211,8 +208,7 @@ public class JsonFhirMapper {
         Bundle bundle = new Bundle();
         bundle.setType(Bundle.BundleType.TRANSACTION);
 
-        List<Mtb> mtbs = this.objectMapper.readValue(jsonString, new TypeReference<List<Mtb>>() {
-        });
+        List<Mtb> mtbs = this.objectMapper.readValue(jsonString, CbioportalRest.class).getMtbs();
 
         Patient fhirPatient = getOrCreatePatient(bundle, patientId);
 

@@ -1,53 +1,56 @@
-[
-  {
-    "date": "",
-    "generalRecommendation": "",
-    "geneticCounselingRecommendation": false,
-    "id": "",
-    "author": "",
-    "mtbState": "",
-    "rebiopsyRecommendation": false,
-    "samples": [
-      ""
-    ],
-    "therapyRecommendations": [
-      {
-        "comment": [
-          ""
-        ],
-        "evidenceLevel": "",
-        "id": "",
-        "author": "",
-        "reasoning": {
-          "clinicalData": [
+{
+  "id": "",
+  "mtbs": [
+    {
+      "date": "",
+      "generalRecommendation": "",
+      "geneticCounselingRecommendation": false,
+      "id": "",
+      "author": "",
+      "mtbState": "",
+      "rebiopsyRecommendation": false,
+      "samples": [
+        ""
+      ],
+      "therapyRecommendations": [
+        {
+          "comment": [
+            ""
+          ],
+          "evidenceLevel": "",
+          "id": "",
+          "author": "",
+          "reasoning": {
+            "clinicalData": [
+              {
+                "attributeId": "",
+                "attributeName": "",
+                "value": ""
+              }
+            ],
+            "geneticAlterations": [
+              {
+                "hugoSymbol": "",
+                "alteration": "",
+                "entrezGeneId": 0
+              }
+            ]
+          },
+          "references": [
             {
-              "attributeId": "",
-              "attributeName": "",
-              "value": ""
+              "pmid": 0,
+              "name": ""
             }
           ],
-          "geneticAlterations": [
+          "treatments": [
             {
-              "hugoSymbol": "",
-              "alteration": "",
-              "entrezGeneId": 0
+              "name": "",
+              "ncit_code": "",
+              "synonyms": ""
             }
           ]
-        },
-        "references": [
-          {
-            "pmid": 0,
-            "name": ""
-          }
-        ],
-        "treatments": [
-          {
-            "name": "",
-            "ncit_code": "",
-            "synonyms": ""
-          }
-        ]
-      }
-    ]
-  }
-]
+        }
+      ]
+    }
+  ]
+}
