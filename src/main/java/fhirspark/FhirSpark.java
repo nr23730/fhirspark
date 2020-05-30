@@ -49,7 +49,7 @@ public final class FhirSpark {
             res.header("Access-Control-Allow-Origin", req.headers("Origin"));
             res.type("application/json");
             res.header("Vary", "Origin, Access-Control-Request-Headers");
-            jsonFhirMapper.addOrEditTherapyRecommendation(req.params(":patientId"), req.body());
+            jsonFhirMapper.addOrEditMtb(req.params(":patientId"), req.body());
             res.body(req.body());
             return res.body();
         });

@@ -1,23 +1,18 @@
 
 package fhirspark.restmodel;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "author",
     "date",
     "generalRecommendation",
     "geneticCounselingRecommendation",
     "id",
-    "author",
     "mtbState",
     "rebiopsyRecommendation",
     "samples",
@@ -25,6 +20,8 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 })
 public class Mtb {
 
+    @JsonProperty("author")
+    private String author;
     @JsonProperty("date")
     private String date;
     @JsonProperty("generalRecommendation")
@@ -33,8 +30,6 @@ public class Mtb {
     private Boolean geneticCounselingRecommendation;
     @JsonProperty("id")
     private String id;
-    @JsonProperty("author")
-    private String author;
     @JsonProperty("mtbState")
     private String mtbState;
     @JsonProperty("rebiopsyRecommendation")
@@ -43,8 +38,21 @@ public class Mtb {
     private List<String> samples = null;
     @JsonProperty("therapyRecommendations")
     private List<TherapyRecommendation> therapyRecommendations = null;
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
+
+    @JsonProperty("author")
+    public String getAuthor() {
+        return author;
+    }
+
+    @JsonProperty("author")
+    public void setAuthor(String author) {
+        this.author = author;
+    }
+
+    public Mtb withAuthor(String author) {
+        this.author = author;
+        return this;
+    }
 
     @JsonProperty("date")
     public String getDate() {
@@ -106,21 +114,6 @@ public class Mtb {
         return this;
     }
 
-    @JsonProperty("author")
-    public String getAuthor() {
-        return author;
-    }
-
-    @JsonProperty("author")
-    public void setAuthor(String author) {
-        this.author = author;
-    }
-
-    public Mtb withAuthor(String author) {
-        this.author = author;
-        return this;
-    }
-
     @JsonProperty("mtbState")
     public String getMtbState() {
         return mtbState;
@@ -178,21 +171,6 @@ public class Mtb {
 
     public Mtb withTherapyRecommendations(List<TherapyRecommendation> therapyRecommendations) {
         this.therapyRecommendations = therapyRecommendations;
-        return this;
-    }
-
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
-
-    public Mtb withAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
         return this;
     }
 

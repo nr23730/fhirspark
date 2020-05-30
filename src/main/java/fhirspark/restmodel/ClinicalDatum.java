@@ -1,11 +1,6 @@
 
 package fhirspark.restmodel;
 
-import java.util.HashMap;
-import java.util.Map;
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -16,7 +11,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "attributeName",
     "value"
 })
-public class ClinicalData {
+public class ClinicalDatum {
 
     @JsonProperty("attributeId")
     private String attributeId;
@@ -24,8 +19,6 @@ public class ClinicalData {
     private String attributeName;
     @JsonProperty("value")
     private String value;
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     @JsonProperty("attributeId")
     public String getAttributeId() {
@@ -37,7 +30,7 @@ public class ClinicalData {
         this.attributeId = attributeId;
     }
 
-    public ClinicalData withAttributeId(String attributeId) {
+    public ClinicalDatum withAttributeId(String attributeId) {
         this.attributeId = attributeId;
         return this;
     }
@@ -52,7 +45,7 @@ public class ClinicalData {
         this.attributeName = attributeName;
     }
 
-    public ClinicalData withAttributeName(String attributeName) {
+    public ClinicalDatum withAttributeName(String attributeName) {
         this.attributeName = attributeName;
         return this;
     }
@@ -67,23 +60,8 @@ public class ClinicalData {
         this.value = value;
     }
 
-    public ClinicalData withValue(String value) {
+    public ClinicalDatum withValue(String value) {
         this.value = value;
-        return this;
-    }
-
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
-
-    public ClinicalData withAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
         return this;
     }
 
