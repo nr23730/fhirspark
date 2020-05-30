@@ -89,11 +89,9 @@ public class JsonFhirMapper {
 
     public String toJson(String patientId) throws JsonProcessingException {
         List<Mtb> mtbs = new ArrayList<Mtb>();
-
         Bundle bPatient = (Bundle) client.search().forResource(Patient.class)
                 .where(new TokenClientParam("identifier").exactly().systemAndCode(PATIENT_URI, patientId)).prettyPrint()
                 .execute();
-
         Patient fhirPatient = (Patient) bPatient.getEntryFirstRep().getResource();
 
         if (fhirPatient == null)
@@ -114,11 +112,25 @@ public class JsonFhirMapper {
                         : new Mtb().withTherapyRecommendations(new ArrayList<TherapyRecommendation>())
                                 .withSamples(new ArrayList<String>());
             }
-
-            mtb.withId(diagnosticReport.getIdentifier().get(0).getValue());
-            mtb.withSamples(new ArrayList<String>());
             if (!mtbs.contains(mtb))
                 mtbs.add(mtb);
+
+            if (diagnosticReport.hasPerformer()) {
+                Bundle b2 = (Bundle) client.search().forResource(Practitioner.class).where(
+                        new TokenClientParam("_id").exactly().code(diagnosticReport.getPerformerFirstRep().getId()))
+                        .prettyPrint().execute();
+                Practitioner author = (Practitioner) b2.getEntryFirstRep().getResource();
+                mtb.setAuthor(author.getIdentifierFirstRep().getValue());
+            }
+
+            SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd");
+            mtb.setDate(f.format(diagnosticReport.getEffectiveDateTimeType().toCalendar().getTime()));
+
+            mtb.setGeneralRecommendation(diagnosticReport.getConclusion());
+
+            // GENETIC COUNSELING HERE
+
+            mtb.setId(diagnosticReport.getIdentifier().get(0).getValue());
 
             if (diagnosticReport.hasStatus()) {
                 switch (diagnosticReport.getStatus().toCode()) {
@@ -134,36 +146,51 @@ public class JsonFhirMapper {
                 }
             }
 
+            // REBIOPSY HERE
+
             for (Reference specimen : diagnosticReport.getSpecimen())
                 mtb.getSamples().add(((Specimen) specimen.getResource()).getIdentifierFirstRep().getValue());
 
-            mtb.setGeneralRecommendation(diagnosticReport.getConclusion());
-
-            if (diagnosticReport.hasPerformer()) {
-                Bundle b2 = (Bundle) client.search().forResource(Practitioner.class).where(
-                        new TokenClientParam("_id").exactly().code(diagnosticReport.getPerformerFirstRep().getId()))
-                        .prettyPrint().execute();
-                Practitioner author = (Practitioner) b2.getEntryFirstRep().getResource();
-
-                mtb.setAuthor(author.getIdentifierFirstRep().getValue());
-            }
-
-            SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd");
-            mtb.setDate(f.format(diagnosticReport.getEffectiveDateTimeType().toCalendar().getTime()));
-
-            TherapyRecommendation therapyRecommendation = new TherapyRecommendation();
+            TherapyRecommendation therapyRecommendation = new TherapyRecommendation()
+                    .withComment(new ArrayList<String>()).withReasoning(new Reasoning());
             mtb.getTherapyRecommendations().add(therapyRecommendation);
+            List<ClinicalDatum> clinicalData = new ArrayList<ClinicalDatum>();
+            List<GeneticAlteration> geneticAlterations = new ArrayList<GeneticAlteration>();
+            therapyRecommendation.getReasoning().withClinicalData(clinicalData)
+                    .withGeneticAlterations(geneticAlterations);
 
             therapyRecommendation.setAuthor(mtb.getAuthor());
 
+            // COMMENTS GET WITHIN MEDICATION
+
+            // PUT EVIDENCE HERE
+
             therapyRecommendation.setId(diagnosticReport.getIdentifier().get(1).getValue());
 
-            List<String> comments = new ArrayList<String>();
-            // for (Annotation annotation : therapyRecommendationCarePlan.getNote())
-            // comments.add(annotation.getText());
-            therapyRecommendation.setComment(comments);
+            // PUT CLINICAL DATA HERE
+
+            for (Reference reference : diagnosticReport.getResult()) {
+                GeneticAlteration g = new GeneticAlteration();
+                ((Observation) reference.getResource()).getComponent().forEach(variant -> {
+                    switch (variant.getCode().getCodingFirstRep().getCode()) {
+                        case "48005-3":
+                            g.setAlteration(variant.getValueCodeableConcept().getCodingFirstRep().getCode()
+                                    .replaceFirst("p.", ""));
+                            break;
+                        case "81252-9":
+                            g.setEntrezGeneId(
+                                    Integer.valueOf(variant.getValueCodeableConcept().getCodingFirstRep().getCode()));
+                            break;
+                        case "48018-6":
+                            g.setHugoSymbol(variant.getValueCodeableConcept().getCodingFirstRep().getDisplay());
+                            break;
+                    }
+                });
+                geneticAlterations.add(g);
+            }
 
             List<Treatment> treatments = new ArrayList<Treatment>();
+            therapyRecommendation.setTreatments(treatments);
             List<Extension> recommendedActionReferences = diagnosticReport.getExtensionsByUrl(RECOMMENDEDACTION_URI);
             for (Extension recommendedActionReference : recommendedActionReferences) {
 
@@ -189,13 +216,10 @@ public class JsonFhirMapper {
                     Coding drug = medicationStatement.getMedicationCodeableConcept().getCodingFirstRep();
                     treatments.add(new Treatment().withNcitCode(drug.getCode()).withName(drug.getDisplay()));
 
-                    therapyRecommendation.setComment(new ArrayList<String>());
                     for (Annotation a : medicationStatement.getNote())
                         therapyRecommendation.getComment().add(a.getText());
-
                 }
             }
-            therapyRecommendation.setTreatments(treatments);
 
             List<fhirspark.restmodel.Reference> references = new ArrayList<fhirspark.restmodel.Reference>();
             for (Extension relatedArtifact : diagnosticReport.getExtensionsByUrl(RELATEDARTIFACT_URI))
@@ -203,31 +227,6 @@ public class JsonFhirMapper {
                         .withPmid(Integer.valueOf(
                                 ((RelatedArtifact) relatedArtifact.getValue()).getUrl().replaceFirst(PUBMED_URI, "")))
                         .withName((((RelatedArtifact) relatedArtifact.getValue()).getCitation())));
-
-            Reasoning reasoning = new Reasoning();
-            List<GeneticAlteration> geneticAlterations = new ArrayList<GeneticAlteration>();
-            reasoning.setGeneticAlterations(geneticAlterations);
-            therapyRecommendation.setReasoning(reasoning);
-
-            for (Reference reference : diagnosticReport.getResult()) {
-                GeneticAlteration g = new GeneticAlteration();
-                ((Observation) reference.getResource()).getComponent().forEach(variant -> {
-                    switch (variant.getCode().getCodingFirstRep().getCode()) {
-                        case "48005-3":
-                            g.setAlteration(variant.getValueCodeableConcept().getCodingFirstRep().getCode()
-                                    .replaceFirst("p.", ""));
-                            break;
-                        case "81252-9":
-                            g.setEntrezGeneId(
-                                    Integer.valueOf(variant.getValueCodeableConcept().getCodingFirstRep().getCode()));
-                            break;
-                        case "48018-6":
-                            g.setHugoSymbol(variant.getValueCodeableConcept().getCodingFirstRep().getDisplay());
-                            break;
-                    }
-                });
-                geneticAlterations.add(g);
-            }
 
             therapyRecommendation.setReferences(references);
 
@@ -237,8 +236,7 @@ public class JsonFhirMapper {
 
     }
 
-    public void addOrEditMtb(String patientId, String jsonString)
-            throws HL7Exception, IOException, LLPException {
+    public void addOrEditMtb(String patientId, String jsonString) throws HL7Exception, IOException, LLPException {
 
         Bundle bundle = new Bundle();
         bundle.setType(Bundle.BundleType.TRANSACTION);
