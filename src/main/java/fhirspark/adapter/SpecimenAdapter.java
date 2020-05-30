@@ -8,7 +8,7 @@ public class SpecimenAdapter {
     
     public Specimen process(Reference patient, String specimen) {
         Specimen fhirSpecimen = new Specimen();
-        fhirSpecimen.getMeta().addProfile("http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/specimen")
+        fhirSpecimen.getMeta().addProfile("http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/specimen");
         fhirSpecimen.setSubject(patient);
         fhirSpecimen.addIdentifier(new Identifier().setSystem("https://cbioportal.org/specimen/").setValue(specimen));
 
