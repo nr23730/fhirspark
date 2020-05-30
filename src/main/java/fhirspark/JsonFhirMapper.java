@@ -238,7 +238,7 @@ public class JsonFhirMapper {
 
         List<Mtb> mtbs = this.objectMapper.readValue(jsonString, CbioportalRest.class).getMtbs();
 
-        Patient fhirPatient = getOrCreatePatient(bundle, patientId);
+        Reference fhirPatient = getOrCreatePatient(bundle, patientId);
 
         mtbs.forEach(mtb -> {
 
@@ -247,7 +247,7 @@ public class JsonFhirMapper {
                 DiagnosticReport diagnosticReport = new DiagnosticReport();
                 diagnosticReport.setId(IdType.newRandomUuid());
 
-                diagnosticReport.setSubject(new Reference(fhirPatient));
+                diagnosticReport.setSubject(fhirPatient);
 
                 diagnosticReport.getCode().addCoding(
                         new Coding(LOINC_URI, "81247-9", "Master HL7 genetic variant reporting panel"));
@@ -262,8 +262,7 @@ public class JsonFhirMapper {
 
                 diagnosticReport.getEffectiveDateTimeType().fromStringValue(mtb.getDate());
 
-                diagnosticReport.addPerformer(
-                        new Reference(getOrCreatePractitioner(bundle, therapyRecommendation.getAuthor())));
+                diagnosticReport.addPerformer(getOrCreatePractitioner(bundle, therapyRecommendation.getAuthor()));
 
                 if (mtb.getMtbState() != null) {
                     switch (mtb.getMtbState().toUpperCase()) {
@@ -281,7 +280,7 @@ public class JsonFhirMapper {
                 }
 
                 mtb.getSamples().forEach(sample -> diagnosticReport
-                        .addSpecimen(new Reference(specimenAdapter.process(new Reference(fhirPatient), sample))));
+                        .addSpecimen(new Reference(specimenAdapter.process(fhirPatient, sample))));
 
                 if (therapyRecommendation.getReasoning().getGeneticAlterations() != null) {
                     therapyRecommendation.getReasoning().getGeneticAlterations().forEach(geneticAlteration -> {
@@ -354,12 +353,12 @@ public class JsonFhirMapper {
                 for (Treatment treatment : therapyRecommendation.getTreatments()) {
                     DrugAdapter drugAdapter = new DrugAdapter();
                     Task medicationChange = new Task().setStatus(TaskStatus.REQUESTED).setIntent(TaskIntent.PROPOSAL)
-                            .setFor(new Reference(fhirPatient));
+                            .setFor(fhirPatient);
                     medicationChange.setId(IdType.newRandomUuid());
                     medicationChange.getMeta()
                             .addProfile("http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/task-med-chg");
 
-                    MedicationStatement ms = drugAdapter.process(new Reference(fhirPatient), treatment);
+                    MedicationStatement ms = drugAdapter.process(fhirPatient, treatment);
 
                     medicationChange.getCode()
                             .addCoding(new Coding(LOINC_URI, "LA26421-0", "Consider alternative medication"));
@@ -433,7 +432,7 @@ public class JsonFhirMapper {
                 "CarePlan?identifier=https://cbioportal.org/patient/|" + therapyRecommendationId).execute();
     }
 
-    private Patient getOrCreatePatient(Bundle b, String patientId) {
+    private Reference getOrCreatePatient(Bundle b, String patientId) {
 
         Patient patient = new Patient();
         patient.setId(IdType.newRandomUuid());
@@ -442,10 +441,10 @@ public class JsonFhirMapper {
                 .setIfNoneExist("identifier=https://cbioportal.org/patient/|" + patientId)
                 .setMethod(Bundle.HTTPVerb.POST);
 
-        return patient;
+        return new Reference(patient);
     }
 
-    private Practitioner getOrCreatePractitioner(Bundle b, String credentials) {
+    private Reference getOrCreatePractitioner(Bundle b, String credentials) {
 
         Practitioner practitioner = new Practitioner();
         practitioner.setId(IdType.newRandomUuid());
@@ -454,7 +453,7 @@ public class JsonFhirMapper {
                 .setUrl("Practitioner").setIfNoneExist("identifier=https://cbioportal.org/patient/|" + credentials)
                 .setMethod(Bundle.HTTPVerb.POST);
 
-        return practitioner;
+        return new Reference(practitioner);
 
     }
 
