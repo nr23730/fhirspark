@@ -52,7 +52,7 @@ import fhirspark.adapter.SpecimenAdapter;
 import fhirspark.resolver.OncoKbDrug;
 import fhirspark.resolver.PubmedPublication;
 import fhirspark.restmodel.CbioportalRest;
-import fhirspark.restmodel.ClinicalData;
+import fhirspark.restmodel.ClinicalDatum;
 import fhirspark.restmodel.GeneticAlteration;
 import fhirspark.restmodel.Mtb;
 import fhirspark.restmodel.Reasoning;
@@ -62,6 +62,7 @@ import fhirspark.restmodel.Treatment;
 public class JsonFhirMapper {
 
     private Settings settings;
+    private static String LOINC_URI = "http://loinc.org";
 
     FhirContext ctx = FhirContext.forR4();
     IGenericClient client;
@@ -175,15 +176,15 @@ public class JsonFhirMapper {
                             .where(new TokenClientParam("_id").exactly()
                                     .code(((Reference) recommendedActionReference.getValue()).getReference()))
                             .prettyPrint().execute();
-                    MedicationStatement medicationStatement = (MedicationStatement) ((Task) bRecommendedAction.getEntryFirstRep().getResource())
-                            .getFocus().getResource();
+                    MedicationStatement medicationStatement = (MedicationStatement) ((Task) bRecommendedAction
+                            .getEntryFirstRep().getResource()).getFocus().getResource();
                     Coding drug = medicationStatement.getMedicationCodeableConcept().getCodingFirstRep();
                     treatments.add(new Treatment().withNcitCode(drug.getCode()).withName(drug.getDisplay()));
 
                     therapyRecommendation.setComment(new ArrayList<String>());
-                    for(Annotation a : medicationStatement.getNote())
+                    for (Annotation a : medicationStatement.getNote())
                         therapyRecommendation.getComment().add(a.getText());
-                    
+
                 }
             }
             therapyRecommendation.setTreatments(treatments);
@@ -249,7 +250,7 @@ public class JsonFhirMapper {
                 diagnosticReport.setSubject(new Reference(fhirPatient));
 
                 diagnosticReport.getCode().addCoding(
-                        new Coding("http://loing.org", "81247-9", "Master HL7 genetic variant reporting panel"));
+                        new Coding(LOINC_URI, "81247-9", "Master HL7 genetic variant reporting panel"));
 
                 diagnosticReport.getIdentifier()
                         .add(new Identifier().setSystem("https://cbioportal.org/mtb/").setValue(mtb.getId()));
@@ -295,7 +296,7 @@ public class JsonFhirMapper {
                             "http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/task-rec-followup");
                     t.setStatus(TaskStatus.REQUESTED).setIntent(TaskIntent.PROPOSAL);
                     t.getCode().setText("Recommended follow-up")
-                            .addCoding(new Coding("http://loinc.org", "LA14020-4", "Genetic counseling recommended"));
+                            .addCoding(new Coding(LOINC_URI, "LA14020-4", "Genetic counseling recommended"));
 
                     Extension ex = new Extension()
                             .setUrl("http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/RecommendedAction");
@@ -309,7 +310,7 @@ public class JsonFhirMapper {
                             "http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/task-rec-followup");
                     t.setStatus(TaskStatus.REQUESTED).setIntent(TaskIntent.PROPOSAL);
                     t.getCode().setText("Recommended follow-up")
-                            .addCoding(new Coding("http://loinc.org", "LA14021-2", "Confirmatory testing recommended"));
+                            .addCoding(new Coding(LOINC_URI, "LA14021-2", "Confirmatory testing recommended"));
 
                     Extension ex = new Extension()
                             .setUrl("http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/RecommendedAction");
@@ -320,8 +321,8 @@ public class JsonFhirMapper {
                 if (therapyRecommendation.getReasoning().getClinicalData() != null) {
                     therapyRecommendation.getReasoning().getClinicalData().forEach(clinical -> {
                         try {
-                            Method m = Class.forName("fhirspark.clinicaldata." + clinical.getAttributeId())
-                                    .getMethod("process", ClinicalData.class);
+                            Method m = Class.forName("fhirspark.adapter.clinicaldata." + clinical.getAttributeId())
+                                    .getMethod("process", ClinicalDatum.class);
                             Resource clinicalFhir = (Resource) m.invoke(null, clinical);
                         } catch (ClassNotFoundException e) {
                             // TODO Auto-generated catch block
@@ -361,13 +362,13 @@ public class JsonFhirMapper {
                     MedicationStatement ms = drugAdapter.process(new Reference(fhirPatient), treatment);
 
                     medicationChange.getCode()
-                            .addCoding(new Coding("http://loinc.org", "LA26421-0", "Consider alternative medication"));
+                            .addCoding(new Coding(LOINC_URI, "LA26421-0", "Consider alternative medication"));
                     medicationChange.setFocus(new Reference(ms));
                     String ncit = ms.getMedicationCodeableConcept().getCodingFirstRep().getCode();
                     medicationChange.addIdentifier(
                             new Identifier().setSystem("http://ncithesaurus-stage.nci.nih.gov").setValue(ncit));
 
-                    for(String comment : therapyRecommendation.getComment())
+                    for (String comment : therapyRecommendation.getComment())
                         ms.getNote().add(new Annotation().setText(comment));
 
                     Extension ex = new Extension()

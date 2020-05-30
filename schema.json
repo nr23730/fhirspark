@@ -2,11 +2,11 @@
   "id": "",
   "mtbs": [
     {
+      "author": "",
       "date": "",
       "generalRecommendation": "",
       "geneticCounselingRecommendation": false,
       "id": "",
-      "author": "",
       "mtbState": "",
       "rebiopsyRecommendation": false,
       "samples": [
@@ -14,12 +14,12 @@
       ],
       "therapyRecommendations": [
         {
+          "author": "",
           "comment": [
             ""
           ],
           "evidenceLevel": "",
           "id": "",
-          "author": "",
           "reasoning": {
             "clinicalData": [
               {
@@ -30,9 +30,10 @@
             ],
             "geneticAlterations": [
               {
-                "hugoSymbol": "",
                 "alteration": "",
-                "entrezGeneId": 0
+                "entrezGeneId": 0,
+                "hugoSymbol": ""
+
               }
             ]
           },

@@ -1,44 +1,52 @@
 
 package fhirspark.restmodel;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "author",
     "comment",
     "evidenceLevel",
     "id",
-    "author",
     "reasoning",
     "references",
     "treatments"
 })
 public class TherapyRecommendation {
 
+    @JsonProperty("author")
+    private String author;
     @JsonProperty("comment")
     private List<String> comment = null;
     @JsonProperty("evidenceLevel")
     private String evidenceLevel;
     @JsonProperty("id")
     private String id;
-    @JsonProperty("author")
-    private String author;
     @JsonProperty("reasoning")
     private Reasoning reasoning;
     @JsonProperty("references")
     private List<Reference> references = null;
     @JsonProperty("treatments")
     private List<Treatment> treatments = null;
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
+
+    @JsonProperty("author")
+    public String getAuthor() {
+        return author;
+    }
+
+    @JsonProperty("author")
+    public void setAuthor(String author) {
+        this.author = author;
+    }
+
+    public TherapyRecommendation withAuthor(String author) {
+        this.author = author;
+        return this;
+    }
 
     @JsonProperty("comment")
     public List<String> getComment() {
@@ -85,21 +93,6 @@ public class TherapyRecommendation {
         return this;
     }
 
-    @JsonProperty("author")
-    public String getAuthor() {
-        return author;
-    }
-
-    @JsonProperty("author")
-    public void setAuthor(String author) {
-        this.author = author;
-    }
-
-    public TherapyRecommendation withAuthor(String author) {
-        this.author = author;
-        return this;
-    }
-
     @JsonProperty("reasoning")
     public Reasoning getReasoning() {
         return reasoning;
@@ -142,21 +135,6 @@ public class TherapyRecommendation {
 
     public TherapyRecommendation withTreatments(List<Treatment> treatments) {
         this.treatments = treatments;
-        return this;
-    }
-
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-    }
-
-    public TherapyRecommendation withAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
         return this;
     }
 
