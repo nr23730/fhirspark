@@ -237,7 +237,7 @@ public class JsonFhirMapper {
 
     }
 
-    public void addOrEditTherapyRecommendation(String patientId, String jsonString)
+    public void addOrEditMtb(String patientId, String jsonString)
             throws HL7Exception, IOException, LLPException {
 
         Bundle bundle = new Bundle();
@@ -253,21 +253,30 @@ public class JsonFhirMapper {
 
                 DiagnosticReport diagnosticReport = new DiagnosticReport();
                 diagnosticReport.setId(IdType.newRandomUuid());
-
                 diagnosticReport.setSubject(fhirPatient);
-
                 diagnosticReport.getCode()
                         .addCoding(new Coding(LOINC_URI, "81247-9", "Master HL7 genetic variant reporting panel"));
 
-                diagnosticReport.getIdentifier().add(new Identifier().setSystem(MTB_URI).setValue(mtb.getId()));
-                diagnosticReport.getIdentifier().add(
-                        new Identifier().setSystem(THERAPYRECOMMENDATION_URI).setValue(therapyRecommendation.getId()));
+                // MTB SECTION
 
-                diagnosticReport.setConclusion(mtb.getGeneralRecommendation());
+                diagnosticReport.addPerformer(getOrCreatePractitioner(bundle, therapyRecommendation.getAuthor()));
 
                 diagnosticReport.getEffectiveDateTimeType().fromStringValue(mtb.getDate());
 
-                diagnosticReport.addPerformer(getOrCreatePractitioner(bundle, therapyRecommendation.getAuthor()));
+                diagnosticReport.setConclusion(mtb.getGeneralRecommendation());
+
+                if (mtb.getGeneticCounselingRecommendation() != null && mtb.getGeneticCounselingRecommendation()) {
+                    Task t = new Task();
+                    t.getMeta().addProfile(FOLLOWUP_URI);
+                    t.setStatus(TaskStatus.REQUESTED).setIntent(TaskIntent.PROPOSAL);
+                    t.getCode().setText("Recommended follow-up")
+                            .addCoding(new Coding(LOINC_URI, "LA14020-4", "Genetic counseling recommended"));
+                    Extension ex = new Extension().setUrl(RECOMMENDEDACTION_URI);
+                    ex.setValue(new Reference(t));
+                    diagnosticReport.addExtension(ex);
+                }
+
+                diagnosticReport.getIdentifier().add(new Identifier().setSystem(MTB_URI).setValue(mtb.getId()));
 
                 if (mtb.getMtbState() != null) {
                     switch (mtb.getMtbState().toUpperCase()) {
@@ -284,39 +293,30 @@ public class JsonFhirMapper {
                     diagnosticReport.setStatus(DiagnosticReportStatus.PARTIAL);
                 }
 
-                mtb.getSamples().forEach(sample -> diagnosticReport
-                        .addSpecimen(new Reference(specimenAdapter.process(fhirPatient, sample))));
-
-                if (therapyRecommendation.getReasoning().getGeneticAlterations() != null) {
-                    therapyRecommendation.getReasoning().getGeneticAlterations().forEach(geneticAlteration -> {
-                        Resource geneticVariant = geneticAlterationsAdapter.process(geneticAlteration);
-                        diagnosticReport.addResult(new Reference(geneticVariant));
-                    });
-                }
-
-                if (mtb.getGeneticCounselingRecommendation() != null && mtb.getGeneticCounselingRecommendation()) {
-                    Task t = new Task();
-                    t.getMeta().addProfile(FOLLOWUP_URI);
-                    t.setStatus(TaskStatus.REQUESTED).setIntent(TaskIntent.PROPOSAL);
-                    t.getCode().setText("Recommended follow-up")
-                            .addCoding(new Coding(LOINC_URI, "LA14020-4", "Genetic counseling recommended"));
-
-                    Extension ex = new Extension().setUrl(RECOMMENDEDACTION_URI);
-                    ex.setValue(new Reference(t));
-                    diagnosticReport.addExtension(ex);
-                }
-
                 if (mtb.getRebiopsyRecommendation() != null && mtb.getRebiopsyRecommendation()) {
                     Task t = new Task();
                     t.getMeta().addProfile(FOLLOWUP_URI);
                     t.setStatus(TaskStatus.REQUESTED).setIntent(TaskIntent.PROPOSAL);
                     t.getCode().setText("Recommended follow-up")
                             .addCoding(new Coding(LOINC_URI, "LA14021-2", "Confirmatory testing recommended"));
-
                     Extension ex = new Extension().setUrl(RECOMMENDEDACTION_URI);
                     ex.setValue(new Reference(t));
                     diagnosticReport.addExtension(ex);
                 }
+
+                mtb.getSamples().forEach(sample -> diagnosticReport
+                        .addSpecimen(new Reference(specimenAdapter.process(fhirPatient, sample))));
+
+                // THERAPYRECOMMENDATION SECTION
+
+                // AUTHOR ALREADY SET BY MTB
+
+                // COMMENTS SET WITH MEDICATION
+
+                // PUT EVIDENCE HERE
+
+                diagnosticReport.getIdentifier().add(
+                        new Identifier().setSystem(THERAPYRECOMMENDATION_URI).setValue(therapyRecommendation.getId()));
 
                 if (therapyRecommendation.getReasoning().getClinicalData() != null) {
                     therapyRecommendation.getReasoning().getClinicalData().forEach(clinical -> {
@@ -324,6 +324,7 @@ public class JsonFhirMapper {
                             Method m = Class.forName("fhirspark.adapter.clinicaldata." + clinical.getAttributeId())
                                     .getMethod("process", ClinicalDatum.class);
                             Resource clinicalFhir = (Resource) m.invoke(null, clinical);
+                            diagnosticReport.addResult(new Reference(clinicalFhir));
                         } catch (ClassNotFoundException e) {
                             // TODO Auto-generated catch block
                             e.printStackTrace();
@@ -337,6 +338,13 @@ public class JsonFhirMapper {
                             // TODO Auto-generated catch block
                             e.printStackTrace();
                         }
+                    });
+                }
+
+                if (therapyRecommendation.getReasoning().getGeneticAlterations() != null) {
+                    therapyRecommendation.getReasoning().getGeneticAlterations().forEach(geneticAlteration -> {
+                        Resource geneticVariant = geneticAlterationsAdapter.process(geneticAlteration);
+                        diagnosticReport.addResult(new Reference(geneticVariant));
                     });
                 }
 

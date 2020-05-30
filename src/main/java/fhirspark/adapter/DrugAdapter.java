@@ -1,7 +1,6 @@
 package fhirspark.adapter;
 
 import org.hl7.fhir.r4.model.Coding;
-import org.hl7.fhir.r4.model.IdType;
 import org.hl7.fhir.r4.model.MedicationStatement;
 import org.hl7.fhir.r4.model.Reference;
 import org.hl7.fhir.r4.model.MedicationStatement.MedicationStatementStatus;
