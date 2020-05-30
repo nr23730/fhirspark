@@ -72,14 +72,17 @@ public class JsonFhirMapper {
     private static String PUBMED_URI = "https://www.ncbi.nlm.nih.gov/pubmed/";
     private static String NCIT_URI = "http://ncithesaurus-stage.nci.nih.gov";
     private static String THERAPYRECOMMENDATION_URI = "https://cbioportal.org/therapyrecommendation/";
+    private static String GENOMICSREPORT_URI = "http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/genomics-report";
+    private static String GENOMIC_URI = "http://terminology.hl7.org/CodeSystem/v2-0074";
 
     FhirContext ctx = FhirContext.forR4();
     IGenericClient client;
     ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
     OncoKbDrug drugResolver = new OncoKbDrug();
     PubmedPublication pubmedResolver = new PubmedPublication();
+    
     GeneticAlternationsAdapter geneticAlterationsAdapter = new GeneticAlternationsAdapter();
-
+    DrugAdapter drugAdapter = new DrugAdapter();
     SpecimenAdapter specimenAdapter = new SpecimenAdapter();
 
     public JsonFhirMapper(Settings settings) {
@@ -250,8 +253,10 @@ public class JsonFhirMapper {
             mtb.getTherapyRecommendations().forEach(therapyRecommendation -> {
 
                 DiagnosticReport diagnosticReport = new DiagnosticReport();
+                diagnosticReport.getMeta().addProfile(GENOMICSREPORT_URI);
                 diagnosticReport.setId(IdType.newRandomUuid());
                 diagnosticReport.setSubject(fhirPatient);
+                diagnosticReport.addCategory().addCoding(new Coding().setSystem(GENOMIC_URI).setCode("GE"));
                 diagnosticReport.getCode()
                         .addCoding(new Coding(LOINC_URI, "81247-9", "Master HL7 genetic variant reporting panel"));
 
@@ -357,7 +362,6 @@ public class JsonFhirMapper {
                 }
 
                 for (Treatment treatment : therapyRecommendation.getTreatments()) {
-                    DrugAdapter drugAdapter = new DrugAdapter();
                     Task medicationChange = new Task().setStatus(TaskStatus.REQUESTED).setIntent(TaskIntent.PROPOSAL)
                             .setFor(fhirPatient);
                     medicationChange.setId(IdType.newRandomUuid());
