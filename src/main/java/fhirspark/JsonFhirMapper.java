@@ -12,6 +12,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.hl7.fhir.instance.model.api.IAnyResource;
+import org.hl7.fhir.instance.model.api.IIdType;
 import org.hl7.fhir.r4.model.Annotation;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Bundle.BundleEntryComponent;
@@ -21,6 +22,7 @@ import org.hl7.fhir.r4.model.Task.TaskIntent;
 import org.hl7.fhir.r4.model.Task.TaskStatus;
 import org.hl7.fhir.r4.model.Coding;
 import org.hl7.fhir.r4.model.DiagnosticReport;
+import org.hl7.fhir.r4.model.Evidence;
 import org.hl7.fhir.r4.model.Extension;
 import org.hl7.fhir.r4.model.IdType;
 import org.hl7.fhir.r4.model.Identifier;
@@ -47,6 +49,7 @@ import ca.uhn.hl7v2.model.Message;
 import ca.uhn.hl7v2.model.v281.message.ORU_R01;
 import ca.uhn.hl7v2.model.v281.segment.PID;
 import fhirspark.adapter.DrugAdapter;
+import fhirspark.adapter.EvidenceAdapter;
 import fhirspark.adapter.GeneticAlternationsAdapter;
 import fhirspark.adapter.SpecimenAdapter;
 import fhirspark.resolver.OncoKbDrug;
@@ -80,10 +83,11 @@ public class JsonFhirMapper {
     ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
     OncoKbDrug drugResolver = new OncoKbDrug();
     PubmedPublication pubmedResolver = new PubmedPublication();
-    
+
     GeneticAlternationsAdapter geneticAlterationsAdapter = new GeneticAlternationsAdapter();
     DrugAdapter drugAdapter = new DrugAdapter();
     SpecimenAdapter specimenAdapter = new SpecimenAdapter();
+    EvidenceAdapter evidenceAdapter = new EvidenceAdapter();
 
     public JsonFhirMapper(Settings settings) {
         this.settings = settings;
@@ -166,7 +170,16 @@ public class JsonFhirMapper {
 
             // COMMENTS GET WITHIN MEDICATION
 
-            // PUT EVIDENCE HERE
+            for (Extension relatedArtifact : diagnosticReport.getExtensionsByUrl(RELATEDARTIFACT_URI)) {
+                if (((RelatedArtifact) relatedArtifact.getValue()).getType() == RelatedArtifactType.JUSTIFICATION) {
+                    Bundle bEvidence = (Bundle) client.search().forResource(Evidence.class)
+                            .where(new TokenClientParam("_id").exactly()
+                                    .code(((RelatedArtifact)relatedArtifact.getValue()).getResource()))
+                            .prettyPrint().execute();
+                    Evidence evidence = (Evidence) bEvidence.getEntryFirstRep().getResource();
+                    therapyRecommendation.setEvidenceLevel(evidence.getName());
+                }
+            }
 
             therapyRecommendation.setId(diagnosticReport.getIdentifier().get(1).getValue());
 
@@ -225,11 +238,13 @@ public class JsonFhirMapper {
             }
 
             List<fhirspark.restmodel.Reference> references = new ArrayList<fhirspark.restmodel.Reference>();
-            for (Extension relatedArtifact : diagnosticReport.getExtensionsByUrl(RELATEDARTIFACT_URI))
-                references.add(new fhirspark.restmodel.Reference()
-                        .withPmid(Integer.valueOf(
-                                ((RelatedArtifact) relatedArtifact.getValue()).getUrl().replaceFirst(PUBMED_URI, "")))
-                        .withName((((RelatedArtifact) relatedArtifact.getValue()).getCitation())));
+            for (Extension relatedArtifact : diagnosticReport.getExtensionsByUrl(RELATEDARTIFACT_URI)) {
+                if (((RelatedArtifact) relatedArtifact.getValue()).getType() == RelatedArtifactType.CITATION)
+                    references.add(new fhirspark.restmodel.Reference()
+                            .withPmid(Integer.valueOf(((RelatedArtifact) relatedArtifact.getValue()).getUrl()
+                                    .replaceFirst(PUBMED_URI, "")))
+                            .withName((((RelatedArtifact) relatedArtifact.getValue()).getCitation())));
+            }
 
             therapyRecommendation.setReferences(references);
 
@@ -316,7 +331,19 @@ public class JsonFhirMapper {
 
                 // COMMENTS SET WITH MEDICATION
 
-                // PUT EVIDENCE HERE
+                Evidence evidence = evidenceAdapter.process(therapyRecommendation.getEvidenceLevel());
+                evidence.setId(IdType.newRandomUuid());
+                bundle.addEntry().setFullUrl(evidence.getIdElement().getValue()).setResource(evidence).getRequest()
+                        .setUrl("Evidence")
+                        .setIfNoneExist("identifier=Evidence?identifier=" + evidence.getIdentifierFirstRep().getSystem()
+                                + "|" + evidence.getIdentifierFirstRep().getValue())
+                        .setMethod(Bundle.HTTPVerb.POST);
+
+                Extension evidenceExtension = new Extension().setUrl(RELATEDARTIFACT_URI);
+                RelatedArtifact evidenceArtifact = new RelatedArtifact().setType(RelatedArtifactType.JUSTIFICATION)
+                        .setResource(harmonizeId(evidence));
+                evidenceExtension.setValue(evidenceArtifact);
+                diagnosticReport.addExtension(evidenceExtension);
 
                 diagnosticReport.getIdentifier().add(
                         new Identifier().setSystem(THERAPYRECOMMENDATION_URI).setValue(therapyRecommendation.getId()));
@@ -384,9 +411,10 @@ public class JsonFhirMapper {
 
                     bundle.addEntry().setFullUrl(medicationChange.getIdElement().getValue())
                             .setResource(medicationChange).getRequest()
-                            .setUrl("Task?identifier=" + NCIT_URI + "|" + ncit + "&subject=" + fhirPatient.getId())
+                            .setUrl("Task?identifier=" + NCIT_URI + "|" + ncit + "&subject="
+                                    + fhirPatient.getResource().getIdElement())
                             .setIfNoneExist("identifier=Task?identifier=" + NCIT_URI + "|" + ncit + "&subject="
-                                    + fhirPatient.getId())
+                                    + fhirPatient.getResource().getIdElement())
                             .setMethod(Bundle.HTTPVerb.PUT);
                 }
 
