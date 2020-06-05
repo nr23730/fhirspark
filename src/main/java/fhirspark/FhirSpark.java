@@ -50,6 +50,8 @@ public final class FhirSpark {
             res.type("application/json");
             res.header("Vary", "Origin, Access-Control-Request-Headers");
             jsonFhirMapper.addOrEditMtb(req.params(":patientId"), req.body());
+            if (settings.getHl7v2config().get(0).getSendv2())
+                jsonFhirMapper.toHl7v2Oru(req.params(":patientId"), req.body());
             res.body(req.body());
             return res.body();
         });

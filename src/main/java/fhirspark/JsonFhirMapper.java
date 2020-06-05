@@ -9,10 +9,10 @@ import java.util.List;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.hl7.fhir.instance.model.api.IAnyResource;
-import org.hl7.fhir.instance.model.api.IIdType;
 import org.hl7.fhir.r4.model.Annotation;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Bundle.BundleEntryComponent;
@@ -46,14 +46,21 @@ import ca.uhn.hl7v2.HapiContext;
 import ca.uhn.hl7v2.app.Connection;
 import ca.uhn.hl7v2.llp.LLPException;
 import ca.uhn.hl7v2.model.Message;
+import ca.uhn.hl7v2.model.v281.datatype.CWE;
+import ca.uhn.hl7v2.model.v281.group.ORU_R01_PATIENT_RESULT;
 import ca.uhn.hl7v2.model.v281.message.ORU_R01;
-import ca.uhn.hl7v2.model.v281.segment.PID;
+import ca.uhn.hl7v2.model.v281.segment.NTE;
+import ca.uhn.hl7v2.model.v281.segment.OBR;
+import ca.uhn.hl7v2.model.v281.segment.OBX;
+import ca.uhn.hl7v2.model.v281.segment.SPM;
 import fhirspark.adapter.DrugAdapter;
 import fhirspark.adapter.EvidenceAdapter;
 import fhirspark.adapter.GeneticAlternationsAdapter;
 import fhirspark.adapter.SpecimenAdapter;
+import fhirspark.resolver.HgncGeneName;
 import fhirspark.resolver.OncoKbDrug;
 import fhirspark.resolver.PubmedPublication;
+import fhirspark.resolver.model.genenames.Doc;
 import fhirspark.restmodel.CbioportalRest;
 import fhirspark.restmodel.ClinicalDatum;
 import fhirspark.restmodel.GeneticAlteration;
@@ -174,7 +181,7 @@ public class JsonFhirMapper {
                 if (((RelatedArtifact) relatedArtifact.getValue()).getType() == RelatedArtifactType.JUSTIFICATION) {
                     Bundle bEvidence = (Bundle) client.search().forResource(Evidence.class)
                             .where(new TokenClientParam("_id").exactly()
-                                    .code(((RelatedArtifact)relatedArtifact.getValue()).getResource()))
+                                    .code(((RelatedArtifact) relatedArtifact.getValue()).getResource()))
                             .prettyPrint().execute();
                     Evidence evidence = (Evidence) bEvidence.getEntryFirstRep().getResource();
                     therapyRecommendation.setEvidenceLevel(evidence.getName());
@@ -254,7 +261,7 @@ public class JsonFhirMapper {
 
     }
 
-    public void addOrEditMtb(String patientId, String jsonString) throws HL7Exception, IOException, LLPException {
+    public void addOrEditMtb(String patientId, String jsonString) throws JsonMappingException, JsonProcessingException {
 
         Bundle bundle = new Bundle();
         bundle.setType(Bundle.BundleType.TRANSACTION);
@@ -434,29 +441,117 @@ public class JsonFhirMapper {
         // Log the response
         System.out.println(ctx.newJsonParser().setPrettyPrint(true).encodeResourceToString(resp));
 
-        // if (settings.getHl7v2config().get(0).getSendv2()) {
+    }
 
-        // HapiContext context = new DefaultHapiContext();
-        // Connection connection =
-        // context.newClient(settings.getHl7v2config().get(0).getServer(),
-        // settings.getHl7v2config().get(0).getPort(), false);
+    public void toHl7v2Oru(String patientId, String jsonString) throws HL7Exception, IOException, LLPException {
+        List<Mtb> mtbs = this.objectMapper.readValue(jsonString, CbioportalRest.class).getMtbs();
 
-        // ORU_R01 oru = new ORU_R01();
-        // oru.initQuickstart("ORU", "R01", "T");
+        HapiContext context = new DefaultHapiContext();
+        Connection connection = context.newClient(settings.getHl7v2config().get(0).getServer(),
+                settings.getHl7v2config().get(0).getPort(), false);
 
-        // PID v2patient = oru.getPATIENT_RESULT().getPATIENT().getPID();
-        // v2patient.getPid3_PatientIdentifierList(0).getIDNumber()
-        // .setValue(fhirPatient.getIdentifierFirstRep().getValue());
+        ORU_R01 oru = new ORU_R01();
+        oru.initQuickstart("ORU", "R01", "P");
 
-        // Message response =
-        // connection.getInitiator().sendAndReceive(oru.getMessage());
+        ORU_R01_PATIENT_RESULT result = oru.insertPATIENT_RESULT(oru.getPATIENT_RESULTReps());
+        result.getPATIENT().getPID().getPid1_SetIDPID().setValue("1");
+        result.getPATIENT().getPID()
+                .getPatientIdentifierList(result.getPATIENT().getPID().getPatientIdentifierListReps()).getIDNumber()
+                .setValue(patientId);
 
-        // System.out.println(oru.encode());
-        // System.out.println(response.encode());
+        for (int i = 1; i <= mtbs.size(); i++) {
+            Mtb mtb = mtbs.get(i - 1);
 
-        // context.close();
-        // }
+            // for(String sample : mtb.getSamples())
+            // SPM specimen =
+            // result.getORDER_OBSERVATION(0).insertSPECIMEN(result.getORDER_OBSERVATION(0).getSPECIMENReps()).getSPM();
+            // specimen.
 
+            OBR masterPanel = result.insertORDER_OBSERVATION(result.getORDER_OBSERVATIONReps()).getOBR();
+            masterPanel.getResultStatus().setValue("F");
+            masterPanel.getUniversalServiceIdentifier().getIdentifier().setValue("81247-9");
+            masterPanel.getUniversalServiceIdentifier().getText()
+                    .setValue("Master HL7 genetic variant reporting panel");
+            masterPanel.getUniversalServiceIdentifier().getNameOfCodingSystem().setValue("LN");
+
+            masterPanel.getObservationDateTime().setValue(mtb.getDate().replaceAll("-", ""));
+
+            for(int j = 1; j <= mtb.getSamples().size(); j++) {
+                SPM specimen = result.insertORDER_OBSERVATION(result.getORDER_OBSERVATIONReps()-1).getSPECIMEN(result.insertORDER_OBSERVATION(result.getORDER_OBSERVATIONReps()-1).getSPECIMENReps()).getSPM();
+                specimen.getSetIDSPM().setValue(String.valueOf(j));
+                specimen.getSpecimenID().getFillerAssignedIdentifier().getEntityIdentifier().setValue(mtb.getSamples().get(j-1));
+                specimen.getSpecimenType().getIdentifier().setValue("TUMOR");
+                specimen.getSpecimenType().getText().setValue("Tumor");
+            }
+            
+
+            for (int j = 1; j <= mtb.getTherapyRecommendations().size(); j++) {
+                TherapyRecommendation therapyRecommendation = mtb.getTherapyRecommendations().get(j - 1);
+
+                masterPanel.getFillerOrderNumber().getEntityIdentifier().setValue(mtb.getId());
+
+                for (int k = 1; k < therapyRecommendation.getReasoning().getGeneticAlterations().size(); k++) {
+                    GeneticAlteration g = therapyRecommendation.getReasoning().getGeneticAlterations().get(k-1);
+                    OBR variant = result.insertORDER_OBSERVATION(result.getORDER_OBSERVATIONReps()).getOBR();
+                    variant.getUniversalServiceIdentifier().getIdentifier().setValue("69548-6");
+                    variant.getUniversalServiceIdentifier().getText().setValue("Genetic variant assessment");
+                    variant.getUniversalServiceIdentifier().getNameOfCodingSystem().setValue("LN");
+
+                    OBX observation = result.getORDER_OBSERVATION(k - 1).getOBSERVATION(0).getOBX();
+                    observation.getSetIDOBX().setValue(String.valueOf(1));
+                    observation.getObservationIdentifier().getIdentifier().setValue("48005-3");
+                    observation.getObservationIdentifier().getText().setValue("Amino acid change (pHGVS)");
+                    observation.getObservationIdentifier().getNameOfCodingSystem().setValue("LN");
+                    observation.getValueType().setValue("CWE");
+                    CWE c1 = new CWE(oru);
+                    c1.getCodingSystemOID().setValue("2.16.840.1.113883.6.282");
+                    c1.getText().setValue("p." + g.getAlteration());
+                    c1.getIdentifier().setValue("p." + g.getAlteration());
+                    observation.insertObservationValue(0).setData(c1);
+
+                    OBX observation1 = result.getORDER_OBSERVATION(k - 1).getOBSERVATION(1).getOBX();
+                    observation1.getSetIDOBX().setValue(String.valueOf(2));
+                    observation1.getObservationIdentifier().getIdentifier().setValue("81252-9");
+                    observation1.getObservationIdentifier().getText().setValue("Discrete genetic variant");
+                    observation.getObservationIdentifier().getNameOfCodingSystem().setValue("LN");
+                    observation1.getValueType().setValue("CWE");
+                    CWE c2 = new CWE(oru);
+                    c2.getCodingSystemOID().setValue("2.16.840.1.113883.4.642.3.1041");
+                    c2.getText().setValue(String.valueOf(g.getEntrezGeneId()));
+                    c2.getIdentifier().setValue(String.valueOf(g.getEntrezGeneId()));
+                    observation1.insertObservationValue(0).setData(c2);
+
+                    OBX observation2 = result.getORDER_OBSERVATION(k - 1).getOBSERVATION(2).getOBX();
+                    observation2.getSetIDOBX().setValue(String.valueOf(3));
+                    observation2.getObservationIdentifier().getIdentifier().setValue("48018-6");
+                    observation2.getObservationIdentifier().getText().setValue("Gene studied [ID]");
+                    observation.getObservationIdentifier().getNameOfCodingSystem().setValue("LN");
+                    observation2.getValueType().setValue("CWE");
+                    CWE c3 = new CWE(oru);
+                    HgncGeneName hgncGeneName = new HgncGeneName();
+                    Doc hgncData = hgncGeneName.resolve(g.getEntrezGeneId()).getResponse().getDocs().get(0);
+                    c3.getCodingSystemOID().setValue("2.16.840.1.113883.6.281");
+                    c3.getIdentifier().setValue(hgncData.getHgncId());
+                    c3.getText().setValue(hgncData.getSymbol());
+                    observation2.insertObservationValue(0).setData(c3);
+
+                }
+
+                NTE note = result.insertORDER_OBSERVATION(result.getORDER_OBSERVATIONReps()).getNTE();
+                note.getCommentType().getIdentifier().setValue("GI");
+                note.getCommentType().getText().setValue("General Instructions");
+                note.getComment(0).setValue(mtb.getGeneralRecommendation());
+
+            }
+
+        }
+
+        Message response = connection.getInitiator().sendAndReceive(oru.getMessage());
+
+        System.out.println(oru.toString());
+        System.out.println(response.encode());
+
+        context.close();
     }
 
     public void deleteTherapyRecommendation(String patientId, String therapyRecommendationId) {
