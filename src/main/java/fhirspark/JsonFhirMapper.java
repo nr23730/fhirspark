@@ -472,6 +472,7 @@ public class JsonFhirMapper {
                 masterPanel.getUniversalServiceIdentifier().getText()
                         .setValue("Master HL7 genetic variant reporting panel");
                 masterPanel.getUniversalServiceIdentifier().getNameOfCodingSystem().setValue("LN");
+                masterPanel.getUniversalServiceIdentifier().getCodingSystemOID().setValue("2.16.840.1.113883.6.1");
 
                 masterPanel.getObservationDateTime().setValue(mtb.getDate().replaceAll("-", ""));
 
@@ -506,12 +507,15 @@ public class JsonFhirMapper {
                     variant.getUniversalServiceIdentifier().getIdentifier().setValue("81250-3");
                     variant.getUniversalServiceIdentifier().getText().setValue("Discrete genetic variant panel");
                     variant.getUniversalServiceIdentifier().getNameOfCodingSystem().setValue("LN");
+                    variant.getUniversalServiceIdentifier().getCodingSystemOID().setValue("2.16.840.1.113883.6.1");
+
 
                     OBX observation = result.getORDER_OBSERVATION(orderNumber).getOBSERVATION(0).getOBX();
                     observation.getSetIDOBX().setValue(String.valueOf(1));
                     observation.getObservationIdentifier().getIdentifier().setValue("69548-6");
                     observation.getObservationIdentifier().getText().setValue("Genetic variant assessment");
                     observation.getObservationIdentifier().getNameOfCodingSystem().setValue("LN");
+                    observation.getObservationIdentifier().getCodingSystemOID().setValue("2.16.840.1.113883.6.1");
                     observation.getValueType().setValue("CWE");
                     CWE c0 = new CWE(oru);
                     c0.getCodingSystemOID().setValue("2.16.840.1.113883.6.1");
@@ -524,6 +528,7 @@ public class JsonFhirMapper {
                     observation0.getObservationIdentifier().getIdentifier().setValue("48005-3");
                     observation0.getObservationIdentifier().getText().setValue("Amino acid change (pHGVS)");
                     observation0.getObservationIdentifier().getNameOfCodingSystem().setValue("LN");
+                    observation0.getObservationIdentifier().getCodingSystemOID().setValue("2.16.840.1.113883.6.1");
                     observation0.getValueType().setValue("CWE");
                     CWE c1 = new CWE(oru);
                     c1.getCodingSystemOID().setValue("2.16.840.1.113883.6.282");
@@ -536,6 +541,7 @@ public class JsonFhirMapper {
                     observation1.getObservationIdentifier().getIdentifier().setValue("81252-9");
                     observation1.getObservationIdentifier().getText().setValue("Discrete genetic variant");
                     observation1.getObservationIdentifier().getNameOfCodingSystem().setValue("LN");
+                    observation1.getObservationIdentifier().getCodingSystemOID().setValue("2.16.840.1.113883.6.1");
                     observation1.getValueType().setValue("CWE");
                     CWE c2 = new CWE(oru);
                     c2.getCodingSystemOID().setValue("2.16.840.1.113883.4.642.3.1041");
@@ -548,6 +554,7 @@ public class JsonFhirMapper {
                     observation2.getObservationIdentifier().getIdentifier().setValue("48018-6");
                     observation2.getObservationIdentifier().getText().setValue("Gene studied [ID]");
                     observation2.getObservationIdentifier().getNameOfCodingSystem().setValue("LN");
+                    observation2.getObservationIdentifier().getCodingSystemOID().setValue("2.16.840.1.113883.6.1");
                     observation2.getValueType().setValue("CWE");
                     CWE c3 = new CWE(oru);
                     HgncGeneName hgncGeneName = new HgncGeneName();
