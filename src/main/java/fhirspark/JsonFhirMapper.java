@@ -518,6 +518,7 @@ public class JsonFhirMapper {
                     observation.getObservationIdentifier().getCodingSystemOID().setValue("2.16.840.1.113883.6.1");
                     observation.getValueType().setValue("CWE");
                     CWE c0 = new CWE(oru);
+                    c0.getNameOfCodingSystem().setValue("LN");
                     c0.getCodingSystemOID().setValue("2.16.840.1.113883.6.1");
                     c0.getText().setValue("Present");
                     c0.getIdentifier().setValue("LA9633-4");
