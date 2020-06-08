@@ -461,39 +461,34 @@ public class JsonFhirMapper {
                 .getPatientIdentifierList(result.getPATIENT().getPID().getPatientIdentifierListReps()).getIDNumber()
                 .setValue(patientId);
 
-        for (int i = 1; i <= mtbs.size(); i++) {
-            Mtb mtb = mtbs.get(i - 1);
+        for (Mtb mtb : mtbs) {
+            for (TherapyRecommendation therapyRecommendation : mtb.getTherapyRecommendations()) {
+                int therapyRecommendationOrder = result.getORDER_OBSERVATIONReps();
 
-            OBR masterPanel = result.getORDER_OBSERVATION(result.getORDER_OBSERVATIONReps()).getOBR();
-            masterPanel.getResultStatus().setValue("F");
-            masterPanel.getUniversalServiceIdentifier().getIdentifier().setValue("81247-9");
-            masterPanel.getUniversalServiceIdentifier().getText()
-                    .setValue("Master HL7 genetic variant reporting panel");
-            masterPanel.getUniversalServiceIdentifier().getNameOfCodingSystem().setValue("LN");
-
-            masterPanel.getObservationDateTime().setValue(mtb.getDate().replaceAll("-", ""));
-
-            for(int j = 1; j <= mtb.getSamples().size(); j++) {
-                SPM specimen = result.getORDER_OBSERVATION(result.getORDER_OBSERVATIONReps()-1).getSPECIMEN(result.getORDER_OBSERVATION(result.getORDER_OBSERVATIONReps()-1).getSPECIMENReps()).getSPM();
-                specimen.getSetIDSPM().setValue(String.valueOf(j));
-                specimen.getSpecimenID().getFillerAssignedIdentifier().getEntityIdentifier().setValue(mtb.getSamples().get(j-1));
-                specimen.getSpecimenType().getIdentifier().setValue("TUMOR");
-                specimen.getSpecimenType().getText().setValue("Tumor");
-            }
-            
-
-            for (int j = 1; j <= mtb.getTherapyRecommendations().size(); j++) {
-
-                int ordersBefore = result.getORDER_OBSERVATIONReps();
-
-                TherapyRecommendation therapyRecommendation = mtb.getTherapyRecommendations().get(j - 1);
+                OBR masterPanel = result.getORDER_OBSERVATION(therapyRecommendationOrder).getOBR();
+                masterPanel.getSetIDOBR().setValue(String.valueOf(result.getORDER_OBSERVATIONReps()));
+                masterPanel.getResultStatus().setValue("F");
+                masterPanel.getUniversalServiceIdentifier().getIdentifier().setValue("81247-9");
+                masterPanel.getUniversalServiceIdentifier().getText()
+                        .setValue("Master HL7 genetic variant reporting panel");
+                masterPanel.getUniversalServiceIdentifier().getNameOfCodingSystem().setValue("LN");
+    
+                masterPanel.getObservationDateTime().setValue(mtb.getDate().replaceAll("-", ""));
+    
+                for(String sample : mtb.getSamples()) {
+                    SPM specimen = result.getORDER_OBSERVATION(therapyRecommendationOrder).getSPECIMEN(result.getORDER_OBSERVATION(therapyRecommendationOrder).getSPECIMENReps()).getSPM();
+                    specimen.getSetIDSPM().setValue(String.valueOf(result.getORDER_OBSERVATION(result.getORDER_OBSERVATIONReps()-1).getSPECIMENReps()));
+                    specimen.getSpecimenID().getFillerAssignedIdentifier().getEntityIdentifier().setValue(sample);
+                    specimen.getSpecimenType().getIdentifier().setValue("TUMOR");
+                    specimen.getSpecimenType().getText().setValue("Tumor");
+                }
 
                 masterPanel.getFillerOrderNumber().getEntityIdentifier().setValue(mtb.getId());
 
-                for (int k = 1; k < therapyRecommendation.getReasoning().getGeneticAlterations().size(); k++) {
-                    GeneticAlteration g = therapyRecommendation.getReasoning().getGeneticAlterations().get(k-1);
+                for (GeneticAlteration g : therapyRecommendation.getReasoning().getGeneticAlterations()) {
                     int orderNumber = result.getORDER_OBSERVATIONReps();
                     OBR variant = result.insertORDER_OBSERVATION(orderNumber).getOBR();
+                    variant.getSetIDOBR().setValue(String.valueOf(result.getORDER_OBSERVATIONReps()));
                     variant.getUniversalServiceIdentifier().getIdentifier().setValue("81250-3");
                     variant.getUniversalServiceIdentifier().getText().setValue("Discrete genetic variant panel");
                     variant.getUniversalServiceIdentifier().getNameOfCodingSystem().setValue("LN");
@@ -550,12 +545,13 @@ public class JsonFhirMapper {
 
                 }
 
-                NTE note = result.getORDER_OBSERVATION(result.getORDER_OBSERVATIONReps()-1).getNTE();
+                NTE note = result.getORDER_OBSERVATION(therapyRecommendationOrder).getNTE();
+                note.getSetIDNTE().setValue("1");
                 note.getCommentType().getIdentifier().setValue("GI");
                 note.getCommentType().getText().setValue("General Instructions");
                 note.getComment(0).setValue(mtb.getGeneralRecommendation());
 
-                for(int k = ordersBefore; k < result.getORDER_OBSERVATIONReps(); k++)
+                for(int k = therapyRecommendationOrder; k < result.getORDER_OBSERVATIONReps(); k++)
                     for(ORU_R01_OBSERVATION observation : result.getORDER_OBSERVATION(k).getOBSERVATIONAll())
                         observation.getOBX().insertResponsibleObserver(0).getPersonIdentifier().setValue(therapyRecommendation.getAuthor());
 
