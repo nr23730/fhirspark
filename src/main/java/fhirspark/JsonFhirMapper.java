@@ -47,8 +47,8 @@ import ca.uhn.hl7v2.app.Connection;
 import ca.uhn.hl7v2.llp.LLPException;
 import ca.uhn.hl7v2.model.Message;
 import ca.uhn.hl7v2.model.v281.datatype.CWE;
+import ca.uhn.hl7v2.model.v281.datatype.ST;
 import ca.uhn.hl7v2.model.v281.group.ORU_R01_OBSERVATION;
-import ca.uhn.hl7v2.model.v281.group.ORU_R01_ORDER_OBSERVATION;
 import ca.uhn.hl7v2.model.v281.group.ORU_R01_PATIENT_RESULT;
 import ca.uhn.hl7v2.model.v281.message.ORU_R01;
 import ca.uhn.hl7v2.model.v281.segment.NTE;
@@ -472,18 +472,32 @@ public class JsonFhirMapper {
                 masterPanel.getUniversalServiceIdentifier().getText()
                         .setValue("Master HL7 genetic variant reporting panel");
                 masterPanel.getUniversalServiceIdentifier().getNameOfCodingSystem().setValue("LN");
-    
+
                 masterPanel.getObservationDateTime().setValue(mtb.getDate().replaceAll("-", ""));
-    
-                for(String sample : mtb.getSamples()) {
-                    SPM specimen = result.getORDER_OBSERVATION(therapyRecommendationOrder).getSPECIMEN(result.getORDER_OBSERVATION(therapyRecommendationOrder).getSPECIMENReps()).getSPM();
-                    specimen.getSetIDSPM().setValue(String.valueOf(result.getORDER_OBSERVATION(result.getORDER_OBSERVATIONReps()-1).getSPECIMENReps()));
+
+                for (String sample : mtb.getSamples()) {
+                    SPM specimen = result.getORDER_OBSERVATION(therapyRecommendationOrder)
+                            .getSPECIMEN(result.getORDER_OBSERVATION(therapyRecommendationOrder).getSPECIMENReps())
+                            .getSPM();
+                    specimen.getSetIDSPM().setValue(String.valueOf(
+                            result.getORDER_OBSERVATION(result.getORDER_OBSERVATIONReps() - 1).getSPECIMENReps()));
                     specimen.getSpecimenID().getFillerAssignedIdentifier().getEntityIdentifier().setValue(sample);
                     specimen.getSpecimenType().getIdentifier().setValue("TUMOR");
                     specimen.getSpecimenType().getText().setValue("Tumor");
                 }
 
                 masterPanel.getFillerOrderNumber().getEntityIdentifier().setValue(mtb.getId());
+
+                OBX evidence = result.getORDER_OBSERVATION(therapyRecommendationOrder).getOBSERVATION(result.getORDER_OBSERVATION(therapyRecommendationOrder).getOBSERVATIONReps()).getOBX();
+                evidence.getSetIDOBX().setValue(String.valueOf(result.getORDER_OBSERVATION(therapyRecommendationOrder).getOBSERVATIONReps()));
+                evidence.getValueType().setValue("ST");
+                evidence.getObservationIdentifier().getIdentifier().setValue("93044-6");
+                evidence.getObservationIdentifier().getText().setValue("Level of evidence");
+                evidence.getObservationIdentifier().getCodingSystemOID().setValue("2.16.840.1.113883.6.1");
+                evidence.getObservationIdentifier().getNameOfCodingSystem().setValue("LN");
+                ST evidenceValue = new ST(oru);
+                evidenceValue.setValue(therapyRecommendation.getEvidenceLevel());
+                evidence.insertObservationValue(0).setData(evidenceValue);
 
                 for (GeneticAlteration g : therapyRecommendation.getReasoning().getGeneticAlterations()) {
                     int orderNumber = result.getORDER_OBSERVATIONReps();
@@ -551,9 +565,10 @@ public class JsonFhirMapper {
                 note.getCommentType().getText().setValue("General Instructions");
                 note.getComment(0).setValue(mtb.getGeneralRecommendation());
 
-                for(int k = therapyRecommendationOrder; k < result.getORDER_OBSERVATIONReps(); k++)
-                    for(ORU_R01_OBSERVATION observation : result.getORDER_OBSERVATION(k).getOBSERVATIONAll())
-                        observation.getOBX().insertResponsibleObserver(0).getPersonIdentifier().setValue(therapyRecommendation.getAuthor());
+                for (int k = therapyRecommendationOrder; k < result.getORDER_OBSERVATIONReps(); k++)
+                    for (ORU_R01_OBSERVATION observation : result.getORDER_OBSERVATION(k).getOBSERVATIONAll())
+                        observation.getOBX().insertResponsibleObserver(0).getPersonIdentifier()
+                                .setValue(therapyRecommendation.getAuthor());
 
             }
 
