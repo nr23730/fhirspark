@@ -47,6 +47,8 @@ import ca.uhn.hl7v2.app.Connection;
 import ca.uhn.hl7v2.llp.LLPException;
 import ca.uhn.hl7v2.model.Message;
 import ca.uhn.hl7v2.model.v281.datatype.CWE;
+import ca.uhn.hl7v2.model.v281.group.ORU_R01_OBSERVATION;
+import ca.uhn.hl7v2.model.v281.group.ORU_R01_ORDER_OBSERVATION;
 import ca.uhn.hl7v2.model.v281.group.ORU_R01_PATIENT_RESULT;
 import ca.uhn.hl7v2.model.v281.message.ORU_R01;
 import ca.uhn.hl7v2.model.v281.segment.NTE;
@@ -481,18 +483,22 @@ public class JsonFhirMapper {
             
 
             for (int j = 1; j <= mtb.getTherapyRecommendations().size(); j++) {
+
+                int ordersBefore = result.getORDER_OBSERVATIONReps();
+
                 TherapyRecommendation therapyRecommendation = mtb.getTherapyRecommendations().get(j - 1);
 
                 masterPanel.getFillerOrderNumber().getEntityIdentifier().setValue(mtb.getId());
 
                 for (int k = 1; k < therapyRecommendation.getReasoning().getGeneticAlterations().size(); k++) {
                     GeneticAlteration g = therapyRecommendation.getReasoning().getGeneticAlterations().get(k-1);
-                    OBR variant = result.insertORDER_OBSERVATION(result.getORDER_OBSERVATIONReps()).getOBR();
+                    int orderNumber = result.getORDER_OBSERVATIONReps();
+                    OBR variant = result.insertORDER_OBSERVATION(orderNumber).getOBR();
                     variant.getUniversalServiceIdentifier().getIdentifier().setValue("81250-3");
                     variant.getUniversalServiceIdentifier().getText().setValue("Discrete genetic variant panel");
                     variant.getUniversalServiceIdentifier().getNameOfCodingSystem().setValue("LN");
 
-                    OBX observation = result.getORDER_OBSERVATION(k - 1).getOBSERVATION(0).getOBX();
+                    OBX observation = result.getORDER_OBSERVATION(orderNumber).getOBSERVATION(0).getOBX();
                     observation.getSetIDOBX().setValue(String.valueOf(1));
                     observation.getObservationIdentifier().getIdentifier().setValue("69548-6");
                     observation.getObservationIdentifier().getText().setValue("Genetic variant assessment");
@@ -504,7 +510,7 @@ public class JsonFhirMapper {
                     c0.getIdentifier().setValue("LA9633-4");
                     observation.insertObservationValue(0).setData(c0);
 
-                    OBX observation0 = result.getORDER_OBSERVATION(k - 1).getOBSERVATION(1).getOBX();
+                    OBX observation0 = result.getORDER_OBSERVATION(orderNumber).getOBSERVATION(1).getOBX();
                     observation0.getSetIDOBX().setValue(String.valueOf(2));
                     observation0.getObservationIdentifier().getIdentifier().setValue("48005-3");
                     observation0.getObservationIdentifier().getText().setValue("Amino acid change (pHGVS)");
@@ -516,7 +522,7 @@ public class JsonFhirMapper {
                     c1.getIdentifier().setValue("p." + g.getAlteration());
                     observation0.insertObservationValue(0).setData(c1);
 
-                    OBX observation1 = result.getORDER_OBSERVATION(k - 1).getOBSERVATION(2).getOBX();
+                    OBX observation1 = result.getORDER_OBSERVATION(orderNumber).getOBSERVATION(2).getOBX();
                     observation1.getSetIDOBX().setValue(String.valueOf(3));
                     observation1.getObservationIdentifier().getIdentifier().setValue("81252-9");
                     observation1.getObservationIdentifier().getText().setValue("Discrete genetic variant");
@@ -528,7 +534,7 @@ public class JsonFhirMapper {
                     c2.getIdentifier().setValue(String.valueOf(g.getEntrezGeneId()));
                     observation1.insertObservationValue(0).setData(c2);
 
-                    OBX observation2 = result.getORDER_OBSERVATION(k - 1).getOBSERVATION(3).getOBX();
+                    OBX observation2 = result.getORDER_OBSERVATION(orderNumber).getOBSERVATION(3).getOBX();
                     observation2.getSetIDOBX().setValue(String.valueOf(4));
                     observation2.getObservationIdentifier().getIdentifier().setValue("48018-6");
                     observation2.getObservationIdentifier().getText().setValue("Gene studied [ID]");
@@ -548,6 +554,10 @@ public class JsonFhirMapper {
                 note.getCommentType().getIdentifier().setValue("GI");
                 note.getCommentType().getText().setValue("General Instructions");
                 note.getComment(0).setValue(mtb.getGeneralRecommendation());
+
+                for(int k = ordersBefore; k < result.getORDER_OBSERVATIONReps(); k++)
+                    for(ORU_R01_OBSERVATION observation : result.getORDER_OBSERVATION(k).getOBSERVATIONAll())
+                        observation.getOBX().insertResponsibleObserver(0).getPersonIdentifier().setValue(therapyRecommendation.getAuthor());
 
             }
 
