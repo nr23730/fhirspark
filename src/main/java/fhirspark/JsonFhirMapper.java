@@ -565,9 +565,18 @@ public class JsonFhirMapper {
                     c3.getText().setValue(hgncData.getSymbol());
                     observation2.insertObservationValue(0).setData(c3);
 
+                    result.getORDER_OBSERVATION(therapyRecommendationOrder).getNTE(0);
+                    NTE note = result.getORDER_OBSERVATION(therapyRecommendationOrder).getNTE(1);
+                    note.getSetIDNTE().setValue("2");
+                    note.getCommentType().getIdentifier().setValue("1R");
+                    note.getCommentType().getText().setValue("Primary Reason");
+                    for(int i = 0; i < therapyRecommendation.getComment().size(); i++) {
+                        note.getComment(i).setValue(therapyRecommendation.getComment().get(i));
+                    }
+
                 }
 
-                NTE note = result.getORDER_OBSERVATION(therapyRecommendationOrder).getNTE();
+                NTE note = result.getORDER_OBSERVATION(therapyRecommendationOrder).getNTE(0);
                 note.getSetIDNTE().setValue("1");
                 note.getCommentType().getIdentifier().setValue("GI");
                 note.getCommentType().getText().setValue("General Instructions");
