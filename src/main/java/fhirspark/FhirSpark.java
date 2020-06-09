@@ -4,20 +4,28 @@ import static spark.Spark.*;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.util.List;
+
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import fhirspark.restmodel.CbioportalRest;
+import fhirspark.restmodel.Mtb;
 
 public final class FhirSpark {
 
     private static JsonFhirMapper jsonFhirMapper;
+    private static JsonHl7v2Mapper jsonHl7v2Mapper;
+    private static ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
 
     public static void main(final String[] args) throws Exception {
         InputStream settingsYaml = ClassLoader.getSystemClassLoader().getResourceAsStream("settings.yaml");
-        if(args.length == 1)
+        if (args.length == 1)
             settingsYaml = new FileInputStream(args[0]);
         ConfigurationLoader configLoader = new ConfigurationLoader();
-        final Settings settings =
-                configLoader.loadConfiguration(
-                    settingsYaml, Settings.class);
+        final Settings settings = configLoader.loadConfiguration(settingsYaml, Settings.class);
         jsonFhirMapper = new JsonFhirMapper(settings);
+        jsonHl7v2Mapper = new JsonHl7v2Mapper(settings);
 
         port(settings.getPort());
 
@@ -49,7 +57,11 @@ public final class FhirSpark {
             res.header("Access-Control-Allow-Origin", req.headers("Origin"));
             res.type("application/json");
             res.header("Vary", "Origin, Access-Control-Request-Headers");
-            jsonFhirMapper.addOrEditMtb(req.params(":patientId"), req.body());
+
+            List<Mtb> mtbs = objectMapper.readValue(req.body(), CbioportalRest.class).getMtbs();
+            jsonFhirMapper.addOrEditMtb(req.params(":patientId"), mtbs);
+            if (settings.getHl7v2config().get(0).getSendv2())
+                jsonHl7v2Mapper.toHl7v2Oru(req.params(":patientId"), mtbs);
             res.body(req.body());
             return res.body();
         });
@@ -66,5 +78,5 @@ public final class FhirSpark {
         });
 
     }
-    
+
 }

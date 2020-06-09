@@ -1,6 +1,5 @@
 package fhirspark;
 
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
@@ -12,7 +11,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.hl7.fhir.instance.model.api.IAnyResource;
-import org.hl7.fhir.instance.model.api.IIdType;
 import org.hl7.fhir.r4.model.Annotation;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Bundle.BundleEntryComponent;
@@ -40,14 +38,7 @@ import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.gclient.ReferenceClientParam;
 import ca.uhn.fhir.rest.gclient.TokenClientParam;
-import ca.uhn.hl7v2.DefaultHapiContext;
-import ca.uhn.hl7v2.HL7Exception;
-import ca.uhn.hl7v2.HapiContext;
-import ca.uhn.hl7v2.app.Connection;
-import ca.uhn.hl7v2.llp.LLPException;
-import ca.uhn.hl7v2.model.Message;
-import ca.uhn.hl7v2.model.v281.message.ORU_R01;
-import ca.uhn.hl7v2.model.v281.segment.PID;
+
 import fhirspark.adapter.DrugAdapter;
 import fhirspark.adapter.EvidenceAdapter;
 import fhirspark.adapter.GeneticAlternationsAdapter;
@@ -64,7 +55,6 @@ import fhirspark.restmodel.Treatment;
 
 public class JsonFhirMapper {
 
-    private Settings settings;
     private static String LOINC_URI = "http://loinc.org";
     private static String PATIENT_URI = "https://cbioportal.org/patient/";
     private static String MTB_URI = "https://cbioportal.org/mtb/";
@@ -90,7 +80,6 @@ public class JsonFhirMapper {
     EvidenceAdapter evidenceAdapter = new EvidenceAdapter();
 
     public JsonFhirMapper(Settings settings) {
-        this.settings = settings;
         this.client = ctx.newRestfulGenericClient(settings.getFhirDbBase());
     }
 
@@ -174,7 +163,7 @@ public class JsonFhirMapper {
                 if (((RelatedArtifact) relatedArtifact.getValue()).getType() == RelatedArtifactType.JUSTIFICATION) {
                     Bundle bEvidence = (Bundle) client.search().forResource(Evidence.class)
                             .where(new TokenClientParam("_id").exactly()
-                                    .code(((RelatedArtifact)relatedArtifact.getValue()).getResource()))
+                                    .code(((RelatedArtifact) relatedArtifact.getValue()).getResource()))
                             .prettyPrint().execute();
                     Evidence evidence = (Evidence) bEvidence.getEntryFirstRep().getResource();
                     therapyRecommendation.setEvidenceLevel(evidence.getName());
@@ -254,12 +243,10 @@ public class JsonFhirMapper {
 
     }
 
-    public void addOrEditMtb(String patientId, String jsonString) throws HL7Exception, IOException, LLPException {
+    public void addOrEditMtb(String patientId, List<Mtb> mtbs) {
 
         Bundle bundle = new Bundle();
         bundle.setType(Bundle.BundleType.TRANSACTION);
-
-        List<Mtb> mtbs = this.objectMapper.readValue(jsonString, CbioportalRest.class).getMtbs();
 
         Reference fhirPatient = getOrCreatePatient(bundle, patientId);
 
@@ -433,29 +420,6 @@ public class JsonFhirMapper {
 
         // Log the response
         System.out.println(ctx.newJsonParser().setPrettyPrint(true).encodeResourceToString(resp));
-
-        // if (settings.getHl7v2config().get(0).getSendv2()) {
-
-        // HapiContext context = new DefaultHapiContext();
-        // Connection connection =
-        // context.newClient(settings.getHl7v2config().get(0).getServer(),
-        // settings.getHl7v2config().get(0).getPort(), false);
-
-        // ORU_R01 oru = new ORU_R01();
-        // oru.initQuickstart("ORU", "R01", "T");
-
-        // PID v2patient = oru.getPATIENT_RESULT().getPATIENT().getPID();
-        // v2patient.getPid3_PatientIdentifierList(0).getIDNumber()
-        // .setValue(fhirPatient.getIdentifierFirstRep().getValue());
-
-        // Message response =
-        // connection.getInitiator().sendAndReceive(oru.getMessage());
-
-        // System.out.println(oru.encode());
-        // System.out.println(response.encode());
-
-        // context.close();
-        // }
 
     }
 
