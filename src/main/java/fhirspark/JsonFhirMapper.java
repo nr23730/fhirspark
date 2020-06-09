@@ -19,12 +19,12 @@ import org.hl7.fhir.r4.model.CarePlan.CarePlanActivityComponent;
 import org.hl7.fhir.r4.model.CarePlan.CarePlanIntent;
 import org.hl7.fhir.r4.model.CarePlan.CarePlanStatus;
 import org.hl7.fhir.r4.model.DiagnosticReport.DiagnosticReportStatus;
+import org.hl7.fhir.r4.model.Observation.ObservationComponentComponent;
 import org.hl7.fhir.r4.model.RelatedArtifact.RelatedArtifactType;
 import org.hl7.fhir.r4.model.Task.TaskIntent;
 import org.hl7.fhir.r4.model.Task.TaskStatus;
 import org.hl7.fhir.r4.model.Coding;
 import org.hl7.fhir.r4.model.DiagnosticReport;
-import org.hl7.fhir.r4.model.Evidence;
 import org.hl7.fhir.r4.model.Extension;
 import org.hl7.fhir.r4.model.IdType;
 import org.hl7.fhir.r4.model.Identifier;
@@ -44,7 +44,6 @@ import ca.uhn.fhir.rest.gclient.ReferenceClientParam;
 import ca.uhn.fhir.rest.gclient.TokenClientParam;
 
 import fhirspark.adapter.DrugAdapter;
-import fhirspark.adapter.EvidenceAdapter;
 import fhirspark.adapter.GeneticAlternationsAdapter;
 import fhirspark.adapter.SpecimenAdapter;
 import fhirspark.resolver.OncoKbDrug;
@@ -81,7 +80,6 @@ public class JsonFhirMapper {
     GeneticAlternationsAdapter geneticAlterationsAdapter = new GeneticAlternationsAdapter();
     DrugAdapter drugAdapter = new DrugAdapter();
     SpecimenAdapter specimenAdapter = new SpecimenAdapter();
-    EvidenceAdapter evidenceAdapter = new EvidenceAdapter();
 
     public JsonFhirMapper(Settings settings) {
         this.client = ctx.newRestfulGenericClient(settings.getFhirDbBase());
@@ -163,39 +161,37 @@ public class JsonFhirMapper {
 
             // COMMENTS GET WITHIN MEDICATION
 
-            for (Extension relatedArtifact : diagnosticReport.getExtensionsByUrl(RELATEDARTIFACT_URI)) {
-                if (((RelatedArtifact) relatedArtifact.getValue()).getType() == RelatedArtifactType.JUSTIFICATION) {
-                    Bundle bEvidence = (Bundle) client.search().forResource(Evidence.class)
-                            .where(new TokenClientParam("_id").exactly()
-                                    .code(((RelatedArtifact) relatedArtifact.getValue()).getResource()))
-                            .prettyPrint().execute();
-                    Evidence evidence = (Evidence) bEvidence.getEntryFirstRep().getResource();
-                    therapyRecommendation.setEvidenceLevel(evidence.getName());
-                }
-            }
-
             therapyRecommendation.setId(diagnosticReport.getIdentifier().get(1).getValue());
 
             // PUT CLINICAL DATA HERE
 
             for (Reference reference : diagnosticReport.getResult()) {
-                GeneticAlteration g = new GeneticAlteration();
-                ((Observation) reference.getResource()).getComponent().forEach(variant -> {
-                    switch (variant.getCode().getCodingFirstRep().getCode()) {
-                        case "48005-3":
-                            g.setAlteration(variant.getValueCodeableConcept().getCodingFirstRep().getCode()
-                                    .replaceFirst("p.", ""));
-                            break;
-                        case "81252-9":
-                            g.setEntrezGeneId(
-                                    Integer.valueOf(variant.getValueCodeableConcept().getCodingFirstRep().getCode()));
-                            break;
-                        case "48018-6":
-                            g.setHugoSymbol(variant.getValueCodeableConcept().getCodingFirstRep().getDisplay());
-                            break;
-                    }
-                });
-                geneticAlterations.add(g);
+                switch (reference.getResource().getMeta().getProfile().get(0).getValue()) {
+                    case "http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/variant":
+                        GeneticAlteration g = new GeneticAlteration();
+                        ((Observation) reference.getResource()).getComponent().forEach(variant -> {
+                            switch (variant.getCode().getCodingFirstRep().getCode()) {
+                                case "48005-3":
+                                    g.setAlteration(variant.getValueCodeableConcept().getCodingFirstRep().getCode()
+                                            .replaceFirst("p.", ""));
+                                    break;
+                                case "81252-9":
+                                    g.setEntrezGeneId(Integer
+                                            .valueOf(variant.getValueCodeableConcept().getCodingFirstRep().getCode()));
+                                    break;
+                                case "48018-6":
+                                    g.setHugoSymbol(variant.getValueCodeableConcept().getCodingFirstRep().getDisplay());
+                                    break;
+                            }
+                        });
+                        geneticAlterations.add(g);
+                        break;
+                    case "http://hl7.org/fhir/uv/genomics-reporting/STU1/medication-efficacy.html":
+                        ((Observation) reference.getResource()).getComponent().forEach(result -> {
+                            if(result.getCode().getCodingFirstRep().getCode().equals("93044-6"))
+                                therapyRecommendation.setEvidenceLevel(result.getValueCodeableConcept().getCodingFirstRep().getCode());
+                        });
+                }
             }
 
             List<Treatment> treatments = new ArrayList<Treatment>();
@@ -331,19 +327,16 @@ public class JsonFhirMapper {
 
                 // COMMENTS SET WITH MEDICATION
 
-                Evidence evidence = evidenceAdapter.process(therapyRecommendation.getEvidenceLevel());
-                evidence.setId(IdType.newRandomUuid());
-                bundle.addEntry().setFullUrl(evidence.getIdElement().getValue()).setResource(evidence).getRequest()
-                        .setUrl("Evidence")
-                        .setIfNoneExist("identifier=Evidence?identifier=" + evidence.getIdentifierFirstRep().getSystem()
-                                + "|" + evidence.getIdentifierFirstRep().getValue())
-                        .setMethod(Bundle.HTTPVerb.POST);
-
-                Extension evidenceExtension = new Extension().setUrl(RELATEDARTIFACT_URI);
-                RelatedArtifact evidenceArtifact = new RelatedArtifact().setType(RelatedArtifactType.JUSTIFICATION)
-                        .setResource(harmonizeId(evidence));
-                evidenceExtension.setValue(evidenceArtifact);
-                diagnosticReport.addExtension(evidenceExtension);
+                Observation efficacyObservation = new Observation();
+                diagnosticReport.addResult(new Reference(efficacyObservation));
+                efficacyObservation.getMeta()
+                        .addProfile("http://hl7.org/fhir/uv/genomics-reporting/STU1/medication-efficacy.html");
+                efficacyObservation.addCategory(diagnosticReport.getCategoryFirstRep());
+                efficacyObservation.getCode().addCoding(new Coding(LOINC_URI, "51961-1", "Genetic variation's effect on drug efficacy"));
+                ObservationComponentComponent evidenceComponent = efficacyObservation.addComponent();
+                evidenceComponent.getCode().addCoding(new Coding(LOINC_URI, "93044-6", "Level of evidence"));
+                evidenceComponent.getValueCodeableConcept().addCoding(new Coding("https://cbioportal.org/evidence/BW/",
+                        therapyRecommendation.getEvidenceLevel(), therapyRecommendation.getEvidenceLevel()));
 
                 diagnosticReport.getIdentifier().add(
                         new Identifier().setSystem(THERAPYRECOMMENDATION_URI).setValue(therapyRecommendation.getId()));
@@ -416,6 +409,10 @@ public class JsonFhirMapper {
                             .setIfNoneExist("identifier=Task?identifier=" + NCIT_URI + "|" + ncit + "&subject="
                                     + fhirPatient.getResource().getIdElement())
                             .setMethod(Bundle.HTTPVerb.PUT);
+
+                    ObservationComponentComponent assessed = efficacyObservation.addComponent();
+                    assessed.getCode().addCoding(new Coding(LOINC_URI, "51963-7", "Medication assessed [ID]"));
+                    assessed.setValue(ms.getMedicationCodeableConcept());
 
                     carePlan.addActivity().setReference(new Reference(medicationChange));
                 }
