@@ -456,6 +456,11 @@ public class JsonFhirMapper {
         oru.initQuickstart("ORU", "R01", "P");
 
         for (Mtb mtb : mtbs) {
+
+            // Send only finished MTB results
+            if(mtb.getMtbState() == null || !mtb.getMtbState().toUpperCase().equals("COMPLETED"))
+                continue;
+
             for (TherapyRecommendation therapyRecommendation : mtb.getTherapyRecommendations()) {
                 ORU_R01_PATIENT_RESULT result = oru.insertPATIENT_RESULT(oru.getPATIENT_RESULTReps());
                 result.getPATIENT().getPID().getPid1_SetIDPID().setValue("1");
