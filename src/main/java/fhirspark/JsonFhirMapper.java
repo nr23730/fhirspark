@@ -455,15 +455,13 @@ public class JsonFhirMapper {
         ORU_R01 oru = new ORU_R01();
         oru.initQuickstart("ORU", "R01", "P");
 
-        
-
         for (Mtb mtb : mtbs) {
             for (TherapyRecommendation therapyRecommendation : mtb.getTherapyRecommendations()) {
                 ORU_R01_PATIENT_RESULT result = oru.insertPATIENT_RESULT(oru.getPATIENT_RESULTReps());
                 result.getPATIENT().getPID().getPid1_SetIDPID().setValue("1");
                 result.getPATIENT().getPID()
-                        .getPatientIdentifierList(result.getPATIENT().getPID().getPatientIdentifierListReps()).getIDNumber()
-                        .setValue(patientId);
+                        .getPatientIdentifierList(result.getPATIENT().getPID().getPatientIdentifierListReps())
+                        .getIDNumber().setValue(patientId);
 
                 int therapyRecommendationOrder = result.getORDER_OBSERVATIONReps();
 
@@ -492,8 +490,11 @@ public class JsonFhirMapper {
 
                 masterPanel.getFillerOrderNumber().getEntityIdentifier().setValue(mtb.getId());
 
-                OBX evidence = result.getORDER_OBSERVATION(therapyRecommendationOrder).getOBSERVATION(result.getORDER_OBSERVATION(therapyRecommendationOrder).getOBSERVATIONReps()).getOBX();
-                evidence.getSetIDOBX().setValue(String.valueOf(result.getORDER_OBSERVATION(therapyRecommendationOrder).getOBSERVATIONReps()));
+                OBX evidence = result.getORDER_OBSERVATION(therapyRecommendationOrder)
+                        .getOBSERVATION(result.getORDER_OBSERVATION(therapyRecommendationOrder).getOBSERVATIONReps())
+                        .getOBX();
+                evidence.getSetIDOBX().setValue(
+                        String.valueOf(result.getORDER_OBSERVATION(therapyRecommendationOrder).getOBSERVATIONReps()));
                 evidence.getValueType().setValue("ST");
                 evidence.getObservationIdentifier().getIdentifier().setValue("93044-6");
                 evidence.getObservationIdentifier().getText().setValue("Level of evidence");
@@ -511,7 +512,6 @@ public class JsonFhirMapper {
                     variant.getUniversalServiceIdentifier().getText().setValue("Discrete genetic variant panel");
                     variant.getUniversalServiceIdentifier().getNameOfCodingSystem().setValue("LN");
                     variant.getUniversalServiceIdentifier().getCodingSystemOID().setValue("2.16.840.1.113883.6.1");
-
 
                     OBX observation = result.getORDER_OBSERVATION(orderNumber).getOBSERVATION(0).getOBX();
                     observation.getSetIDOBX().setValue(String.valueOf(1));
@@ -568,22 +568,30 @@ public class JsonFhirMapper {
                     c3.getText().setValue(hgncData.getSymbol());
                     observation2.insertObservationValue(0).setData(c3);
 
-                    result.getORDER_OBSERVATION(therapyRecommendationOrder).getNTE(0);
-                    NTE note = result.getORDER_OBSERVATION(therapyRecommendationOrder).getNTE(1);
-                    note.getSetIDNTE().setValue("2");
-                    note.getCommentType().getIdentifier().setValue("1R");
-                    note.getCommentType().getText().setValue("Primary Reason");
-                    for(int i = 0; i < therapyRecommendation.getComment().size(); i++) {
-                        note.getComment(i).setValue(therapyRecommendation.getComment().get(i));
-                    }
-
                 }
 
-                NTE note = result.getORDER_OBSERVATION(therapyRecommendationOrder).getNTE(0);
-                note.getSetIDNTE().setValue("1");
-                note.getCommentType().getIdentifier().setValue("GI");
-                note.getCommentType().getText().setValue("General Instructions");
-                note.getComment(0).setValue(mtb.getGeneralRecommendation());
+                for (fhirspark.restmodel.Reference reference : therapyRecommendation.getReferences()) {
+                    CWE v2ref = new CWE(oru);
+                    v2ref.getCodingSystemOID().setValue("2.16.840.1.113883.13.191");
+                    v2ref.getIdentifier().setValue(String.valueOf(reference.getPmid()));
+                    String name = reference.getName() != null ? reference.getName()
+                            : pubmedResolver.resolvePublication(reference.getPmid());
+                    v2ref.getText().setValue(name);
+                }
+
+                NTE generealRecommendation = result.getORDER_OBSERVATION(therapyRecommendationOrder).getNTE(0);
+                generealRecommendation.getSetIDNTE().setValue("1");
+                generealRecommendation.getCommentType().getIdentifier().setValue("GI");
+                generealRecommendation.getCommentType().getText().setValue("General Instructions");
+                generealRecommendation.getComment(0).setValue(mtb.getGeneralRecommendation());
+
+                NTE comments = result.getORDER_OBSERVATION(therapyRecommendationOrder).getNTE(1);
+                comments.getSetIDNTE().setValue("2");
+                comments.getCommentType().getIdentifier().setValue("1R");
+                comments.getCommentType().getText().setValue("Primary Reason");
+                for (int i = 0; i < therapyRecommendation.getComment().size(); i++) {
+                    comments.getComment(i).setValue(therapyRecommendation.getComment().get(i));
+                }
 
                 for (int k = therapyRecommendationOrder; k < result.getORDER_OBSERVATIONReps(); k++)
                     for (ORU_R01_OBSERVATION observation : result.getORDER_OBSERVATION(k).getOBSERVATIONAll())
