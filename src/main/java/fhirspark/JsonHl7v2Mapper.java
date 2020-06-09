@@ -180,12 +180,14 @@ public class JsonHl7v2Mapper {
 
                 NTE generealRecommendation = result.getORDER_OBSERVATION(therapyRecommendationOrder).getNTE(0);
                 generealRecommendation.getSetIDNTE().setValue("1");
+                generealRecommendation.getSourceOfComment().setValue("L");
                 generealRecommendation.getCommentType().getIdentifier().setValue("GI");
                 generealRecommendation.getCommentType().getText().setValue("General Instructions");
                 generealRecommendation.getComment(0).setValue(mtb.getGeneralRecommendation());
 
                 NTE comments = result.getORDER_OBSERVATION(therapyRecommendationOrder).getNTE(1);
                 comments.getSetIDNTE().setValue("2");
+                comments.getSourceOfComment().setValue("L");
                 comments.getCommentType().getIdentifier().setValue("1R");
                 comments.getCommentType().getText().setValue("Primary Reason");
                 for (int i = 0; i < therapyRecommendation.getComment().size(); i++) {
