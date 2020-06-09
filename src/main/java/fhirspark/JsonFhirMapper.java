@@ -473,6 +473,7 @@ public class JsonFhirMapper {
                         .setValue("Master HL7 genetic variant reporting panel");
                 masterPanel.getUniversalServiceIdentifier().getNameOfCodingSystem().setValue("LN");
                 masterPanel.getUniversalServiceIdentifier().getCodingSystemOID().setValue("2.16.840.1.113883.6.1");
+                masterPanel.getFillerOrderNumber().getEntityIdentifier().setValue(therapyRecommendation.getId());
 
                 masterPanel.getObservationDateTime().setValue(mtb.getDate().replaceAll("-", ""));
 
