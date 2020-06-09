@@ -455,14 +455,16 @@ public class JsonFhirMapper {
         ORU_R01 oru = new ORU_R01();
         oru.initQuickstart("ORU", "R01", "P");
 
-        ORU_R01_PATIENT_RESULT result = oru.insertPATIENT_RESULT(oru.getPATIENT_RESULTReps());
-        result.getPATIENT().getPID().getPid1_SetIDPID().setValue("1");
-        result.getPATIENT().getPID()
-                .getPatientIdentifierList(result.getPATIENT().getPID().getPatientIdentifierListReps()).getIDNumber()
-                .setValue(patientId);
+        
 
         for (Mtb mtb : mtbs) {
             for (TherapyRecommendation therapyRecommendation : mtb.getTherapyRecommendations()) {
+                ORU_R01_PATIENT_RESULT result = oru.insertPATIENT_RESULT(oru.getPATIENT_RESULTReps());
+                result.getPATIENT().getPID().getPid1_SetIDPID().setValue("1");
+                result.getPATIENT().getPID()
+                        .getPatientIdentifierList(result.getPATIENT().getPID().getPatientIdentifierListReps()).getIDNumber()
+                        .setValue(patientId);
+
                 int therapyRecommendationOrder = result.getORDER_OBSERVATIONReps();
 
                 OBR masterPanel = result.getORDER_OBSERVATION(therapyRecommendationOrder).getOBR();
