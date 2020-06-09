@@ -23,6 +23,7 @@ import fhirspark.resolver.model.genenames.Doc;
 import fhirspark.restmodel.GeneticAlteration;
 import fhirspark.restmodel.Mtb;
 import fhirspark.restmodel.TherapyRecommendation;
+import fhirspark.restmodel.Treatment;
 
 public class JsonHl7v2Mapper {
 
@@ -168,6 +169,13 @@ public class JsonHl7v2Mapper {
                     String name = reference.getName() != null ? reference.getName()
                             : pubmedResolver.resolvePublication(reference.getPmid());
                     v2ref.getText().setValue(name);
+                }
+
+                for(Treatment treatment : therapyRecommendation.getTreatments()) {
+                    CWE v2treatment = new CWE(oru);
+                    v2treatment.getCodingSystemOID().setValue("2.16.840.1.113883.3.26.1.1");
+                    v2treatment.getIdentifier().setValue(treatment.getNcitCode());
+                    v2treatment.getText().setValue(treatment.getName());
                 }
 
                 NTE generealRecommendation = result.getORDER_OBSERVATION(therapyRecommendationOrder).getNTE(0);
