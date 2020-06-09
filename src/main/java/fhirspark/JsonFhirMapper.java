@@ -13,7 +13,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.hl7.fhir.instance.model.api.IAnyResource;
 import org.hl7.fhir.r4.model.Annotation;
 import org.hl7.fhir.r4.model.Bundle;
+import org.hl7.fhir.r4.model.CarePlan;
 import org.hl7.fhir.r4.model.Bundle.BundleEntryComponent;
+import org.hl7.fhir.r4.model.CarePlan.CarePlanActivityComponent;
+import org.hl7.fhir.r4.model.CarePlan.CarePlanIntent;
+import org.hl7.fhir.r4.model.CarePlan.CarePlanStatus;
 import org.hl7.fhir.r4.model.DiagnosticReport.DiagnosticReportStatus;
 import org.hl7.fhir.r4.model.RelatedArtifact.RelatedArtifactType;
 import org.hl7.fhir.r4.model.Task.TaskIntent;
@@ -262,6 +266,14 @@ public class JsonFhirMapper {
                 diagnosticReport.getCode()
                         .addCoding(new Coding(LOINC_URI, "81247-9", "Master HL7 genetic variant reporting panel"));
 
+                CarePlan carePlan = new CarePlan();
+                carePlan.setId(IdType.newRandomUuid());
+                carePlan.setSubject(fhirPatient);
+                carePlan.setIntent(CarePlanIntent.PROPOSAL);
+                carePlan.setStatus(CarePlanStatus.ACTIVE);
+                carePlan.setAuthor(getOrCreatePractitioner(bundle, therapyRecommendation.getAuthor()));
+                carePlan.getSupportingInfo().add(new Reference(diagnosticReport));
+
                 // MTB SECTION
 
                 diagnosticReport.addPerformer(getOrCreatePractitioner(bundle, therapyRecommendation.getAuthor()));
@@ -279,6 +291,7 @@ public class JsonFhirMapper {
                     Extension ex = new Extension().setUrl(RECOMMENDEDACTION_URI);
                     ex.setValue(new Reference(t));
                     diagnosticReport.addExtension(ex);
+                    carePlan.getActivity().add(new CarePlanActivityComponent().setReference(new Reference(t)));
                 }
 
                 diagnosticReport.getIdentifier().add(new Identifier().setSystem(MTB_URI).setValue(mtb.getId()));
@@ -403,6 +416,8 @@ public class JsonFhirMapper {
                             .setIfNoneExist("identifier=Task?identifier=" + NCIT_URI + "|" + ncit + "&subject="
                                     + fhirPatient.getResource().getIdElement())
                             .setMethod(Bundle.HTTPVerb.PUT);
+
+                    carePlan.addActivity().setReference(new Reference(medicationChange));
                 }
 
                 bundle.addEntry().setFullUrl(diagnosticReport.getIdElement().getValue()).setResource(diagnosticReport)
