@@ -146,6 +146,7 @@ public class JsonFhirMapper {
 
             // REBIOPSY HERE
 
+            mtb.getSamples().clear();
             for (Reference specimen : diagnosticReport.getSpecimen())
                 mtb.getSamples().add(((Specimen) specimen.getResource()).getIdentifierFirstRep().getValue());
 
