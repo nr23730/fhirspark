@@ -20,9 +20,11 @@ import org.hl7.fhir.r4.model.CarePlan.CarePlanIntent;
 import org.hl7.fhir.r4.model.CarePlan.CarePlanStatus;
 import org.hl7.fhir.r4.model.DiagnosticReport.DiagnosticReportStatus;
 import org.hl7.fhir.r4.model.Observation.ObservationComponentComponent;
+import org.hl7.fhir.r4.model.Observation.ObservationStatus;
 import org.hl7.fhir.r4.model.RelatedArtifact.RelatedArtifactType;
 import org.hl7.fhir.r4.model.Task.TaskIntent;
 import org.hl7.fhir.r4.model.Task.TaskStatus;
+import org.hl7.fhir.r4.model.codesystems.ObservationCategory;
 import org.hl7.fhir.r4.model.Coding;
 import org.hl7.fhir.r4.model.DiagnosticReport;
 import org.hl7.fhir.r4.model.Extension;
@@ -332,7 +334,9 @@ public class JsonFhirMapper {
                 diagnosticReport.addResult(new Reference(efficacyObservation));
                 efficacyObservation.getMeta()
                         .addProfile("http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/medication-efficacy");
-                efficacyObservation.addCategory(diagnosticReport.getCategoryFirstRep());
+                efficacyObservation.setStatus(ObservationStatus.FINAL);
+                efficacyObservation.addCategory().addCoding(new Coding(ObservationCategory.LABORATORY.getSystem(),
+                ObservationCategory.LABORATORY.toCode(), ObservationCategory.LABORATORY.getDisplay()));
                 efficacyObservation.getCode().addCoding(new Coding(LOINC_URI, "51961-1", "Genetic variation's effect on drug efficacy"));
                 ObservationComponentComponent evidenceComponent = efficacyObservation.addComponent();
                 evidenceComponent.getCode().addCoding(new Coding(LOINC_URI, "93044-6", "Level of evidence"));
