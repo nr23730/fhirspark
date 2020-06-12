@@ -187,7 +187,7 @@ public class JsonFhirMapper {
                         });
                         geneticAlterations.add(g);
                         break;
-                    case "http://hl7.org/fhir/uv/genomics-reporting/STU1/medication-efficacy.html":
+                    case "http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/medication-efficacy":
                         ((Observation) reference.getResource()).getComponent().forEach(result -> {
                             if(result.getCode().getCodingFirstRep().getCode().equals("93044-6"))
                                 therapyRecommendation.setEvidenceLevel(result.getValueCodeableConcept().getCodingFirstRep().getCode());
@@ -331,7 +331,7 @@ public class JsonFhirMapper {
                 Observation efficacyObservation = new Observation();
                 diagnosticReport.addResult(new Reference(efficacyObservation));
                 efficacyObservation.getMeta()
-                        .addProfile("http://hl7.org/fhir/uv/genomics-reporting/STU1/medication-efficacy.html");
+                        .addProfile("http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/medication-efficacy");
                 efficacyObservation.addCategory(diagnosticReport.getCategoryFirstRep());
                 efficacyObservation.getCode().addCoding(new Coding(LOINC_URI, "51961-1", "Genetic variation's effect on drug efficacy"));
                 ObservationComponentComponent evidenceComponent = efficacyObservation.addComponent();
