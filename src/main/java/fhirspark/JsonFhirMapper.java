@@ -1,12 +1,12 @@
 package fhirspark;
 
-import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import com.fasterxml.jackson.core.JsonFactory;
@@ -112,7 +112,7 @@ public class JsonFhirMapper {
             Mtb mtb = new Mtb().withTherapyRecommendations(new ArrayList<TherapyRecommendation>())
                     .withSamples(new ArrayList<String>());
             for (Mtb mtbCandidate : mtbs) {
-                mtb = mtbCandidate.getId().equals(diagnosticReport.getIdentifier().get(0).getValue()) ? mtbCandidate
+                mtb = mtbCandidate.getId().equals("mtb_" + patientId + "_" + diagnosticReport.getIssued().getTime()) ? mtbCandidate
                         : new Mtb().withTherapyRecommendations(new ArrayList<TherapyRecommendation>())
                                 .withSamples(new ArrayList<String>());
             }
@@ -134,7 +134,7 @@ public class JsonFhirMapper {
 
             // GENETIC COUNSELING HERE
 
-            mtb.setId(diagnosticReport.getIdentifier().get(0).getValue());
+            mtb.setId("mtb_" + patientId + "_" + diagnosticReport.getIssued().getTime());
 
             if (diagnosticReport.hasStatus()) {
                 switch (diagnosticReport.getStatus().toCode()) {
@@ -168,7 +168,7 @@ public class JsonFhirMapper {
 
             // COMMENTS GET WITHIN MEDICATION
 
-            therapyRecommendation.setId(diagnosticReport.getIdentifier().get(1).getValue());
+            therapyRecommendation.setId(diagnosticReport.getIdentifier().get(0).getValue());
 
             // PUT CLINICAL DATA HERE
 
@@ -258,9 +258,9 @@ public class JsonFhirMapper {
 
         Reference fhirPatient = getOrCreatePatient(bundle, patientId);
 
-        mtbs.forEach(mtb -> {
+        for (Mtb mtb : mtbs) {
 
-            mtb.getTherapyRecommendations().forEach(therapyRecommendation -> {
+            for (TherapyRecommendation therapyRecommendation : mtb.getTherapyRecommendations()) {
 
                 DiagnosticReport diagnosticReport = new DiagnosticReport();
                 diagnosticReport.getMeta().addProfile(GENOMICSREPORT_URI);
@@ -289,6 +289,7 @@ public class JsonFhirMapper {
                 if (mtb.getGeneticCounselingRecommendation() != null && mtb.getGeneticCounselingRecommendation()) {
                     Task t = new Task();
                     t.getMeta().addProfile(FOLLOWUP_URI);
+                    t.setFor(fhirPatient);
                     t.setStatus(TaskStatus.REQUESTED).setIntent(TaskIntent.PROPOSAL);
                     t.getCode().setText("Recommended follow-up")
                             .addCoding(new Coding(LOINC_URI, "LA14020-4", "Genetic counseling recommended"));
@@ -298,7 +299,8 @@ public class JsonFhirMapper {
                     carePlan.getActivity().add(new CarePlanActivityComponent().setReference(new Reference(t)));
                 }
 
-                diagnosticReport.getIdentifier().add(new Identifier().setSystem(MTB_URI).setValue(mtb.getId()));
+                assert (mtb.getId().startsWith("mtb_" + patientId + "_"));
+                diagnosticReport.setIssued(new Date(Long.valueOf(mtb.getId().replace("mtb_" + patientId + "_", ""))));
 
                 if (mtb.getMtbState() != null) {
                     switch (mtb.getMtbState().toUpperCase()) {
@@ -318,6 +320,7 @@ public class JsonFhirMapper {
                 if (mtb.getRebiopsyRecommendation() != null && mtb.getRebiopsyRecommendation()) {
                     Task t = new Task();
                     t.getMeta().addProfile(FOLLOWUP_URI);
+                    t.setFor(fhirPatient);
                     t.setStatus(TaskStatus.REQUESTED).setIntent(TaskIntent.PROPOSAL);
                     t.getCode().setText("Recommended follow-up")
                             .addCoding(new Coding(LOINC_URI, "LA14021-2", "Confirmatory testing recommended"));
@@ -351,8 +354,8 @@ public class JsonFhirMapper {
                 evidenceComponent.getValueCodeableConcept().addCoding(new Coding("https://cbioportal.org/evidence/BW/",
                         therapyRecommendation.getEvidenceLevel(), therapyRecommendation.getEvidenceLevel()));
 
-                diagnosticReport.getIdentifier().add(
-                        new Identifier().setSystem(THERAPYRECOMMENDATION_URI).setValue(therapyRecommendation.getId()));
+                diagnosticReport.addIdentifier().setSystem(THERAPYRECOMMENDATION_URI)
+                        .setValue(therapyRecommendation.getId());
 
                 if (therapyRecommendation.getReasoning().getClinicalData() != null) {
                     therapyRecommendation.getReasoning().getClinicalData().forEach(clinical -> {
@@ -438,9 +441,9 @@ public class JsonFhirMapper {
                         .setIfNoneExist("identifier=" + THERAPYRECOMMENDATION_URI + "|" + therapyRecommendation.getId())
                         .setMethod(Bundle.HTTPVerb.PUT);
 
-            });
+            }
 
-        });
+        }
 
         try {
             Bundle resp = client.transaction().withBundle(bundle).execute();
