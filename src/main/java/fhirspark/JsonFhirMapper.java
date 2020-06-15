@@ -1,5 +1,8 @@
 package fhirspark;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
@@ -41,10 +44,11 @@ import org.hl7.fhir.r4.model.Specimen;
 import org.hl7.fhir.r4.model.Task;
 
 import ca.uhn.fhir.context.FhirContext;
+import ca.uhn.fhir.parser.DataFormatException;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.gclient.ReferenceClientParam;
 import ca.uhn.fhir.rest.gclient.TokenClientParam;
-
+import ca.uhn.fhir.rest.server.exceptions.UnprocessableEntityException;
 import fhirspark.adapter.DrugAdapter;
 import fhirspark.adapter.GeneticAlternationsAdapter;
 import fhirspark.adapter.SpecimenAdapter;
@@ -191,8 +195,9 @@ public class JsonFhirMapper {
                         break;
                     case "http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/medication-efficacy":
                         ((Observation) reference.getResource()).getComponent().forEach(result -> {
-                            if(result.getCode().getCodingFirstRep().getCode().equals("93044-6"))
-                                therapyRecommendation.setEvidenceLevel(result.getValueCodeableConcept().getCodingFirstRep().getCode());
+                            if (result.getCode().getCodingFirstRep().getCode().equals("93044-6"))
+                                therapyRecommendation.setEvidenceLevel(
+                                        result.getValueCodeableConcept().getCodingFirstRep().getCode());
                         });
                 }
             }
@@ -246,7 +251,7 @@ public class JsonFhirMapper {
 
     }
 
-    public void addOrEditMtb(String patientId, List<Mtb> mtbs) {
+    public void addOrEditMtb(String patientId, List<Mtb> mtbs) throws DataFormatException, IOException {
 
         Bundle bundle = new Bundle();
         bundle.setType(Bundle.BundleType.TRANSACTION);
@@ -332,12 +337,15 @@ public class JsonFhirMapper {
 
                 Observation efficacyObservation = new Observation();
                 diagnosticReport.addResult(new Reference(efficacyObservation));
-                efficacyObservation.getMeta()
-                        .addProfile("http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/medication-efficacy");
+                efficacyObservation.getMeta().addProfile(
+                        "http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/medication-efficacy");
                 efficacyObservation.setStatus(ObservationStatus.FINAL);
                 efficacyObservation.addCategory().addCoding(new Coding(ObservationCategory.LABORATORY.getSystem(),
-                ObservationCategory.LABORATORY.toCode(), ObservationCategory.LABORATORY.getDisplay()));
-                efficacyObservation.getCode().addCoding(new Coding(LOINC_URI, "51961-1", "Genetic variation's effect on drug efficacy"));
+                        ObservationCategory.LABORATORY.toCode(), ObservationCategory.LABORATORY.getDisplay()));
+                efficacyObservation.getValueCodeableConcept()
+                        .addCoding(new Coding(LOINC_URI, "LA9661-5", "Presumed responsive"));
+                efficacyObservation.getCode()
+                        .addCoding(new Coding(LOINC_URI, "51961-1", "Genetic variation's effect on drug efficacy"));
                 ObservationComponentComponent evidenceComponent = efficacyObservation.addComponent();
                 evidenceComponent.getCode().addCoding(new Coding(LOINC_URI, "93044-6", "Level of evidence"));
                 evidenceComponent.getValueCodeableConcept().addCoding(new Coding("https://cbioportal.org/evidence/BW/",
@@ -373,6 +381,7 @@ public class JsonFhirMapper {
                     therapyRecommendation.getReasoning().getGeneticAlterations().forEach(geneticAlteration -> {
                         Resource geneticVariant = geneticAlterationsAdapter.process(geneticAlteration);
                         diagnosticReport.addResult(new Reference(geneticVariant));
+                        efficacyObservation.addDerivedFrom(new Reference(geneticVariant));
                     });
                 }
 
@@ -433,10 +442,16 @@ public class JsonFhirMapper {
 
         });
 
-        Bundle resp = client.transaction().withBundle(bundle).execute();
+        try {
+            Bundle resp = client.transaction().withBundle(bundle).execute();
 
-        // Log the response
-        System.out.println(ctx.newJsonParser().setPrettyPrint(true).encodeResourceToString(resp));
+            // Log the response
+            System.out.println(ctx.newJsonParser().setPrettyPrint(true).encodeResourceToString(resp));
+        } catch (UnprocessableEntityException entityException) {
+            FileWriter f = new FileWriter("error.json");
+            f.write(entityException.getResponseBody());
+            f.close();
+        }
 
     }
 

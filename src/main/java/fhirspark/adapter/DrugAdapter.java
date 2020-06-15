@@ -16,7 +16,7 @@ public class DrugAdapter {
         MedicationStatement medicationStatement = new MedicationStatement();
         medicationStatement.getMeta()
                 .addProfile("http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/medicationstatement");
-        medicationStatement.setStatus(MedicationStatementStatus.INTENDED).setSubject(patient);
+        medicationStatement.setStatus(MedicationStatementStatus.UNKNOWN).setSubject(patient);
 
         String ncitCode = treatment.getNcitCode() != null ? treatment.getNcitCode()
                 : drugResolver.resolveDrug(treatment.getName()).getNcitCode();
