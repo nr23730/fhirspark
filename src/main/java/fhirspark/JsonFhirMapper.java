@@ -112,7 +112,8 @@ public class JsonFhirMapper {
             Mtb mtb = new Mtb().withTherapyRecommendations(new ArrayList<TherapyRecommendation>())
                     .withSamples(new ArrayList<String>());
             for (Mtb mtbCandidate : mtbs) {
-                mtb = mtbCandidate.getId().equals("mtb_" + patientId + "_" + diagnosticReport.getIssued().getTime()) ? mtbCandidate
+                mtb = mtbCandidate.getId().equals("mtb_" + patientId + "_" + diagnosticReport.getIssued().getTime())
+                        ? mtbCandidate
                         : new Mtb().withTherapyRecommendations(new ArrayList<TherapyRecommendation>())
                                 .withSamples(new ArrayList<String>());
             }
@@ -469,8 +470,9 @@ public class JsonFhirMapper {
         Patient patient = new Patient();
         patient.setId(IdType.newRandomUuid());
         patient.addIdentifier(new Identifier().setSystem(PATIENT_URI).setValue(patientId));
-        b.addEntry().setFullUrl(patient.getIdElement().getValue()).setResource(patient).getRequest().setUrl("Patient")
-                .setIfNoneExist("identifier=" + PATIENT_URI + "|" + patientId).setMethod(Bundle.HTTPVerb.POST);
+        b.addEntry().setFullUrl(patient.getIdElement().getValue()).setResource(patient).getRequest()
+                .setUrl("Patient?identifier=" + PATIENT_URI + "|" + patientId)
+                .setIfNoneExist("identifier=" + PATIENT_URI + "|" + patientId).setMethod(Bundle.HTTPVerb.PUT);
 
         return new Reference(patient);
     }
@@ -481,8 +483,8 @@ public class JsonFhirMapper {
         practitioner.setId(IdType.newRandomUuid());
         practitioner.addIdentifier(new Identifier().setSystem(PATIENT_URI).setValue(credentials));
         b.addEntry().setFullUrl(practitioner.getIdElement().getValue()).setResource(practitioner).getRequest()
-                .setUrl("Practitioner").setIfNoneExist("identifier=" + PATIENT_URI + "|" + credentials)
-                .setMethod(Bundle.HTTPVerb.POST);
+                .setUrl("Practitioner?identifier=" + PATIENT_URI + "|" + credentials).setIfNoneExist("identifier=" + PATIENT_URI + "|" + credentials)
+                .setMethod(Bundle.HTTPVerb.PUT);
 
         return new Reference(practitioner);
 
