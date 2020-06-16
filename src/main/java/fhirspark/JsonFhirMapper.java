@@ -22,6 +22,7 @@ import org.hl7.fhir.r4.model.CarePlan.CarePlanActivityComponent;
 import org.hl7.fhir.r4.model.CarePlan.CarePlanIntent;
 import org.hl7.fhir.r4.model.CarePlan.CarePlanStatus;
 import org.hl7.fhir.r4.model.DiagnosticReport.DiagnosticReportStatus;
+import org.hl7.fhir.r4.model.Identifier.IdentifierUse;
 import org.hl7.fhir.r4.model.Observation.ObservationComponentComponent;
 import org.hl7.fhir.r4.model.Observation.ObservationStatus;
 import org.hl7.fhir.r4.model.RelatedArtifact.RelatedArtifactType;
@@ -469,7 +470,9 @@ public class JsonFhirMapper {
 
         Patient patient = new Patient();
         patient.setId(IdType.newRandomUuid());
-        patient.addIdentifier(new Identifier().setSystem(PATIENT_URI).setValue(patientId));
+        patient.getIdentifierFirstRep().setSystem(PATIENT_URI).setValue(patientId);
+        patient.getIdentifierFirstRep().setUse(IdentifierUse.USUAL);
+        patient.getIdentifierFirstRep().getType().addCoding().setSystem("http://terminology.hl7.org/CodeSystem/v2-0203").setCode("MR");
         b.addEntry().setFullUrl(patient.getIdElement().getValue()).setResource(patient).getRequest()
                 .setUrl("Patient?identifier=" + PATIENT_URI + "|" + patientId)
                 .setIfNoneExist("identifier=" + PATIENT_URI + "|" + patientId).setMethod(Bundle.HTTPVerb.PUT);
