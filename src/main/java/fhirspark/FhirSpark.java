@@ -9,7 +9,12 @@ import java.io.InputStream;
 import java.util.List;
 import org.eclipse.jetty.http.HttpStatus;
 
-import static spark.Spark.*;
+import static spark.Spark.delete;
+import static spark.Spark.get;
+import static spark.Spark.options;
+import static spark.Spark.port;
+import static spark.Spark.post;
+import static spark.Spark.put;
 
 public final class FhirSpark {
 
