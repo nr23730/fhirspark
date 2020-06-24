@@ -143,14 +143,15 @@ public class JsonFhirMapper {
 
             if (diagnosticReport.hasStatus()) {
                 switch (diagnosticReport.getStatus().toCode()) {
-                    case "partial":
-                        mtb.setMtbState("DRAFT");
-                        break;
                     case "final":
                         mtb.setMtbState("COMPLETED");
                         break;
                     case "cancelled":
                         mtb.setMtbState("ARCHIVED");
+                        break;
+                    default:
+                    case "partial":
+                        mtb.setMtbState("DRAFT");
                         break;
                 }
             }
@@ -195,6 +196,8 @@ public class JsonFhirMapper {
                                 case "48018-6":
                                     g.setHugoSymbol(variant.getValueCodeableConcept().getCodingFirstRep().getDisplay());
                                     break;
+                                default:
+                                    break;
                             }
                         });
                         geneticAlterations.add(g);
@@ -206,6 +209,9 @@ public class JsonFhirMapper {
                                         result.getValueCodeableConcept().getCodingFirstRep().getCode());
                             }
                         });
+                        break;
+                    default:
+                        break;
                 }
             }
 
@@ -224,6 +230,8 @@ public class JsonFhirMapper {
                             break;
                         case "LA14020-4":
                             mtb.setGeneticCounselingRecommendation(true);
+                            break;
+                        default:
                             break;
                     }
                 } else {
@@ -312,14 +320,16 @@ public class JsonFhirMapper {
 
                 if (mtb.getMtbState() != null) {
                     switch (mtb.getMtbState().toUpperCase()) {
-                        case "DRAFT":
-                            diagnosticReport.setStatus(DiagnosticReportStatus.PARTIAL);
-                            break;
                         case "COMPLETED":
                             diagnosticReport.setStatus(DiagnosticReportStatus.FINAL);
                             break;
                         case "ARCHIVED":
                             diagnosticReport.setStatus(DiagnosticReportStatus.CANCELLED);
+                            break;
+                        default:
+                        case "DRAFT":
+                            diagnosticReport.setStatus(DiagnosticReportStatus.PARTIAL);
+                            break;
                     }
                 } else {
                     diagnosticReport.setStatus(DiagnosticReportStatus.PARTIAL);
