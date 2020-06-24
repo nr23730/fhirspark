@@ -1,8 +1,7 @@
 package fhirspark.adapter.clinicaldata;
 
-import org.hl7.fhir.r4.model.Resource;
-
 import fhirspark.restmodel.ClinicalDatum;
+import org.hl7.fhir.r4.model.Resource;
 
 public interface ClinicalDataAdapter {
 

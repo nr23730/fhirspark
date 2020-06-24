@@ -1,12 +1,11 @@
 package fhirspark.adapter;
 
-import org.hl7.fhir.r4.model.Coding;
-import org.hl7.fhir.r4.model.MedicationStatement;
-import org.hl7.fhir.r4.model.Reference;
-import org.hl7.fhir.r4.model.MedicationStatement.MedicationStatementStatus;
-
 import fhirspark.resolver.OncoKbDrug;
 import fhirspark.restmodel.Treatment;
+import org.hl7.fhir.r4.model.Coding;
+import org.hl7.fhir.r4.model.MedicationStatement;
+import org.hl7.fhir.r4.model.MedicationStatement.MedicationStatementStatus;
+import org.hl7.fhir.r4.model.Reference;
 
 public class DrugAdapter {
 

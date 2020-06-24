@@ -1,17 +1,16 @@
 package fhirspark.adapter;
 
+import fhirspark.resolver.HgncGeneName;
+import fhirspark.resolver.model.genenames.Doc;
+import fhirspark.restmodel.GeneticAlteration;
 import org.hl7.fhir.r4.model.CodeableConcept;
 import org.hl7.fhir.r4.model.Coding;
 import org.hl7.fhir.r4.model.Meta;
 import org.hl7.fhir.r4.model.Observation;
-import org.hl7.fhir.r4.model.Resource;
 import org.hl7.fhir.r4.model.Observation.ObservationComponentComponent;
 import org.hl7.fhir.r4.model.Observation.ObservationStatus;
+import org.hl7.fhir.r4.model.Resource;
 import org.hl7.fhir.r4.model.codesystems.ObservationCategory;
-
-import fhirspark.resolver.HgncGeneName;
-import fhirspark.resolver.model.genenames.Doc;
-import fhirspark.restmodel.GeneticAlteration;
 
 public class GeneticAlternationsAdapter {
 

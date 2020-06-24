@@ -1,9 +1,5 @@
 package fhirspark.resolver;
 
-import fhirspark.resolver.model.Drug;
-
-import java.util.List;
-
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -14,6 +10,8 @@ import com.sun.jersey.api.client.ClientHandlerException;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.client.WebResource;
+import fhirspark.resolver.model.Drug;
+import java.util.List;
 
 public class OncoKbDrug {
 

@@ -1,16 +1,14 @@
 package fhirspark;
 
-import static spark.Spark.*;
-
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import fhirspark.restmodel.CbioportalRest;
+import fhirspark.restmodel.Mtb;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.List;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import fhirspark.restmodel.CbioportalRest;
-import fhirspark.restmodel.Mtb;
+import static spark.Spark.*;
 
 public final class FhirSpark {
 

@@ -1,7 +1,5 @@
 package fhirspark.resolver;
 
-import fhirspark.resolver.model.genenames.Genenames;
-
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -11,6 +9,7 @@ import com.sun.jersey.api.client.ClientHandlerException;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.client.WebResource;
+import fhirspark.resolver.model.genenames.Genenames;
 
 public class HgncGeneName {
 
