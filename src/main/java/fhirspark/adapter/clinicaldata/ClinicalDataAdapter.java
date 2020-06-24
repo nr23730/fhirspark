@@ -5,6 +5,6 @@ import org.hl7.fhir.r4.model.Resource;
 
 public interface ClinicalDataAdapter {
 
-    public Resource process(ClinicalDatum clinicalData);
+    Resource process(ClinicalDatum clinicalData);
 
 }
