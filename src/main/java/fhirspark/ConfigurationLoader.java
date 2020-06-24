@@ -21,7 +21,8 @@ public class ConfigurationLoader {
 
     <T> T loadConfiguration(InputStream config, Class<T> cls) {
         try {
-            String contents = this.stringSubstitutor.replace(new String(ByteStreams.toByteArray(config), StandardCharsets.UTF_8));
+            String contents = this.stringSubstitutor
+                    .replace(new String(ByteStreams.toByteArray(config), StandardCharsets.UTF_8));
 
             return this.objectMapper.readValue(contents, cls);
         } catch (IOException e) {

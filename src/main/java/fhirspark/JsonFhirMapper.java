@@ -476,7 +476,8 @@ public class JsonFhirMapper {
         patient.setId(IdType.newRandomUuid());
         patient.getIdentifierFirstRep().setSystem(PATIENT_URI).setValue(patientId);
         patient.getIdentifierFirstRep().setUse(IdentifierUse.USUAL);
-        patient.getIdentifierFirstRep().getType().addCoding().setSystem("http://terminology.hl7.org/CodeSystem/v2-0203").setCode("MR");
+        patient.getIdentifierFirstRep().getType().addCoding().setSystem("http://terminology.hl7.org/CodeSystem/v2-0203")
+                .setCode("MR");
         b.addEntry().setFullUrl(patient.getIdElement().getValue()).setResource(patient).getRequest()
                 .setUrl("Patient?identifier=" + PATIENT_URI + "|" + patientId)
                 .setIfNoneExist("identifier=" + PATIENT_URI + "|" + patientId).setMethod(Bundle.HTTPVerb.PUT);
@@ -490,8 +491,8 @@ public class JsonFhirMapper {
         practitioner.setId(IdType.newRandomUuid());
         practitioner.addIdentifier(new Identifier().setSystem(PATIENT_URI).setValue(credentials));
         b.addEntry().setFullUrl(practitioner.getIdElement().getValue()).setResource(practitioner).getRequest()
-                .setUrl("Practitioner?identifier=" + PATIENT_URI + "|" + credentials).setIfNoneExist("identifier=" + PATIENT_URI + "|" + credentials)
-                .setMethod(Bundle.HTTPVerb.PUT);
+                .setUrl("Practitioner?identifier=" + PATIENT_URI + "|" + credentials)
+                .setIfNoneExist("identifier=" + PATIENT_URI + "|" + credentials).setMethod(Bundle.HTTPVerb.PUT);
 
         return new Reference(practitioner);
 

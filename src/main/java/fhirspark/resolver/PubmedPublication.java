@@ -18,7 +18,8 @@ public class PubmedPublication {
 
     public String resolvePublication(int pubmedId) {
         WebResource webResource = client
-                .resource("https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&id=" + pubmedId + "&retmode=json");
+                .resource("https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&id=" + pubmedId
+                        + "&retmode=json");
         ClientResponse response = webResource.accept("application/json").get(ClientResponse.class);
         if (response.getStatus() != HttpStatus.OK_200) {
             throw new RuntimeException("HTTP Error: " + response.getStatus());
@@ -37,7 +38,7 @@ public class PubmedPublication {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-       return null;
+        return null;
     }
 
 }
