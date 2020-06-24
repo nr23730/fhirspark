@@ -10,6 +10,7 @@ import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.client.WebResource;
 import fhirspark.resolver.model.genenames.Genenames;
+import org.eclipse.jetty.http.HttpStatus;
 
 public class HgncGeneName {
 
@@ -20,7 +21,7 @@ public class HgncGeneName {
         WebResource webResource = client
                 .resource("http://rest.genenames.org/fetch/entrez_id/" + ncbiGeneId);
         ClientResponse response = webResource.accept("application/json").get(ClientResponse.class);
-        if (response.getStatus() != 200) {
+        if (response.getStatus() != HttpStatus.OK_200) {
             throw new RuntimeException("HTTP Error: " + response.getStatus());
         }
 

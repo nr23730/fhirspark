@@ -12,6 +12,7 @@ import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.client.WebResource;
 import fhirspark.resolver.model.Drug;
 import java.util.List;
+import org.eclipse.jetty.http.HttpStatus;
 
 public class OncoKbDrug {
 
@@ -22,7 +23,7 @@ public class OncoKbDrug {
         WebResource webResource = client
                 .resource("https://oncokb.org:443/api/v1/drugs/lookup?name=" + name + "&exactMatch=true");
         ClientResponse response = webResource.accept("application/json").get(ClientResponse.class);
-        if (response.getStatus() != 200) {
+        if (response.getStatus() != HttpStatus.OK_200) {
             throw new RuntimeException("HTTP Error: " + response.getStatus());
         }
 

@@ -7,6 +7,7 @@ import fhirspark.restmodel.Mtb;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.List;
+import org.eclipse.jetty.http.HttpStatus;
 
 import static spark.Spark.*;
 
@@ -31,7 +32,7 @@ public final class FhirSpark {
         port(settings.getPort());
 
         options("/mtb/:patientId", (req, res) -> {
-            res.status(204);
+            res.status(HttpStatus.NO_CONTENT_204);
             res.header("Access-Control-Allow-Credentials", "true");
             res.header("Access-Control-Allow-Headers", req.headers("Access-Control-Request-Headers"));
             res.header("Access-Control-Allow-Methods", "GET, PUT, DELETE");
@@ -43,7 +44,7 @@ public final class FhirSpark {
         });
 
         get("/mtb/:patientId", (req, res) -> {
-            res.status(200);
+            res.status(HttpStatus.OK_200);
             res.header("Access-Control-Allow-Credentials", "true");
             res.header("Access-Control-Allow-Origin", req.headers("Origin"));
             res.type("application/json");
@@ -53,7 +54,7 @@ public final class FhirSpark {
         });
 
         put("/mtb/:patientId", (req, res) -> {
-            res.status(201);
+            res.status(HttpStatus.CREATED_201);
             res.header("Access-Control-Allow-Credentials", "true");
             res.header("Access-Control-Allow-Origin", req.headers("Origin"));
             res.type("application/json");
@@ -69,7 +70,7 @@ public final class FhirSpark {
         });
 
         delete("/mtb/:patientId", (req, res) -> {
-            res.status(200);
+            res.status(HttpStatus.OK_200);
             res.header("Access-Control-Allow-Credentials", "true");
             res.header("Access-Control-Allow-Origin", req.headers("Origin"));
             res.type("application/json");

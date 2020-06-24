@@ -9,6 +9,7 @@ import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.client.WebResource;
 import java.io.IOException;
+import org.eclipse.jetty.http.HttpStatus;
 
 public class PubmedPublication {
 
@@ -19,7 +20,7 @@ public class PubmedPublication {
         WebResource webResource = client
                 .resource("https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&id=" + pubmedId + "&retmode=json");
         ClientResponse response = webResource.accept("application/json").get(ClientResponse.class);
-        if (response.getStatus() != 200) {
+        if (response.getStatus() != HttpStatus.OK_200) {
             throw new RuntimeException("HTTP Error: " + response.getStatus());
         }
 
