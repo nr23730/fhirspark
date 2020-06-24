@@ -21,6 +21,9 @@ public final class FhirSpark {
     private static JsonHl7v2Mapper jsonHl7v2Mapper;
     private static ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
 
+    private FhirSpark() {
+    }
+
     public static void main(final String[] args) throws Exception {
         InputStream settingsYaml = ClassLoader.getSystemClassLoader().getResourceAsStream("settings.yaml");
         if (args.length == 1) {
