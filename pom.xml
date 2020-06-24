@@ -126,6 +126,8 @@
                     <includeTestSourceDirectory>true</includeTestSourceDirectory>
                     <skip>${skipTests}</skip>
                     <excludes>fhirspark/restmodel/**,fhirspark/resolver/model/**</excludes>
+                    <suppressionsLocation>checkstyle-suppressions.xml</suppressionsLocation>
+                    <suppressionsFileExpression>checkstyle.suppressions.file</suppressionsFileExpression>
                 </configuration>
                 <executions>
                     <execution>
