@@ -208,7 +208,7 @@ public class JsonFhirMapper {
 
                 Task t = (Task) ((Reference) recommendedActionReference.getValue()).getResource();
                 if (t != null) {
-                    assert (t.getMeta().getProfile().get(0).getValue().equals(FOLLOWUP_URI));
+                    assert t.getMeta().getProfile().get(0).getValue().equals(FOLLOWUP_URI);
                     Coding c = t.getCode().getCodingFirstRep();
                     switch (c.getCode()) {
                         case "LA14021-2":
@@ -239,7 +239,7 @@ public class JsonFhirMapper {
                     references.add(new fhirspark.restmodel.Reference()
                             .withPmid(Integer.valueOf(((RelatedArtifact) relatedArtifact.getValue()).getUrl()
                                     .replaceFirst(PUBMED_URI, "")))
-                            .withName((((RelatedArtifact) relatedArtifact.getValue()).getCitation())));
+                            .withName(((RelatedArtifact) relatedArtifact.getValue()).getCitation()));
             }
 
             therapyRecommendation.setReferences(references);
@@ -298,7 +298,7 @@ public class JsonFhirMapper {
                     carePlan.getActivity().add(new CarePlanActivityComponent().setReference(new Reference(t)));
                 }
 
-                assert (mtb.getId().startsWith("mtb_" + patientId + "_"));
+                assert mtb.getId().startsWith("mtb_" + patientId + "_");
                 diagnosticReport.setIssued(new Date(Long.valueOf(mtb.getId().replace("mtb_" + patientId + "_", ""))));
 
                 if (mtb.getMtbState() != null) {
@@ -458,7 +458,7 @@ public class JsonFhirMapper {
     }
 
     public void deleteTherapyRecommendation(String patientId, String therapyRecommendationId) {
-        assert (therapyRecommendationId.startsWith(patientId));
+        assert therapyRecommendationId.startsWith(patientId);
         client.delete().resourceConditionalByUrl("CarePlan?identifier=" + PATIENT_URI + "|" + therapyRecommendationId)
                 .execute();
     }

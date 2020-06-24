@@ -41,7 +41,7 @@ public class GeneticAlternationsAdapter {
         variant.addComponent(ncbiGeneId);
 
         Doc hgncData = hgncGeneName.resolve(geneticAlternation.getEntrezGeneId()).getResponse().getDocs().get(0);
-        assert (geneticAlternation.getHugoSymbol().equals(hgncData.getSymbol()));
+        assert geneticAlternation.getHugoSymbol().equals(hgncData.getSymbol());
         ObservationComponentComponent hgnc = new ObservationComponentComponent()
                 .setCode(new CodeableConcept(new Coding("http://loinc.org", "48018-6", "Gene studied [ID]")));
         hgnc.getValueCodeableConcept()
