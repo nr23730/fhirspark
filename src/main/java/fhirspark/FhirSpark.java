@@ -18,13 +18,15 @@ public final class FhirSpark {
 
     public static void main(final String[] args) throws Exception {
         InputStream settingsYaml = ClassLoader.getSystemClassLoader().getResourceAsStream("settings.yaml");
-        if (args.length == 1)
+        if (args.length == 1) {
             settingsYaml = new FileInputStream(args[0]);
+        }
         ConfigurationLoader configLoader = new ConfigurationLoader();
         final Settings settings = configLoader.loadConfiguration(settingsYaml, Settings.class);
         jsonFhirMapper = new JsonFhirMapper(settings);
-        if (settings.getHl7v2config().get(0).getSendv2())
+        if (settings.getHl7v2config().get(0).getSendv2()) {
             jsonHl7v2Mapper = new JsonHl7v2Mapper(settings);
+        }
 
         port(settings.getPort());
 
@@ -59,8 +61,9 @@ public final class FhirSpark {
 
             List<Mtb> mtbs = objectMapper.readValue(req.body(), CbioportalRest.class).getMtbs();
             jsonFhirMapper.addOrEditMtb(req.params(":patientId"), mtbs);
-            if (settings.getHl7v2config().get(0).getSendv2())
-            jsonHl7v2Mapper.toHl7v2Oru(req.params(":patientId"), mtbs);
+            if (settings.getHl7v2config().get(0).getSendv2()) {
+                jsonHl7v2Mapper.toHl7v2Oru(req.params(":patientId"), mtbs);
+            }
             res.body(req.body());
             return res.body();
         });

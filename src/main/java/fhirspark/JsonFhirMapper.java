@@ -96,8 +96,9 @@ public class JsonFhirMapper {
                 .execute();
         Patient fhirPatient = (Patient) bPatient.getEntryFirstRep().getResource();
 
-        if (fhirPatient == null)
+        if (fhirPatient == null) {
             return "{}";
+        }
 
         Bundle bDiagnosticReports = (Bundle) client.search().forResource(DiagnosticReport.class)
                 .where(new ReferenceClientParam("subject").hasId(harmonizeId(fhirPatient))).prettyPrint().execute();
@@ -115,8 +116,9 @@ public class JsonFhirMapper {
                         : new Mtb().withTherapyRecommendations(new ArrayList<TherapyRecommendation>())
                                 .withSamples(new ArrayList<String>());
             }
-            if (!mtbs.contains(mtb))
+            if (!mtbs.contains(mtb)) {
                 mtbs.add(mtb);
+            }
 
             if (diagnosticReport.hasPerformer()) {
                 Bundle b2 = (Bundle) client.search().forResource(Practitioner.class).where(
@@ -152,8 +154,9 @@ public class JsonFhirMapper {
             // REBIOPSY HERE
 
             mtb.getSamples().clear();
-            for (Reference specimen : diagnosticReport.getSpecimen())
+            for (Reference specimen : diagnosticReport.getSpecimen()) {
                 mtb.getSamples().add(((Specimen) specimen.getResource()).getIdentifierFirstRep().getValue());
+            }
 
             TherapyRecommendation therapyRecommendation = new TherapyRecommendation()
                     .withComment(new ArrayList<String>()).withReasoning(new Reasoning());
@@ -194,9 +197,10 @@ public class JsonFhirMapper {
                         break;
                     case "http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/medication-efficacy":
                         ((Observation) reference.getResource()).getComponent().forEach(result -> {
-                            if (result.getCode().getCodingFirstRep().getCode().equals("93044-6"))
+                            if (result.getCode().getCodingFirstRep().getCode().equals("93044-6")) {
                                 therapyRecommendation.setEvidenceLevel(
                                         result.getValueCodeableConcept().getCodingFirstRep().getCode());
+                            }
                         });
                 }
             }
@@ -228,18 +232,20 @@ public class JsonFhirMapper {
                     Coding drug = medicationStatement.getMedicationCodeableConcept().getCodingFirstRep();
                     treatments.add(new Treatment().withNcitCode(drug.getCode()).withName(drug.getDisplay()));
 
-                    for (Annotation a : medicationStatement.getNote())
+                    for (Annotation a : medicationStatement.getNote()) {
                         therapyRecommendation.getComment().add(a.getText());
+                    }
                 }
             }
 
             List<fhirspark.restmodel.Reference> references = new ArrayList<fhirspark.restmodel.Reference>();
             for (Extension relatedArtifact : diagnosticReport.getExtensionsByUrl(RELATEDARTIFACT_URI)) {
-                if (((RelatedArtifact) relatedArtifact.getValue()).getType() == RelatedArtifactType.CITATION)
+                if (((RelatedArtifact) relatedArtifact.getValue()).getType() == RelatedArtifactType.CITATION) {
                     references.add(new fhirspark.restmodel.Reference()
                             .withPmid(Integer.valueOf(((RelatedArtifact) relatedArtifact.getValue()).getUrl()
                                     .replaceFirst(PUBMED_URI, "")))
                             .withName(((RelatedArtifact) relatedArtifact.getValue()).getCitation()));
+                }
             }
 
             therapyRecommendation.setReferences(references);
@@ -411,8 +417,9 @@ public class JsonFhirMapper {
                     String ncit = ms.getMedicationCodeableConcept().getCodingFirstRep().getCode();
                     medicationChange.addIdentifier(new Identifier().setSystem(NCIT_URI).setValue(ncit));
 
-                    for (String comment : therapyRecommendation.getComment())
+                    for (String comment : therapyRecommendation.getComment()) {
                         ms.getNote().add(new Annotation().setText(comment));
+                    }
 
                     Extension ex = new Extension().setUrl(RECOMMENDEDACTION_URI);
                     ex.setValue(new Reference(medicationChange));
@@ -491,10 +498,11 @@ public class JsonFhirMapper {
     }
 
     private String harmonizeId(IAnyResource resource) {
-        if (resource.getIdElement().getValue().startsWith("urn:uuid:"))
+        if (resource.getIdElement().getValue().startsWith("urn:uuid:")) {
             return resource.getIdElement().getValue();
-        else
+        } else {
             return resource.getIdElement().getResourceType() + "/" + resource.getIdElement().getIdPart();
+        }
     }
 
 }
