@@ -29,7 +29,8 @@ public class OncoKbDrug {
 
         List<Drug> result;
         try {
-            result = objectMapper.readValue(response.getEntity(String.class), new TypeReference<List<Drug>>(){});
+            result = objectMapper.readValue(response.getEntity(String.class), new TypeReference<List<Drug>>() {
+            });
             return result.get(0);
         } catch (JsonMappingException e) {
             // TODO Auto-generated catch block
@@ -44,6 +45,6 @@ public class OncoKbDrug {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-       return null;
+        return null;
     }
 }

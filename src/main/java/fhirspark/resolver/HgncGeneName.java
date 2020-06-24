@@ -16,10 +16,9 @@ public class HgncGeneName {
 
     private Client client = new Client();
     private ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
-    
+
     public Genenames resolve(int ncbiGeneId) {
-        WebResource webResource = client
-                .resource("http://rest.genenames.org/fetch/entrez_id/" + ncbiGeneId);
+        WebResource webResource = client.resource("http://rest.genenames.org/fetch/entrez_id/" + ncbiGeneId);
         ClientResponse response = webResource.accept("application/json").get(ClientResponse.class);
         if (response.getStatus() != HttpStatus.OK_200) {
             throw new RuntimeException("HTTP Error: " + response.getStatus());
@@ -42,7 +41,7 @@ public class HgncGeneName {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-       return null;
+        return null;
     }
 
 }
