@@ -16,7 +16,7 @@ import java.util.List;
 public class OncoKbDrug {
 
     private Client client = new Client();
-    ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
+    private ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
 
     public Drug resolveDrug(String name) {
         WebResource webResource = client

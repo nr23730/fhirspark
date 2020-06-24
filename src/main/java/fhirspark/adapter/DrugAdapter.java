@@ -9,7 +9,7 @@ import org.hl7.fhir.r4.model.Reference;
 
 public class DrugAdapter {
 
-    OncoKbDrug drugResolver = new OncoKbDrug();
+    private OncoKbDrug drugResolver = new OncoKbDrug();
 
     public MedicationStatement process(Reference patient, Treatment treatment) {
         MedicationStatement medicationStatement = new MedicationStatement();

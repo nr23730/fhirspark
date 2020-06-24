@@ -14,7 +14,7 @@ import fhirspark.resolver.model.genenames.Genenames;
 public class HgncGeneName {
 
     private Client client = new Client();
-    ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
+    private ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
     
     public Genenames resolve(int ncbiGeneId) {
         WebResource webResource = client

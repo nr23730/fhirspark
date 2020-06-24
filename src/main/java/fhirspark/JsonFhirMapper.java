@@ -75,15 +75,15 @@ public class JsonFhirMapper {
     private static String GENOMICSREPORT_URI = "http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/genomics-report";
     private static String GENOMIC_URI = "http://terminology.hl7.org/CodeSystem/v2-0074";
 
-    FhirContext ctx = FhirContext.forR4();
-    IGenericClient client;
-    ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
-    OncoKbDrug drugResolver = new OncoKbDrug();
-    PubmedPublication pubmedResolver = new PubmedPublication();
+    private FhirContext ctx = FhirContext.forR4();
+    private IGenericClient client;
+    private ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
+    private OncoKbDrug drugResolver = new OncoKbDrug();
+    private PubmedPublication pubmedResolver = new PubmedPublication();
 
-    GeneticAlternationsAdapter geneticAlterationsAdapter = new GeneticAlternationsAdapter();
-    DrugAdapter drugAdapter = new DrugAdapter();
-    SpecimenAdapter specimenAdapter = new SpecimenAdapter();
+    private GeneticAlternationsAdapter geneticAlterationsAdapter = new GeneticAlternationsAdapter();
+    private DrugAdapter drugAdapter = new DrugAdapter();
+    private SpecimenAdapter specimenAdapter = new SpecimenAdapter();
 
     public JsonFhirMapper(Settings settings) {
         this.client = ctx.newRestfulGenericClient(settings.getFhirDbBase());

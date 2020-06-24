@@ -13,7 +13,7 @@ import java.io.IOException;
 public class PubmedPublication {
 
     private Client client = new Client();
-    ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
+    private ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
 
     public String resolvePublication(int pubmedId) {
         WebResource webResource = client
