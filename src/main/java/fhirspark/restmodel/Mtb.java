@@ -35,9 +35,9 @@ public class Mtb {
     @JsonProperty("rebiopsyRecommendation")
     private Boolean rebiopsyRecommendation;
     @JsonProperty("samples")
-    private List<String> samples = null;
+    private List<String> samples;
     @JsonProperty("therapyRecommendations")
-    private List<TherapyRecommendation> therapyRecommendations = null;
+    private List<TherapyRecommendation> therapyRecommendations;
 
     @JsonProperty("author")
     public String getAuthor() {

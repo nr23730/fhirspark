@@ -14,9 +14,9 @@ import java.util.List;
 public class Reasoning {
 
     @JsonProperty("clinicalData")
-    private List<ClinicalDatum> clinicalData = null;
+    private List<ClinicalDatum> clinicalData;
     @JsonProperty("geneticAlterations")
-    private List<GeneticAlteration> geneticAlterations = null;
+    private List<GeneticAlteration> geneticAlterations;
 
     @JsonProperty("clinicalData")
     public List<ClinicalDatum> getClinicalData() {

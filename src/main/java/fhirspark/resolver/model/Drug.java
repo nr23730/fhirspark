@@ -21,7 +21,7 @@ private String drugName;
 @JsonProperty("uuid")
 private String uuid;
 @JsonProperty("synonyms")
-private List<String> synonyms = null;
+private List<String> synonyms;
 
 @JsonProperty("ncitCode")
 public String getNcitCode() {

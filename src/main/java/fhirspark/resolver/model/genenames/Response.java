@@ -24,7 +24,7 @@ public class Response {
     @JsonProperty("start")
     private Integer start;
     @JsonProperty("docs")
-    private List<Doc> docs = null;
+    private List<Doc> docs;
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 

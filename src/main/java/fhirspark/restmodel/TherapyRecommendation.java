@@ -21,7 +21,7 @@ public class TherapyRecommendation {
     @JsonProperty("author")
     private String author;
     @JsonProperty("comment")
-    private List<String> comment = null;
+    private List<String> comment;
     @JsonProperty("evidenceLevel")
     private String evidenceLevel;
     @JsonProperty("id")
@@ -29,9 +29,9 @@ public class TherapyRecommendation {
     @JsonProperty("reasoning")
     private Reasoning reasoning;
     @JsonProperty("references")
-    private List<Reference> references = null;
+    private List<Reference> references;
     @JsonProperty("treatments")
-    private List<Treatment> treatments = null;
+    private List<Treatment> treatments;
 
     @JsonProperty("author")
     public String getAuthor() {

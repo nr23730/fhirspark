@@ -19,7 +19,7 @@ public final class Settings {
     @JsonProperty("fhirDbBase")
     private String fhirDbBase;
     @JsonProperty("hl7v2config")
-    private List<Hl7v2config> hl7v2config = null;
+    private List<Hl7v2config> hl7v2config;
 
     @JsonProperty("port")
     public Integer getPort() {
