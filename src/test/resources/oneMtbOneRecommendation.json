@@ -1,0 +1,43 @@
+{
+	"id": "Testpatient11",
+	"mtbs": [
+		{
+			"author": "anonymousUser1",
+			"date": "2020-05-20",
+			"generalRecommendation": "asdf1",
+			"id": "mtb_Testpatient11_1590601794804",
+			"mtbState": "COMPLETED",
+			"samples": [
+				"Testpatient_01"
+			],
+			"therapyRecommendations": [
+				{
+					"author": "anonymousUser1",
+					"comment": [
+						"eins",
+						"zwei"
+					],
+					"id": "Testpatient11_1590601800979",
+					"evidenceLevel": "m1a",
+					"reasoning": {
+						"clinicalData": [],
+						"geneticAlterations": [
+							{
+								"alteration": "V600E",
+								"entrezGeneId": 673,
+								"hugoSymbol": "BRAF"
+							}
+						]
+					},
+					"references": [],
+					"treatments": [
+						{
+							"name": "Afatinib",
+							"ncit_code": "C66940"
+						}
+					]
+				}
+			]
+		}
+	]
+}
