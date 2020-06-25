@@ -1,0 +1,118 @@
+{
+	"id": "Testpatient",
+	"mtbs": [
+		{
+			"author": "anonymousUser1",
+			"date": "2020-05-20",
+			"generalRecommendation": "asdf1",
+			"id": "mtb_Testpatient_1590601794804",
+			"mtbState": "COMPLETED",
+			"samples": [
+				"Testpatient_01"
+			],
+			"therapyRecommendations": [
+				{
+					"author": "anonymousUser1",
+					"comment": [
+						"eins",
+						"zwei"
+					],
+					"id": "Testpatient_1590601800979",
+					"evidenceLevel": "m1a",
+					"reasoning": {
+						"clinicalData": [
+						],
+						"geneticAlterations": [
+							{
+								"alteration": "V600E",
+								"entrezGeneId": 673,
+								"hugoSymbol": "BRAF"
+							}
+						]
+					},
+					"references": [],
+					"treatments": [
+						{
+							"name": "Afatinib",
+							"ncit_code": "C66940"
+						}
+					]
+				}
+			]
+		},
+		{
+			"author": "anonymousUser1",
+			"date": "2020-05-27",
+			"generalRecommendation": "ghjk2",
+			"id": "mtb_Testpatient_1590601799440",
+			"mtbState": "DRAFT",
+			"samples": [
+				"Testpatient_01",
+				"Testpatient_02"
+			],
+			"rebiopsyRecommendation": true,
+			"therapyRecommendations": [
+				{
+					"author": "anonymousUser1",
+					"comment": [
+						"drei",
+						"vier"
+					],
+					"evidenceLevel": "m2a",
+					"id": "Testpatient_1590601812873",
+					"reasoning": {
+						"clinicalData": [
+						],
+						"geneticAlterations": [
+							{
+								"alteration": "S2215F",
+								"entrezGeneId": 2475,
+								"hugoSymbol": "MTOR"
+							},
+							{
+								"alteration": "G12C",
+								"entrezGeneId": 3845,
+								"hugoSymbol": "KRAS"
+							}
+						]
+					},
+					"references": [],
+					"treatments": [
+						{
+							"name": "Avapritinib",
+							"ncit_code": "C123827"
+						}
+					]
+				},
+				{
+					"author": "anonymousUser1",
+					"comment": [
+						"fünf",
+						"sechs",
+						"sieben"
+					],
+					"id": "Testpatient_1590601827090",
+					"evidenceLevel": "m55a",
+					"reasoning": {
+						"clinicalData": [
+						],
+						"geneticAlterations": [
+							{
+								"alteration": "R248",
+								"entrezGeneId": 7157,
+								"hugoSymbol": "TP53"
+							}
+						]
+					},
+					"references": [],
+					"treatments": [
+						{
+							"name": "Asciminib",
+							"ncit_code": "C114494"
+						}
+					]
+				}
+			]
+		}
+	]
+}

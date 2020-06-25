@@ -1,5 +1,5 @@
 port: ${FHIRSPARK_PORT:-3001}
-fhirDbBase: ${FHIRSPARK_FHIRBASE:-https://cbioportal.mi.nr205.de/fhir/}
+fhirDbBase: ${FHIRSPARK_FHIRBASE:-http://localhost:8080/fhir/}
 hl7v2config: 
  - sendv2: ${FHIRSPARK_SENDHL7V2:-false}
    server: ${FHIRSPARK_HL7V2SERVER:-localhost}
