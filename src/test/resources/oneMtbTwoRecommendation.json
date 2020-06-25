@@ -1,11 +1,11 @@
 {
-	"id": "Testpatient",
+	"id": "Testpatient12",
 	"mtbs": [
 		{
 			"author": "anonymousUser1",
 			"date": "2020-05-27",
 			"generalRecommendation": "ghjk2",
-			"id": "mtb_Testpatient_1590601799440",
+			"id": "mtb_Testpatient12_1590601799440",
 			"mtbState": "DRAFT",
 			"samples": [
 				"Testpatient_01",
@@ -20,7 +20,7 @@
 						"vier"
 					],
 					"evidenceLevel": "m2a",
-					"id": "Testpatient_1590601812873",
+					"id": "Testpatient12_1590601812873",
 					"reasoning": {
 						"clinicalData": [],
 						"geneticAlterations": [
@@ -51,8 +51,8 @@
 						"sechs",
 						"sieben"
 					],
-					"id": "Testpatient_1590601827090",
-					"evidenceLevel": "m55a",
+					"id": "Testpatient12_1590601827090",
+					"evidenceLevel": "m1a",
 					"reasoning": {
 						"clinicalData": [],
 						"geneticAlterations": [

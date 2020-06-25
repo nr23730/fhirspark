@@ -1,11 +1,11 @@
 {
-	"id": "Testpatient",
+	"id": "Testpatient11",
 	"mtbs": [
 		{
 			"author": "anonymousUser1",
 			"date": "2020-05-20",
 			"generalRecommendation": "asdf1",
-			"id": "mtb_Testpatient_1590601794804",
+			"id": "mtb_Testpatient11_1590601794804",
 			"mtbState": "COMPLETED",
 			"samples": [
 				"Testpatient_01"
@@ -17,7 +17,7 @@
 						"eins",
 						"zwei"
 					],
-					"id": "Testpatient_1590601800979",
+					"id": "Testpatient11_1590601800979",
 					"evidenceLevel": "m1a",
 					"reasoning": {
 						"clinicalData": [],

@@ -1,11 +1,11 @@
 {
-	"id": "Testpatient",
+	"id": "Testpatient22",
 	"mtbs": [
 		{
 			"author": "anonymousUser1",
 			"date": "2020-05-20",
 			"generalRecommendation": "asdf1",
-			"id": "mtb_Testpatient_1590601794804",
+			"id": "mtb_Testpatient22_1590601794804",
 			"mtbState": "COMPLETED",
 			"samples": [
 				"Testpatient_01"
@@ -17,7 +17,7 @@
 						"eins",
 						"zwei"
 					],
-					"id": "Testpatient_1590601800979",
+					"id": "Testpatient22_1590601800979",
 					"evidenceLevel": "m1a",
 					"reasoning": {
 						"clinicalData": [],
@@ -43,7 +43,7 @@
 			"author": "anonymousUser1",
 			"date": "2020-05-27",
 			"generalRecommendation": "ghjk2",
-			"id": "mtb_Testpatient_1590601799440",
+			"id": "mtb_Testpatient22_1590601799440",
 			"mtbState": "DRAFT",
 			"samples": [
 				"Testpatient_01",
@@ -58,7 +58,7 @@
 						"sechs",
 						"sieben"
 					],
-					"id": "Testpatient_1590601827090",
+					"id": "Testpatient22_1590601827090",
 					"evidenceLevel": "m55a",
 					"reasoning": {
 						"clinicalData": [],
