@@ -9,6 +9,14 @@ on:
 jobs:
   build:
 
+    services:
+      hapiserver:
+        image: docker.miracum.org/miracum-data/hapi-fhir-jpaserver:v8.1.1
+        ports:
+         - 8080:8080
+        env:
+          validation.requests.enabled: "false"
+
     runs-on: ubuntu-latest
 
     steps:
@@ -18,4 +26,4 @@ jobs:
       with:
         java-version: 11
     - name: Build with Maven
-      run: mvn -B package --file pom.xml
+      run: mvn -B -Dfhir.test.url="http://localhost:8080/fhir/" package --file pom.xml

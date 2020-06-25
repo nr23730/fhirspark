@@ -10,9 +10,12 @@ import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
 
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.Properties;
+
 import fhirspark.restmodel.*;
+import spark.resource.ClassPathResource;
+
 import static org.junit.Assert.*;
 
 @TestInstance(Lifecycle.PER_CLASS)
@@ -29,9 +32,11 @@ public class JsonFhirMapperTest {
         try {
             settings = new ConfigurationLoader()
                     .loadConfiguration(new FileInputStream("src/main/resources/settings.yaml"), Settings.class);
-            settings.setFhirDbBase("https://cbioportal.mi.nr205.de/fhir/");
+            Properties p = new Properties();
+            p.load(new ClassPathResource("app.properties").getInputStream());
+            settings.setFhirDbBase(p.getProperty("fhir.test.url"));
             this.jfm = new JsonFhirMapper(settings);
-        } catch (FileNotFoundException e) {
+        } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
