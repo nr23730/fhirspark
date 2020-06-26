@@ -1,7 +1,7 @@
 FROM adoptopenjdk/maven-openjdk11:latest as build
 LABEL maintainer="Niklas Reimer <niklas@nr205.de>"
 
-RUN apt update && apt install git -y
+RUN apt-get update && apt-get install git -y
 
 ENV FHIRSPARK_HOME=/fhirspark
 COPY $PWD /fhirspark
