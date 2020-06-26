@@ -59,6 +59,10 @@ public class JsonFhirMapperTest {
     }
 
     @Test
+    public void oneMtbZeroRecommendationTest() {
+    }
+
+    @Test
     public void oneMtbOneRecommendationTest() {
     }
 
