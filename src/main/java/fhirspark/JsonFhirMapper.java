@@ -12,7 +12,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import fhirspark.adapter.DrugAdapter;
 import fhirspark.adapter.GeneticAlternationsAdapter;
 import fhirspark.adapter.SpecimenAdapter;
-import fhirspark.resolver.OncoKbDrug;
 import fhirspark.resolver.PubmedPublication;
 import fhirspark.restmodel.CbioportalRest;
 import fhirspark.restmodel.ClinicalDatum;
@@ -75,6 +74,7 @@ public class JsonFhirMapper {
     private static String uriPUBMED = "https://www.ncbi.nlm.nih.gov/pubmed/";
     private static String uriNCIT = "http://ncithesaurus-stage.nci.nih.gov";
     private static String uriTHERAPYRECOMMENDATION = "https://cbioportal.org/therapyrecommendation/";
+    private static String uriMTB = "https://cbioportal.org/mtb/";
     private static String uriGENOMICSREPORT =
             "http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/genomics-report";
     private static String uriGENOMIC = "http://terminology.hl7.org/CodeSystem/v2-0074";
@@ -82,7 +82,6 @@ public class JsonFhirMapper {
     private FhirContext ctx = FhirContext.forR4();
     private IGenericClient client;
     private ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
-    private OncoKbDrug drugResolver = new OncoKbDrug();
     private PubmedPublication pubmedResolver = new PubmedPublication();
 
     private GeneticAlternationsAdapter geneticAlterationsAdapter = new GeneticAlternationsAdapter();
@@ -114,15 +113,7 @@ public class JsonFhirMapper {
 
             Mtb mtb = new Mtb().withTherapyRecommendations(new ArrayList<TherapyRecommendation>())
                     .withSamples(new ArrayList<String>());
-            for (Mtb mtbCandidate : mtbs) {
-                mtb = mtbCandidate.getId().equals("mtb_" + patientId + "_" + diagnosticReport.getIssued().getTime())
-                        ? mtbCandidate
-                        : new Mtb().withTherapyRecommendations(new ArrayList<TherapyRecommendation>())
-                                .withSamples(new ArrayList<String>());
-            }
-            if (!mtbs.contains(mtb)) {
-                mtbs.add(mtb);
-            }
+            mtbs.add(mtb);
 
             if (diagnosticReport.hasPerformer()) {
                 Bundle b2 = (Bundle) client.search().forResource(Practitioner.class).where(
@@ -163,102 +154,102 @@ public class JsonFhirMapper {
                 mtb.getSamples().add(((Specimen) specimen.getResource()).getIdentifierFirstRep().getValue());
             }
 
-            TherapyRecommendation therapyRecommendation = new TherapyRecommendation()
-                    .withComment(new ArrayList<String>()).withReasoning(new Reasoning());
-            mtb.getTherapyRecommendations().add(therapyRecommendation);
-            List<ClinicalDatum> clinicalData = new ArrayList<ClinicalDatum>();
-            List<GeneticAlteration> geneticAlterations = new ArrayList<GeneticAlteration>();
-            therapyRecommendation.getReasoning().withClinicalData(clinicalData)
-                    .withGeneticAlterations(geneticAlterations);
-
-            therapyRecommendation.setAuthor(mtb.getAuthor());
-
-            // COMMENTS GET WITHIN MEDICATION
-
-            therapyRecommendation.setId(diagnosticReport.getIdentifier().get(0).getValue());
-
-            // PUT CLINICAL DATA HERE
-
             for (Reference reference : diagnosticReport.getResult()) {
                 switch (reference.getResource().getMeta().getProfile().get(0).getValue()) {
-                    case "http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/variant":
-                        GeneticAlteration g = new GeneticAlteration();
-                        ((Observation) reference.getResource()).getComponent().forEach(variant -> {
-                            switch (variant.getCode().getCodingFirstRep().getCode()) {
-                                case "48005-3":
-                                    g.setAlteration(variant.getValueCodeableConcept().getCodingFirstRep().getCode()
-                                            .replaceFirst("p.", ""));
-                                    break;
-                                case "81252-9":
-                                    g.setEntrezGeneId(Integer
-                                            .valueOf(variant.getValueCodeableConcept().getCodingFirstRep().getCode()));
-                                    break;
-                                case "48018-6":
-                                    g.setHugoSymbol(variant.getValueCodeableConcept().getCodingFirstRep().getDisplay());
-                                    break;
-                                default:
-                                    break;
-                            }
-                        });
-                        geneticAlterations.add(g);
-                        break;
-                        case "http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/medication-efficacy":
+                    case "http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/medication-efficacy":
                         Observation ob = (Observation) reference.getResource();
+
+                        TherapyRecommendation therapyRecommendation = new TherapyRecommendation()
+                                .withComment(new ArrayList<String>()).withReasoning(new Reasoning());
+                        mtb.getTherapyRecommendations().add(therapyRecommendation);
+                        List<ClinicalDatum> clinicalData = new ArrayList<ClinicalDatum>();
+                        List<GeneticAlteration> geneticAlterations = new ArrayList<GeneticAlteration>();
+                        therapyRecommendation.getReasoning().withClinicalData(clinicalData)
+                                .withGeneticAlterations(geneticAlterations);
+
+                        therapyRecommendation.setAuthor(mtb.getAuthor());
+
+                        therapyRecommendation.setId(ob.getIdentifierFirstRep().getValue());
+
+                        // PUT CLINICAL DATA HERE
+
+                        List<Treatment> treatments = new ArrayList<Treatment>();
+                        therapyRecommendation.setTreatments(treatments);
+                        List<Extension> recommendedActionReferences = diagnosticReport
+                                .getExtensionsByUrl(uriRECOMMENDEDACTION);
+                        for (Extension recommendedActionReference : recommendedActionReferences) {
+
+                            Task t = (Task) ((Reference) recommendedActionReference.getValue()).getResource();
+                            if (t != null) {
+                                assert t.getMeta().getProfile().get(0).getValue().equals(uriFOLLOWUP);
+                                Coding c = t.getCode().getCodingFirstRep();
+                                switch (c.getCode()) {
+                                    case "LA14021-2":
+                                        mtb.setRebiopsyRecommendation(true);
+                                        break;
+                                    case "LA14020-4":
+                                        mtb.setGeneticCounselingRecommendation(true);
+                                        break;
+                                    default:
+                                        break;
+                                }
+                            }
+                        }
+
+                        List<fhirspark.restmodel.Reference> references = new ArrayList<fhirspark.restmodel.Reference>();
+                        for (Extension relatedArtifact : ob.getExtensionsByUrl(uriRELATEDARTIFACT)) {
+                            if (((RelatedArtifact) relatedArtifact.getValue())
+                                    .getType() == RelatedArtifactType.CITATION) {
+                                references.add(new fhirspark.restmodel.Reference()
+                                        .withPmid(Integer.valueOf(((RelatedArtifact) relatedArtifact.getValue())
+                                                .getUrl().replaceFirst(uriPUBMED, "")))
+                                        .withName(((RelatedArtifact) relatedArtifact.getValue()).getCitation()));
+                            }
+                        }
+
+                        therapyRecommendation.setReferences(references);
+
                         ob.getComponent().forEach(result -> {
                             if (result.getCode().getCodingFirstRep().getCode().equals("93044-6")) {
                                 therapyRecommendation.setEvidenceLevel(
                                         result.getValueCodeableConcept().getCodingFirstRep().getCode());
                             }
+                            if (result.getCode().getCodingFirstRep().getCode().equals("51963-7")) {
+                                therapyRecommendation.getTreatments().add(new Treatment()
+                                        .withNcitCode(result.getValueCodeableConcept().getCodingFirstRep().getCode())
+                                        .withName(result.getValueCodeableConcept().getCodingFirstRep().getDisplay()));
+                            }
                         });
+
+                        ob.getDerivedFrom().forEach(reference1 -> {
+                            GeneticAlteration g = new GeneticAlteration();
+                            ((Observation) reference1.getResource()).getComponent().forEach(variant -> {
+                                switch (variant.getCode().getCodingFirstRep().getCode()) {
+                                    case "48005-3":
+                                        g.setAlteration(variant.getValueCodeableConcept().getCodingFirstRep().getCode()
+                                                .replaceFirst("p.", ""));
+                                        break;
+                                    case "81252-9":
+                                        g.setEntrezGeneId(Integer.valueOf(
+                                                variant.getValueCodeableConcept().getCodingFirstRep().getCode()));
+                                        break;
+                                    case "48018-6":
+                                        g.setHugoSymbol(
+                                                variant.getValueCodeableConcept().getCodingFirstRep().getDisplay());
+                                        break;
+                                    default:
+                                        break;
+                                }
+                            });
+                            geneticAlterations.add(g);
+                        });
+
                         ob.getNote().forEach(note -> therapyRecommendation.getComment().add(note.getText()));
                         break;
                     default:
                         break;
                 }
             }
-
-            List<Treatment> treatments = new ArrayList<Treatment>();
-            therapyRecommendation.setTreatments(treatments);
-            List<Extension> recommendedActionReferences = diagnosticReport.getExtensionsByUrl(uriRECOMMENDEDACTION);
-            for (Extension recommendedActionReference : recommendedActionReferences) {
-
-                Task t = (Task) ((Reference) recommendedActionReference.getValue()).getResource();
-                if (t != null) {
-                    assert t.getMeta().getProfile().get(0).getValue().equals(uriFOLLOWUP);
-                    Coding c = t.getCode().getCodingFirstRep();
-                    switch (c.getCode()) {
-                        case "LA14021-2":
-                            mtb.setRebiopsyRecommendation(true);
-                            break;
-                        case "LA14020-4":
-                            mtb.setGeneticCounselingRecommendation(true);
-                            break;
-                        default:
-                            break;
-                    }
-                } else {
-                    Bundle bRecommendedAction = (Bundle) client.search().forResource(Task.class)
-                            .where(new TokenClientParam("_id").exactly()
-                                    .code(((Reference) recommendedActionReference.getValue()).getReference()))
-                            .prettyPrint().execute();
-                    MedicationStatement medicationStatement = (MedicationStatement) ((Task) bRecommendedAction
-                            .getEntryFirstRep().getResource()).getFocus().getResource();
-                    Coding drug = medicationStatement.getMedicationCodeableConcept().getCodingFirstRep();
-                    treatments.add(new Treatment().withNcitCode(drug.getCode()).withName(drug.getDisplay()));
-                }
-            }
-
-            List<fhirspark.restmodel.Reference> references = new ArrayList<fhirspark.restmodel.Reference>();
-            for (Extension relatedArtifact : diagnosticReport.getExtensionsByUrl(uriRELATEDARTIFACT)) {
-                if (((RelatedArtifact) relatedArtifact.getValue()).getType() == RelatedArtifactType.CITATION) {
-                    references.add(new fhirspark.restmodel.Reference()
-                            .withPmid(Integer.valueOf(((RelatedArtifact) relatedArtifact.getValue()).getUrl()
-                                    .replaceFirst(uriPUBMED, "")))
-                            .withName(((RelatedArtifact) relatedArtifact.getValue()).getCitation()));
-                }
-            }
-
-            therapyRecommendation.setReferences(references);
 
         }
 
@@ -275,84 +266,79 @@ public class JsonFhirMapper {
 
         for (Mtb mtb : mtbs) {
 
+            DiagnosticReport diagnosticReport = new DiagnosticReport();
+            diagnosticReport.getMeta().addProfile(uriGENOMICSREPORT);
+            diagnosticReport.setId(IdType.newRandomUuid());
+            diagnosticReport.setSubject(fhirPatient);
+            diagnosticReport.addCategory().addCoding(new Coding().setSystem(uriGENOMIC).setCode("GE"));
+            diagnosticReport.getCode()
+                    .addCoding(new Coding(uriLOINC, "81247-9", "Master HL7 genetic variant reporting panel"));
+
+            CarePlan carePlan = new CarePlan();
+            carePlan.setId(IdType.newRandomUuid());
+            carePlan.setSubject(fhirPatient);
+            carePlan.setIntent(CarePlanIntent.PROPOSAL);
+            carePlan.setStatus(CarePlanStatus.ACTIVE);
+            carePlan.setAuthor(getOrCreatePractitioner(bundle, mtb.getAuthor()));
+            carePlan.getSupportingInfo().add(new Reference(diagnosticReport));
+
+            diagnosticReport.addPerformer(getOrCreatePractitioner(bundle, mtb.getAuthor()));
+
+            diagnosticReport.getEffectiveDateTimeType().fromStringValue(mtb.getDate());
+
+            diagnosticReport.setConclusion(mtb.getGeneralRecommendation());
+
+            diagnosticReport.addIdentifier().setSystem(uriMTB).setValue(mtb.getId());
+
+            if (mtb.getGeneticCounselingRecommendation() != null && mtb.getGeneticCounselingRecommendation()) {
+                Task t = new Task();
+                t.getMeta().addProfile(uriFOLLOWUP);
+                t.setFor(fhirPatient);
+                t.setStatus(TaskStatus.REQUESTED).setIntent(TaskIntent.PROPOSAL);
+                t.getCode().setText("Recommended follow-up")
+                        .addCoding(new Coding(uriLOINC, "LA14020-4", "Genetic counseling recommended"));
+                Extension ex = new Extension().setUrl(uriRECOMMENDEDACTION);
+                ex.setValue(new Reference(t));
+                diagnosticReport.addExtension(ex);
+                carePlan.getActivity().add(new CarePlanActivityComponent().setReference(new Reference(t)));
+            }
+
+            assert mtb.getId().startsWith("mtb_" + patientId + "_");
+            diagnosticReport.setIssued(new Date(Long.valueOf(mtb.getId().replace("mtb_" + patientId + "_", ""))));
+
+            if (mtb.getMtbState() != null) {
+                switch (mtb.getMtbState().toUpperCase()) {
+                    case "COMPLETED":
+                        diagnosticReport.setStatus(DiagnosticReportStatus.FINAL);
+                        break;
+                    case "ARCHIVED":
+                        diagnosticReport.setStatus(DiagnosticReportStatus.CANCELLED);
+                        break;
+                    default:
+                    case "DRAFT":
+                        diagnosticReport.setStatus(DiagnosticReportStatus.PARTIAL);
+                        break;
+                }
+            } else {
+                diagnosticReport.setStatus(DiagnosticReportStatus.PARTIAL);
+            }
+
+            if (mtb.getRebiopsyRecommendation() != null && mtb.getRebiopsyRecommendation()) {
+                Task t = new Task();
+                t.getMeta().addProfile(uriFOLLOWUP);
+                t.setFor(fhirPatient);
+                t.setStatus(TaskStatus.REQUESTED).setIntent(TaskIntent.PROPOSAL);
+                t.getCode().setText("Recommended follow-up")
+                        .addCoding(new Coding(uriLOINC, "LA14021-2", "Confirmatory testing recommended"));
+                Extension ex = new Extension().setUrl(uriRECOMMENDEDACTION);
+                ex.setValue(new Reference(t));
+                diagnosticReport.addExtension(ex);
+            }
+
+            mtb.getSamples().forEach(sample -> diagnosticReport
+                    .addSpecimen(new Reference(specimenAdapter.process(fhirPatient, sample))));
+
             for (TherapyRecommendation therapyRecommendation : mtb.getTherapyRecommendations()) {
-
-                DiagnosticReport diagnosticReport = new DiagnosticReport();
-                diagnosticReport.getMeta().addProfile(uriGENOMICSREPORT);
-                diagnosticReport.setId(IdType.newRandomUuid());
-                diagnosticReport.setSubject(fhirPatient);
-                diagnosticReport.addCategory().addCoding(new Coding().setSystem(uriGENOMIC).setCode("GE"));
-                diagnosticReport.getCode()
-                        .addCoding(new Coding(uriLOINC, "81247-9", "Master HL7 genetic variant reporting panel"));
-
-                CarePlan carePlan = new CarePlan();
-                carePlan.setId(IdType.newRandomUuid());
-                carePlan.setSubject(fhirPatient);
-                carePlan.setIntent(CarePlanIntent.PROPOSAL);
-                carePlan.setStatus(CarePlanStatus.ACTIVE);
-                carePlan.setAuthor(getOrCreatePractitioner(bundle, therapyRecommendation.getAuthor()));
-                carePlan.getSupportingInfo().add(new Reference(diagnosticReport));
-
-                // MTB SECTION
-
-                diagnosticReport.addPerformer(getOrCreatePractitioner(bundle, therapyRecommendation.getAuthor()));
-
-                diagnosticReport.getEffectiveDateTimeType().fromStringValue(mtb.getDate());
-
-                diagnosticReport.setConclusion(mtb.getGeneralRecommendation());
-
-                if (mtb.getGeneticCounselingRecommendation() != null && mtb.getGeneticCounselingRecommendation()) {
-                    Task t = new Task();
-                    t.getMeta().addProfile(uriFOLLOWUP);
-                    t.setFor(fhirPatient);
-                    t.setStatus(TaskStatus.REQUESTED).setIntent(TaskIntent.PROPOSAL);
-                    t.getCode().setText("Recommended follow-up")
-                            .addCoding(new Coding(uriLOINC, "LA14020-4", "Genetic counseling recommended"));
-                    Extension ex = new Extension().setUrl(uriRECOMMENDEDACTION);
-                    ex.setValue(new Reference(t));
-                    diagnosticReport.addExtension(ex);
-                    carePlan.getActivity().add(new CarePlanActivityComponent().setReference(new Reference(t)));
-                }
-
-                assert mtb.getId().startsWith("mtb_" + patientId + "_");
-                diagnosticReport.setIssued(new Date(Long.valueOf(mtb.getId().replace("mtb_" + patientId + "_", ""))));
-
-                if (mtb.getMtbState() != null) {
-                    switch (mtb.getMtbState().toUpperCase()) {
-                        case "COMPLETED":
-                            diagnosticReport.setStatus(DiagnosticReportStatus.FINAL);
-                            break;
-                        case "ARCHIVED":
-                            diagnosticReport.setStatus(DiagnosticReportStatus.CANCELLED);
-                            break;
-                        default:
-                        case "DRAFT":
-                            diagnosticReport.setStatus(DiagnosticReportStatus.PARTIAL);
-                            break;
-                    }
-                } else {
-                    diagnosticReport.setStatus(DiagnosticReportStatus.PARTIAL);
-                }
-
-                if (mtb.getRebiopsyRecommendation() != null && mtb.getRebiopsyRecommendation()) {
-                    Task t = new Task();
-                    t.getMeta().addProfile(uriFOLLOWUP);
-                    t.setFor(fhirPatient);
-                    t.setStatus(TaskStatus.REQUESTED).setIntent(TaskIntent.PROPOSAL);
-                    t.getCode().setText("Recommended follow-up")
-                            .addCoding(new Coding(uriLOINC, "LA14021-2", "Confirmatory testing recommended"));
-                    Extension ex = new Extension().setUrl(uriRECOMMENDEDACTION);
-                    ex.setValue(new Reference(t));
-                    diagnosticReport.addExtension(ex);
-                }
-
-                mtb.getSamples().forEach(sample -> diagnosticReport
-                        .addSpecimen(new Reference(specimenAdapter.process(fhirPatient, sample))));
-
-                // THERAPYRECOMMENDATION SECTION
-
-                // AUTHOR ALREADY SET BY MTB
-
                 Observation efficacyObservation = new Observation();
                 diagnosticReport.addResult(new Reference(efficacyObservation));
                 efficacyObservation.getMeta().addProfile(
@@ -369,8 +355,10 @@ public class JsonFhirMapper {
                 evidenceComponent.getValueCodeableConcept().addCoding(new Coding("https://cbioportal.org/evidence/BW/",
                         therapyRecommendation.getEvidenceLevel(), therapyRecommendation.getEvidenceLevel()));
 
-                diagnosticReport.addIdentifier().setSystem(uriTHERAPYRECOMMENDATION)
+                efficacyObservation.addIdentifier().setSystem(uriTHERAPYRECOMMENDATION)
                         .setValue(therapyRecommendation.getId());
+
+                efficacyObservation.addPerformer(getOrCreatePractitioner(bundle, therapyRecommendation.getAuthor()));
 
                 therapyRecommendation.getComment()
                         .forEach(comment -> efficacyObservation.getNote().add(new Annotation().setText(comment)));
@@ -406,57 +394,58 @@ public class JsonFhirMapper {
                     });
                 }
 
-                therapyRecommendation.getReferences().forEach(reference -> {
-                    String title = reference.getName() != null ? reference.getName()
-                            : pubmedResolver.resolvePublication(reference.getPmid());
-                    Extension ex = new Extension().setUrl(uriRELATEDARTIFACT);
-                    RelatedArtifact relatedArtifact = new RelatedArtifact().setType(RelatedArtifactType.CITATION)
-                            .setUrl(uriPUBMED + reference.getPmid()).setCitation(title);
-                    ex.setValue(relatedArtifact);
-                    diagnosticReport.addExtension(ex);
-                });
+                if (therapyRecommendation.getReferences() != null) {
+                    therapyRecommendation.getReferences().forEach(reference -> {
+                        String title = reference.getName() != null ? reference.getName()
+                                : pubmedResolver.resolvePublication(reference.getPmid());
+                        Extension ex = new Extension().setUrl(uriRELATEDARTIFACT);
+                        RelatedArtifact relatedArtifact = new RelatedArtifact().setType(RelatedArtifactType.CITATION)
+                                .setUrl(uriPUBMED + reference.getPmid()).setCitation(title);
+                        ex.setValue(relatedArtifact);
+                        efficacyObservation.addExtension(ex);
+                    });
+                }
 
-                therapyRecommendation.getTreatments().forEach(treatment -> {
-                    Task medicationChange = new Task().setStatus(TaskStatus.REQUESTED).setIntent(TaskIntent.PROPOSAL)
-                            .setFor(fhirPatient);
-                    medicationChange.setId(IdType.newRandomUuid());
-                    medicationChange.getMeta().addProfile(uriMEDICATIONCHANGE);
+                if (therapyRecommendation.getTreatments() != null) {
+                    therapyRecommendation.getTreatments().forEach(treatment -> {
+                        Task medicationChange = new Task().setStatus(TaskStatus.REQUESTED)
+                                .setIntent(TaskIntent.PROPOSAL).setFor(fhirPatient);
+                        medicationChange.setId(IdType.newRandomUuid());
+                        medicationChange.getMeta().addProfile(uriMEDICATIONCHANGE);
 
-                    MedicationStatement ms = drugAdapter.process(fhirPatient, treatment);
+                        MedicationStatement ms = drugAdapter.process(fhirPatient, treatment);
 
-                    medicationChange.getCode()
-                            .addCoding(new Coding(uriLOINC, "LA26421-0", "Consider alternative medication"));
-                    medicationChange.setFocus(new Reference(ms));
-                    String ncit = ms.getMedicationCodeableConcept().getCodingFirstRep().getCode();
-                    medicationChange.addIdentifier(new Identifier().setSystem(uriNCIT).setValue(ncit));
+                        medicationChange.getCode()
+                                .addCoding(new Coding(uriLOINC, "LA26421-0", "Consider alternative medication"));
+                        medicationChange.setFocus(new Reference(ms));
+                        String ncit = ms.getMedicationCodeableConcept().getCodingFirstRep().getCode();
+                        medicationChange.addIdentifier(new Identifier().setSystem(uriNCIT).setValue(ncit));
 
-                    Extension ex = new Extension().setUrl(uriRECOMMENDEDACTION);
-                    ex.setValue(new Reference(medicationChange));
-                    diagnosticReport.addExtension(ex);
+                        Extension ex = new Extension().setUrl(uriRECOMMENDEDACTION);
+                        ex.setValue(new Reference(medicationChange));
+                        diagnosticReport.addExtension(ex);
 
-                    bundle.addEntry().setFullUrl(medicationChange.getIdElement().getValue())
-                            .setResource(medicationChange).getRequest()
-                            .setUrl("Task?identifier=" + uriNCIT + "|" + ncit + "&subject="
-                                    + fhirPatient.getResource().getIdElement())
-                            .setIfNoneExist("identifier=Task?identifier=" + uriNCIT + "|" + ncit + "&subject="
-                                    + fhirPatient.getResource().getIdElement())
-                            .setMethod(Bundle.HTTPVerb.PUT);
+                        bundle.addEntry().setFullUrl(medicationChange.getIdElement().getValue())
+                                .setResource(medicationChange).getRequest()
+                                .setUrl("Task?identifier=" + uriNCIT + "|" + ncit + "&subject="
+                                        + fhirPatient.getResource().getIdElement())
+                                .setIfNoneExist("identifier=Task?identifier=" + uriNCIT + "|" + ncit + "&subject="
+                                        + fhirPatient.getResource().getIdElement())
+                                .setMethod(Bundle.HTTPVerb.PUT);
 
-                    ObservationComponentComponent assessed = efficacyObservation.addComponent();
-                    assessed.getCode().addCoding(new Coding(uriLOINC, "51963-7", "Medication assessed [ID]"));
-                    assessed.setValue(ms.getMedicationCodeableConcept());
+                        ObservationComponentComponent assessed = efficacyObservation.addComponent();
+                        assessed.getCode().addCoding(new Coding(uriLOINC, "51963-7", "Medication assessed [ID]"));
+                        assessed.setValue(ms.getMedicationCodeableConcept());
 
-                    carePlan.addActivity().setReference(new Reference(medicationChange));
-                });
-
-                bundle.addEntry().setFullUrl(diagnosticReport.getIdElement().getValue()).setResource(diagnosticReport)
-                        .getRequest()
-                        .setUrl("DiagnosticReport?identifier=" + uriTHERAPYRECOMMENDATION + "|"
-                                + therapyRecommendation.getId())
-                        .setIfNoneExist("identifier=" + uriTHERAPYRECOMMENDATION + "|" + therapyRecommendation.getId())
-                        .setMethod(Bundle.HTTPVerb.PUT);
+                        carePlan.addActivity().setReference(new Reference(medicationChange));
+                    });
+                }
 
             }
+
+            bundle.addEntry().setFullUrl(diagnosticReport.getIdElement().getValue()).setResource(diagnosticReport)
+                    .getRequest().setUrl("DiagnosticReport?identifier=" + uriMTB + "|" + mtb.getId())
+                    .setIfNoneExist("identifier=" + uriMTB + "|" + mtb.getId()).setMethod(Bundle.HTTPVerb.PUT);
 
         }
 
