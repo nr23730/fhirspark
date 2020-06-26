@@ -202,13 +202,15 @@ public class JsonFhirMapper {
                         });
                         geneticAlterations.add(g);
                         break;
-                    case "http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/medication-efficacy":
-                        ((Observation) reference.getResource()).getComponent().forEach(result -> {
+                        case "http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/medication-efficacy":
+                        Observation ob = (Observation) reference.getResource();
+                        ob.getComponent().forEach(result -> {
                             if (result.getCode().getCodingFirstRep().getCode().equals("93044-6")) {
                                 therapyRecommendation.setEvidenceLevel(
                                         result.getValueCodeableConcept().getCodingFirstRep().getCode());
                             }
                         });
+                        ob.getNote().forEach(note -> therapyRecommendation.getComment().add(note.getText()));
                         break;
                     default:
                         break;
@@ -243,9 +245,6 @@ public class JsonFhirMapper {
                             .getEntryFirstRep().getResource()).getFocus().getResource();
                     Coding drug = medicationStatement.getMedicationCodeableConcept().getCodingFirstRep();
                     treatments.add(new Treatment().withNcitCode(drug.getCode()).withName(drug.getDisplay()));
-
-                    medicationStatement.getNote()
-                            .forEach(note -> therapyRecommendation.getComment().add(note.getText()));
                 }
             }
 
@@ -354,8 +353,6 @@ public class JsonFhirMapper {
 
                 // AUTHOR ALREADY SET BY MTB
 
-                // COMMENTS SET WITH MEDICATION
-
                 Observation efficacyObservation = new Observation();
                 diagnosticReport.addResult(new Reference(efficacyObservation));
                 efficacyObservation.getMeta().addProfile(
@@ -374,6 +371,9 @@ public class JsonFhirMapper {
 
                 diagnosticReport.addIdentifier().setSystem(uriTHERAPYRECOMMENDATION)
                         .setValue(therapyRecommendation.getId());
+
+                therapyRecommendation.getComment()
+                        .forEach(comment -> efficacyObservation.getNote().add(new Annotation().setText(comment)));
 
                 if (therapyRecommendation.getReasoning().getClinicalData() != null) {
                     therapyRecommendation.getReasoning().getClinicalData().forEach(clinical -> {
@@ -429,9 +429,6 @@ public class JsonFhirMapper {
                     medicationChange.setFocus(new Reference(ms));
                     String ncit = ms.getMedicationCodeableConcept().getCodingFirstRep().getCode();
                     medicationChange.addIdentifier(new Identifier().setSystem(uriNCIT).setValue(ncit));
-
-                    therapyRecommendation.getComment()
-                            .forEach(comment -> ms.getNote().add(new Annotation().setText(comment)));
 
                     Extension ex = new Extension().setUrl(uriRECOMMENDEDACTION);
                     ex.setValue(new Reference(medicationChange));
