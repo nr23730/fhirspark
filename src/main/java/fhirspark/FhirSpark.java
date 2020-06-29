@@ -34,7 +34,7 @@ public final class FhirSpark {
         final Settings settings = configLoader.loadConfiguration(settingsYaml, Settings.class);
         HgncGeneName.initialize(settings.getHgncPath());
         jsonFhirMapper = new JsonFhirMapper(settings);
-        if (settings.getHl7v2config().get(0).getSendv2()) {
+        if (settings.getHl7v2config() != null && settings.getHl7v2config().get(0).getSendv2()) {
             jsonHl7v2Mapper = new JsonHl7v2Mapper(settings);
         }
 
