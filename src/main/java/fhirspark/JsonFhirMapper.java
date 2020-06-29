@@ -238,6 +238,10 @@ public class JsonFhirMapper {
                                         g.setHugoSymbol(
                                                 variant.getValueCodeableConcept().getCodingFirstRep().getDisplay());
                                         break;
+                                    case "48001-2":
+                                        g.setChromosome(
+                                                variant.getValueCodeableConcept().getCodingFirstRep().getCode());
+                                        break;
                                     default:
                                         break;
                                 }

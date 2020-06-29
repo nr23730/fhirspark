@@ -25,7 +25,8 @@
 							{
 								"alteration": "V600E",
 								"entrezGeneId": 673,
-								"hugoSymbol": "BRAF"
+								"hugoSymbol": "BRAF",
+								"chromosome": "13"
 							}
 						]
 					},
@@ -66,7 +67,8 @@
 							{
 								"alteration": "R248",
 								"entrezGeneId": 7157,
-								"hugoSymbol": "TP53"
+								"hugoSymbol": "TP53",
+								"chromosome": "10"
 							}
 						]
 					},

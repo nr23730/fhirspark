@@ -27,12 +27,14 @@
 							{
 								"alteration": "S2215F",
 								"entrezGeneId": 2475,
-								"hugoSymbol": "MTOR"
+								"hugoSymbol": "MTOR",
+								"chromosome": "3"
 							},
 							{
 								"alteration": "G12C",
 								"entrezGeneId": 3845,
-								"hugoSymbol": "KRAS"
+								"hugoSymbol": "KRAS",
+								"chromosome": "5"
 							}
 						]
 					},
@@ -59,7 +61,8 @@
 							{
 								"alteration": "R248",
 								"entrezGeneId": 7157,
-								"hugoSymbol": "TP53"
+								"hugoSymbol": "TP53",
+								"chromosome": "7"
 							}
 						]
 					},

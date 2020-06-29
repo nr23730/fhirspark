@@ -25,7 +25,8 @@
 							{
 								"alteration": "V600E",
 								"entrezGeneId": 673,
-								"hugoSymbol": "BRAF"
+								"hugoSymbol": "BRAF",
+								"chromosome": "2"
 							}
 						]
 					},
@@ -65,12 +66,14 @@
 							{
 								"alteration": "S2215F",
 								"entrezGeneId": 2475,
-								"hugoSymbol": "MTOR"
+								"hugoSymbol": "MTOR",
+								"chromosome": "9"
 							},
 							{
 								"alteration": "G12C",
 								"entrezGeneId": 3845,
-								"hugoSymbol": "KRAS"
+								"hugoSymbol": "KRAS",
+								"chromosome": "8"
 							}
 						]
 					},
@@ -97,7 +100,8 @@
 							{
 								"alteration": "R248",
 								"entrezGeneId": 7157,
-								"hugoSymbol": "TP53"
+								"hugoSymbol": "TP53",
+								"chromosome": "1"
 							}
 						]
 					},
