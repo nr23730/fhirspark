@@ -15,6 +15,7 @@ import fhirspark.adapter.SpecimenAdapter;
 import fhirspark.resolver.PubmedPublication;
 import fhirspark.restmodel.CbioportalRest;
 import fhirspark.restmodel.ClinicalDatum;
+import fhirspark.restmodel.Deletions;
 import fhirspark.restmodel.GeneticAlteration;
 import fhirspark.restmodel.Mtb;
 import fhirspark.restmodel.Reasoning;
@@ -467,10 +468,22 @@ public class JsonFhirMapper {
 
     }
 
-    public void deleteTherapyRecommendation(String patientId, String therapyRecommendationId) {
+    public void deleteEntries(String patientId, Deletions deletions) {
+        // deletions.getTherapyRecommendation()
+        //         .forEach(recommendation -> deleteTherapyRecommendation(patientId, recommendation));
+        deletions.getMtb().forEach(mtb -> deleteMtb(patientId, mtb));
+    }
+
+    private void deleteTherapyRecommendation(String patientId, String therapyRecommendationId) {
         assert therapyRecommendationId.startsWith(patientId);
-        client.delete().resourceConditionalByUrl("CarePlan?identifier=" + PATIENT_URI + "|" + therapyRecommendationId)
-                .execute();
+        client.delete().resourceConditionalByUrl(
+                "Observation?identifier=" + THERAPYRECOMMENDATION_URI + "|" + therapyRecommendationId).execute();
+    }
+
+    private void deleteMtb(String patientId, String mtbId) {
+        assert mtbId.startsWith("mtb_" + patientId + "_");
+        client.delete().resourceConditionalByUrl(
+                "DiagnosticReport?identifier=" + MTB_URI + "|" + mtbId).execute();
     }
 
     private Reference getOrCreatePatient(Bundle b, String patientId) {
