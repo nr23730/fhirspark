@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import fhirspark.resolver.HgncGeneName;
 import fhirspark.resolver.OncoKbDrug;
 import fhirspark.restmodel.CbioportalRest;
+import fhirspark.restmodel.Deletions;
 import fhirspark.restmodel.Mtb;
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -86,7 +87,8 @@ public final class FhirSpark {
             res.header("Access-Control-Allow-Origin", req.headers("Origin"));
             res.type("application/json");
             res.header("Vary", "Origin, Access-Control-Request-Headers");
-            jsonFhirMapper.deleteTherapyRecommendation(req.params(":patientId"), req.params(":therapyRecommendation"));
+            Deletions deletions = objectMapper.readValue(req.body(), Deletions.class);
+            jsonFhirMapper.deleteEntries(req.params(":patientId"), deletions);
             res.body(req.body());
             return res.body();
         });
