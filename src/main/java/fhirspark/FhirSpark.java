@@ -2,6 +2,7 @@ package fhirspark;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import fhirspark.resolver.HgncGeneName;
 import fhirspark.restmodel.CbioportalRest;
 import fhirspark.restmodel.Mtb;
 import java.io.FileInputStream;
@@ -31,6 +32,7 @@ public final class FhirSpark {
         }
         ConfigurationLoader configLoader = new ConfigurationLoader();
         final Settings settings = configLoader.loadConfiguration(settingsYaml, Settings.class);
+        HgncGeneName.initialize(settings.getHgncPath());
         jsonFhirMapper = new JsonFhirMapper(settings);
         if (settings.getHl7v2config().get(0).getSendv2()) {
             jsonHl7v2Mapper = new JsonHl7v2Mapper(settings);

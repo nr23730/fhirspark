@@ -1,7 +1,7 @@
 package fhirspark.adapter;
 
 import fhirspark.resolver.HgncGeneName;
-import fhirspark.resolver.model.genenames.Doc;
+import fhirspark.resolver.model.Genenames;
 import fhirspark.restmodel.GeneticAlteration;
 import org.hl7.fhir.r4.model.CodeableConcept;
 import org.hl7.fhir.r4.model.Coding;
@@ -13,8 +13,6 @@ import org.hl7.fhir.r4.model.Resource;
 import org.hl7.fhir.r4.model.codesystems.ObservationCategory;
 
 public class GeneticAlternationsAdapter {
-
-    private HgncGeneName hgncGeneName = new HgncGeneName();
 
     public Resource process(GeneticAlteration geneticAlternation) {
 
@@ -40,12 +38,12 @@ public class GeneticAlternationsAdapter {
                 .setCode("" + geneticAlternation.getEntrezGeneId()));
         variant.addComponent(ncbiGeneId);
 
-        Doc hgncData = hgncGeneName.resolve(geneticAlternation.getEntrezGeneId()).getResponse().getDocs().get(0);
-        assert geneticAlternation.getHugoSymbol().equals(hgncData.getSymbol());
+        Genenames gn = HgncGeneName.resolve(geneticAlternation.getEntrezGeneId());
+        assert geneticAlternation.getHugoSymbol().equals(gn.getApprovedSymbol());
         ObservationComponentComponent hgnc = new ObservationComponentComponent()
                 .setCode(new CodeableConcept(new Coding("http://loinc.org", "48018-6", "Gene studied [ID]")));
         hgnc.getValueCodeableConcept()
-                .addCoding(new Coding("http://www.genenames.org/geneId", hgncData.getHgncId(), hgncData.getSymbol()));
+                .addCoding(new Coding("http://www.genenames.org/geneId", gn.getHgncId(), gn.getApprovedSymbol()));
         variant.addComponent(hgnc);
 
         return variant;

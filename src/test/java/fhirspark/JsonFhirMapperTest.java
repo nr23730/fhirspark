@@ -13,6 +13,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
 
+import fhirspark.resolver.HgncGeneName;
 import fhirspark.restmodel.*;
 import spark.resource.ClassPathResource;
 
@@ -35,6 +36,7 @@ public class JsonFhirMapperTest {
             Properties p = new Properties();
             p.load(new ClassPathResource("app.properties").getInputStream());
             settings.setFhirDbBase(p.getProperty("fhir.test.url"));
+            HgncGeneName.initialize(settings.getHgncPath());
             this.jfm = new JsonFhirMapper(settings);
         } catch (IOException e) {
             // TODO Auto-generated catch block

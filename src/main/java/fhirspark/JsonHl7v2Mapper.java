@@ -14,10 +14,12 @@ import ca.uhn.hl7v2.model.v281.message.RDE_O11;
 import ca.uhn.hl7v2.model.v281.segment.NTE;
 import ca.uhn.hl7v2.model.v281.segment.OBR;
 import ca.uhn.hl7v2.model.v281.segment.OBX;
+import ca.uhn.hl7v2.model.v281.segment.PID;
+import ca.uhn.hl7v2.model.v281.segment.RXO;
 import ca.uhn.hl7v2.model.v281.segment.SPM;
 import fhirspark.resolver.HgncGeneName;
 import fhirspark.resolver.PubmedPublication;
-import fhirspark.resolver.model.genenames.Doc;
+import fhirspark.resolver.model.Genenames;
 import fhirspark.restmodel.Mtb;
 import fhirspark.restmodel.TherapyRecommendation;
 import java.io.IOException;
@@ -160,11 +162,10 @@ public class JsonHl7v2Mapper {
                         hgnc.getObservationIdentifier().getCodingSystemOID().setValue("2.16.840.1.113883.6.1");
                         hgnc.getValueType().setValue("CWE");
                         CWE hgncValue = new CWE(oru);
-                        HgncGeneName hgncGeneName = new HgncGeneName();
-                        Doc hgncData = hgncGeneName.resolve(g.getEntrezGeneId()).getResponse().getDocs().get(0);
+                        Genenames genenames = HgncGeneName.resolve(g.getEntrezGeneId());
                         hgncValue.getCodingSystemOID().setValue("2.16.840.1.113883.6.281");
-                        hgncValue.getIdentifier().setValue(hgncData.getHgncId());
-                        hgncValue.getText().setValue(hgncData.getSymbol());
+                        hgncValue.getIdentifier().setValue(genenames.getHgncId());
+                        hgncValue.getText().setValue(genenames.getApprovedSymbol());
                         hgnc.insertObservationValue(0).setData(hgncValue);
                     } catch (HL7Exception e) {
                         // TODO Auto-generated catch block
@@ -185,6 +186,24 @@ public class JsonHl7v2Mapper {
                         // TODO Auto-generated catch block
                         e.printStackTrace();
                     }
+                });
+
+                therapyRecommendation.getTreatments().forEach(treatment -> {
+
+                    try {
+                        PID pid = rde.getPATIENT().getPID();
+                        pid.getPid1_SetIDPID().setValue("1");
+                        pid.getPatientIdentifierList(pid.getPatientIdentifierListReps()).getIDNumber()
+                                .setValue(patientId);
+                        RXO rxo = rde.getORDER(rde.getORDERReps()).getORDER_DETAIL().getRXO();
+                        rxo.getDispensingPharmacy().getCodingSystemOID().setValue("2.16.840.1.113883.3.26.1.1");
+                        rxo.getDispensingPharmacy().getIdentifier().setValue(treatment.getNcitCode());
+                        rxo.getDispensingPharmacy().getText().setValue(treatment.getName());
+                    } catch (DataTypeException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    }
+
                 });
 
                 NTE generealRecommendation = result.getORDER_OBSERVATION(therapyRecommendationOrder).getNTE(0);

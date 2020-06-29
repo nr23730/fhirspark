@@ -1,47 +1,38 @@
 package fhirspark.resolver;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientHandlerException;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.UniformInterfaceException;
-import com.sun.jersey.api.client.WebResource;
-import fhirspark.resolver.model.genenames.Genenames;
-import org.eclipse.jetty.http.HttpStatus;
+import com.fasterxml.jackson.dataformat.csv.CsvMapper;
+import com.fasterxml.jackson.dataformat.csv.CsvSchema;
+import fhirspark.resolver.model.Genenames;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
-public class HgncGeneName {
+public final class HgncGeneName {
 
-    private Client client = new Client();
-    private ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
+    private static final Map<Integer, Genenames> HGNC_MAP = new HashMap<>();
 
-    public Genenames resolve(int ncbiGeneId) {
-        WebResource webResource = client.resource("http://rest.genenames.org/fetch/entrez_id/" + ncbiGeneId);
-        ClientResponse response = webResource.accept("application/json").get(ClientResponse.class);
-        if (response.getStatus() != HttpStatus.OK_200) {
-            throw new RuntimeException("HTTP Error: " + response.getStatus());
-        }
+    private HgncGeneName() {
+    }
 
-        Genenames result;
+    public static void initialize(String dbPath) {
         try {
-            result = objectMapper.readValue(response.getEntity(String.class), Genenames.class);
-            return result;
-        } catch (JsonMappingException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (JsonProcessingException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (ClientHandlerException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (UniformInterfaceException e) {
+            Iterator<Genenames> iterator = new CsvMapper().readerFor(Genenames.class)
+                    .with(CsvSchema.emptySchema().withHeader().withColumnSeparator('\t'))
+                    .readValues(new FileInputStream(dbPath));
+            while (iterator.hasNext()) {
+                Genenames g = iterator.next();
+                HGNC_MAP.put(g.getNcbiGeneId(), g);
+            }
+        } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-        return null;
+    }
+
+    public static Genenames resolve(int ncbiGeneId) {
+        return HGNC_MAP.get(ncbiGeneId);
     }
 
 }
