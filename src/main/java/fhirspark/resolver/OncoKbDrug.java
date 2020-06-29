@@ -1,50 +1,35 @@
 package fhirspark.resolver;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientHandlerException;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.UniformInterfaceException;
-import com.sun.jersey.api.client.WebResource;
 import fhirspark.resolver.model.Drug;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
-import org.eclipse.jetty.http.HttpStatus;
+import java.util.Map;
 
-public class OncoKbDrug {
+public final class OncoKbDrug {
 
-    private Client client = new Client();
-    private ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
+    private static final Map<String, Drug> DRUG_MAP = new HashMap<>();
 
-    public Drug resolveDrug(String name) {
-        WebResource webResource = client
-                .resource("https://oncokb.org:443/api/v1/drugs/lookup?name=" + name + "&exactMatch=true");
-        ClientResponse response = webResource.accept("application/json").get(ClientResponse.class);
-        if (response.getStatus() != HttpStatus.OK_200) {
-            throw new RuntimeException("HTTP Error: " + response.getStatus());
-        }
+    private OncoKbDrug() {
+    }
 
-        List<Drug> result;
+    public static void initalize(String dbPath) {
         try {
-            result = objectMapper.readValue(response.getEntity(String.class), new TypeReference<List<Drug>>() {
-            });
-            return result.get(0);
-        } catch (JsonMappingException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (JsonProcessingException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (ClientHandlerException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (UniformInterfaceException e) {
+            List<Drug> drugs = new ObjectMapper().readerFor(new TypeReference<List<Drug>>() {
+            }).readValue(new FileInputStream(dbPath));
+            for (Drug d : drugs) {
+                DRUG_MAP.put(d.getDrugName(), d);
+            }
+        } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-        return null;
+    }
+
+    public static Drug resolve(String name) {
+        return DRUG_MAP.get(name);
     }
 }
