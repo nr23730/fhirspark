@@ -9,8 +9,6 @@ import org.hl7.fhir.r4.model.Reference;
 
 public class DrugAdapter {
 
-    private OncoKbDrug drugResolver = new OncoKbDrug();
-
     public MedicationStatement process(Reference patient, Treatment treatment) {
         MedicationStatement medicationStatement = new MedicationStatement();
         medicationStatement.getMeta()
@@ -18,7 +16,7 @@ public class DrugAdapter {
         medicationStatement.setStatus(MedicationStatementStatus.UNKNOWN).setSubject(patient);
 
         String ncitCode = treatment.getNcitCode() != null ? treatment.getNcitCode()
-                : drugResolver.resolveDrug(treatment.getName()).getNcitCode();
+                : OncoKbDrug.resolve(treatment.getName()).getNcitCode();
         medicationStatement.getMedicationCodeableConcept().getCoding()
                 .add(new Coding("http://ncithesaurus-stage.nci.nih.gov", ncitCode, treatment.getName()));
 

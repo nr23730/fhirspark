@@ -1,6 +1,7 @@
 port: ${FHIRSPARK_PORT:-3001}
 fhirDbBase: ${FHIRSPARK_FHIRBASE:-http://localhost:8080/fhir/}
 hgncPath: ${FHIRSPARK_HGNCPATH:-hgnc.csv}
+oncokbPath: ${FHIRSPARK_ONCOKBPATH:-drugs.json}
 hl7v2config: 
  - sendv2: ${FHIRSPARK_SENDHL7V2:-false}
    server: ${FHIRSPARK_HL7V2SERVER:-localhost}
