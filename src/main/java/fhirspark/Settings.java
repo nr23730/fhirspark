@@ -10,6 +10,7 @@ import java.util.List;
 @JsonPropertyOrder({
     "port",
     "fhirDbBase",
+    "hgncPath",
     "hl7v2config"
 })
 public final class Settings {
@@ -18,6 +19,8 @@ public final class Settings {
     private Integer port;
     @JsonProperty("fhirDbBase")
     private String fhirDbBase;
+    @JsonProperty("hgncPath")
+    private String hgncPath;
     @JsonProperty("hl7v2config")
     private List<Hl7v2config> hl7v2config;
 
@@ -39,6 +42,16 @@ public final class Settings {
     @JsonProperty("fhirDbBase")
     public void setFhirDbBase(String fhirDbBase) {
         this.fhirDbBase = fhirDbBase;
+    }
+
+    @JsonProperty("hgncPath")
+    public String getHgncPath() {
+        return hgncPath;
+    }
+
+    @JsonProperty("hgncPath")
+    public void setHgncPath(String hgncPath) {
+        this.hgncPath = hgncPath;
     }
 
     @JsonProperty("hl7v2config")
