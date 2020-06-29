@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.util.Properties;
 
 import fhirspark.resolver.HgncGeneName;
+import fhirspark.resolver.OncoKbDrug;
 import fhirspark.restmodel.*;
 import spark.resource.ClassPathResource;
 
@@ -37,6 +38,7 @@ public class JsonFhirMapperTest {
             p.load(new ClassPathResource("app.properties").getInputStream());
             settings.setFhirDbBase(p.getProperty("fhir.test.url"));
             HgncGeneName.initialize(settings.getHgncPath());
+            OncoKbDrug.initalize(settings.getOncokbPath());
             this.jfm = new JsonFhirMapper(settings);
         } catch (IOException e) {
             // TODO Auto-generated catch block

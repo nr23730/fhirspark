@@ -11,6 +11,7 @@ import java.util.List;
     "port",
     "fhirDbBase",
     "hgncPath",
+    "oncokbPath",
     "hl7v2config"
 })
 public final class Settings {
@@ -21,6 +22,8 @@ public final class Settings {
     private String fhirDbBase;
     @JsonProperty("hgncPath")
     private String hgncPath;
+    @JsonProperty("oncokbPath")
+    private String oncokbPath;
     @JsonProperty("hl7v2config")
     private List<Hl7v2config> hl7v2config;
 
@@ -52,6 +55,16 @@ public final class Settings {
     @JsonProperty("hgncPath")
     public void setHgncPath(String hgncPath) {
         this.hgncPath = hgncPath;
+    }
+
+    @JsonProperty("oncokbPath")
+    public String getOncokbPath() {
+        return oncokbPath;
+    }
+
+    @JsonProperty("oncokbPath")
+    public void setOncokbPath(String oncokbPath) {
+        this.oncokbPath = oncokbPath;
     }
 
     @JsonProperty("hl7v2config")
