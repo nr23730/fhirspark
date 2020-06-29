@@ -23,8 +23,6 @@ import fhirspark.restmodel.TherapyRecommendation;
 import fhirspark.restmodel.Treatment;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -369,28 +367,28 @@ public class JsonFhirMapper {
                 therapyRecommendation.getComment()
                         .forEach(comment -> efficacyObservation.getNote().add(new Annotation().setText(comment)));
 
-                if (therapyRecommendation.getReasoning().getClinicalData() != null) {
-                    therapyRecommendation.getReasoning().getClinicalData().forEach(clinical -> {
-                        try {
-                            Method m = Class.forName("fhirspark.adapter.clinicaldata." + clinical.getAttributeId())
-                                    .getMethod("process", ClinicalDatum.class);
-                            Resource clinicalFhir = (Resource) m.invoke(null, clinical);
-                            diagnosticReport.addResult(new Reference(clinicalFhir));
-                        } catch (ClassNotFoundException e) {
-                            // TODO Auto-generated catch block
-                            e.printStackTrace();
-                        } catch (NoSuchMethodException e) {
-                            // TODO Auto-generated catch block
-                            e.printStackTrace();
-                        } catch (IllegalAccessException e) {
-                            // TODO Auto-generated catch block
-                            e.printStackTrace();
-                        } catch (InvocationTargetException e) {
-                            // TODO Auto-generated catch block
-                            e.printStackTrace();
-                        }
-                    });
-                }
+                // if (therapyRecommendation.getReasoning().getClinicalData() != null) {
+                //     therapyRecommendation.getReasoning().getClinicalData().forEach(clinical -> {
+                //         try {
+                //             Method m = Class.forName("fhirspark.adapter.clinicaldata." + clinical.getAttributeId())
+                //                     .getMethod("process", ClinicalDatum.class);
+                //             Resource clinicalFhir = (Resource) m.invoke(null, clinical);
+                //             diagnosticReport.addResult(new Reference(clinicalFhir));
+                //         } catch (ClassNotFoundException e) {
+                //             // TODO Auto-generated catch block
+                //             e.printStackTrace();
+                //         } catch (NoSuchMethodException e) {
+                //             // TODO Auto-generated catch block
+                //             e.printStackTrace();
+                //         } catch (IllegalAccessException e) {
+                //             // TODO Auto-generated catch block
+                //             e.printStackTrace();
+                //         } catch (InvocationTargetException e) {
+                //             // TODO Auto-generated catch block
+                //             e.printStackTrace();
+                //         }
+                //     });
+                // }
 
                 if (therapyRecommendation.getReasoning().getGeneticAlterations() != null) {
                     therapyRecommendation.getReasoning().getGeneticAlterations().forEach(geneticAlteration -> {
