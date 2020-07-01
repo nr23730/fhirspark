@@ -15,6 +15,6 @@ jobs:
     - name: Build the Docker image
       run: docker build . --file Dockerfile --tag ${{ secrets.DOCKER_URL }}/cbioportal/fhirspark:latest --label maintainer="Niklas Reimer <${{ secrets.EMAIL }}>"
     - name: Login to Docker registry
-      run: docker login -u ${{ secrets.ROBOT_NAME }} -p ${{ secrets.ROBOT_TOKEN }}
+      run: docker login -u ${{ secrets.ROBOT_NAME }} -p ${{ secrets.ROBOT_TOKEN }} ${{ secrets.DOCKER_URL }}
     - name: Upload Docker image
       run: docker push ${{ secrets.DOCKER_URL }}/cbioportal/fhirspark:latest
