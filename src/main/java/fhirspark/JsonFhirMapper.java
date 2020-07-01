@@ -10,7 +10,7 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fhirspark.adapter.DrugAdapter;
-import fhirspark.adapter.GeneticAlternationsAdapter;
+import fhirspark.adapter.GeneticAlterationsAdapter;
 import fhirspark.adapter.SpecimenAdapter;
 import fhirspark.resolver.PubmedPublication;
 import fhirspark.restmodel.CbioportalRest;
@@ -83,7 +83,7 @@ public class JsonFhirMapper {
     private ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
     private PubmedPublication pubmedResolver = new PubmedPublication();
 
-    private GeneticAlternationsAdapter geneticAlterationsAdapter = new GeneticAlternationsAdapter();
+    private GeneticAlterationsAdapter geneticAlterationsAdapter = new GeneticAlterationsAdapter();
     private DrugAdapter drugAdapter = new DrugAdapter();
     private SpecimenAdapter specimenAdapter = new SpecimenAdapter();
 
@@ -241,6 +241,18 @@ public class JsonFhirMapper {
                                         g.setChromosome(
                                                 variant.getValueCodeableConcept().getCodingFirstRep().getCode());
                                         break;
+                                    case "62378-5":
+                                        switch (variant.getValueCodeableConcept().getCodingFirstRep().getCode()) {
+                                            case "LA14033-7":
+                                                g.setAlteration("Amplification");
+                                                break;
+                                            case "LA14034-5":
+                                                g.setAlteration("Deletion");
+                                                break;
+                                            default:
+                                                break;
+                                        }
+                                        break;
                                     default:
                                         break;
                                 }
@@ -368,26 +380,27 @@ public class JsonFhirMapper {
                         .forEach(comment -> efficacyObservation.getNote().add(new Annotation().setText(comment)));
 
                 // if (therapyRecommendation.getReasoning().getClinicalData() != null) {
-                //     therapyRecommendation.getReasoning().getClinicalData().forEach(clinical -> {
-                //         try {
-                //             Method m = Class.forName("fhirspark.adapter.clinicaldata." + clinical.getAttributeId())
-                //                     .getMethod("process", ClinicalDatum.class);
-                //             Resource clinicalFhir = (Resource) m.invoke(null, clinical);
-                //             diagnosticReport.addResult(new Reference(clinicalFhir));
-                //         } catch (ClassNotFoundException e) {
-                //             // TODO Auto-generated catch block
-                //             e.printStackTrace();
-                //         } catch (NoSuchMethodException e) {
-                //             // TODO Auto-generated catch block
-                //             e.printStackTrace();
-                //         } catch (IllegalAccessException e) {
-                //             // TODO Auto-generated catch block
-                //             e.printStackTrace();
-                //         } catch (InvocationTargetException e) {
-                //             // TODO Auto-generated catch block
-                //             e.printStackTrace();
-                //         }
-                //     });
+                // therapyRecommendation.getReasoning().getClinicalData().forEach(clinical -> {
+                // try {
+                // Method m = Class.forName("fhirspark.adapter.clinicaldata." +
+                // clinical.getAttributeId())
+                // .getMethod("process", ClinicalDatum.class);
+                // Resource clinicalFhir = (Resource) m.invoke(null, clinical);
+                // diagnosticReport.addResult(new Reference(clinicalFhir));
+                // } catch (ClassNotFoundException e) {
+                // // TODO Auto-generated catch block
+                // e.printStackTrace();
+                // } catch (NoSuchMethodException e) {
+                // // TODO Auto-generated catch block
+                // e.printStackTrace();
+                // } catch (IllegalAccessException e) {
+                // // TODO Auto-generated catch block
+                // e.printStackTrace();
+                // } catch (InvocationTargetException e) {
+                // // TODO Auto-generated catch block
+                // e.printStackTrace();
+                // }
+                // });
                 // }
 
                 if (therapyRecommendation.getReasoning().getGeneticAlterations() != null) {
@@ -468,20 +481,22 @@ public class JsonFhirMapper {
 
     public void deleteEntries(String patientId, Deletions deletions) {
         // deletions.getTherapyRecommendation()
-        //         .forEach(recommendation -> deleteTherapyRecommendation(patientId, recommendation));
+        // .forEach(recommendation -> deleteTherapyRecommendation(patientId,
+        // recommendation));
         deletions.getMtb().forEach(mtb -> deleteMtb(patientId, mtb));
     }
 
     private void deleteTherapyRecommendation(String patientId, String therapyRecommendationId) {
         assert therapyRecommendationId.startsWith(patientId);
-        client.delete().resourceConditionalByUrl(
-                "Observation?identifier=" + THERAPYRECOMMENDATION_URI + "|" + therapyRecommendationId).execute();
+        client.delete()
+                .resourceConditionalByUrl(
+                        "Observation?identifier=" + THERAPYRECOMMENDATION_URI + "|" + therapyRecommendationId)
+                .execute();
     }
 
     private void deleteMtb(String patientId, String mtbId) {
         assert mtbId.startsWith("mtb_" + patientId + "_");
-        client.delete().resourceConditionalByUrl(
-                "DiagnosticReport?identifier=" + MTB_URI + "|" + mtbId).execute();
+        client.delete().resourceConditionalByUrl("DiagnosticReport?identifier=" + MTB_URI + "|" + mtbId).execute();
     }
 
     private Reference getOrCreatePatient(Bundle b, String patientId) {
