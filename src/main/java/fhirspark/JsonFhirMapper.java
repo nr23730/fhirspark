@@ -99,7 +99,7 @@ public class JsonFhirMapper {
         Patient fhirPatient = (Patient) bPatient.getEntryFirstRep().getResource();
 
         if (fhirPatient == null) {
-            return "{}";
+            return this.objectMapper.writeValueAsString(new CbioportalRest().withId(patientId).withMtbs(mtbs));
         }
 
         Bundle bDiagnosticReports = (Bundle) client.search().forResource(DiagnosticReport.class)

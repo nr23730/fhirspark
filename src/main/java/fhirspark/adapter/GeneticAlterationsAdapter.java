@@ -63,7 +63,7 @@ public class GeneticAlterationsAdapter {
 
         ObservationComponentComponent ncbiGeneId = new ObservationComponentComponent()
                 .setCode(new CodeableConcept(new Coding("http://loinc.org", "81252-9", "Discrete genetic variant")));
-        ncbiGeneId.getValueCodeableConcept().addCoding(new Coding().setSystem("http://www.ncbi.nlm.nih.gov/clinvar")
+        ncbiGeneId.getValueCodeableConcept().addCoding(new Coding().setSystem("http://www.ncbi.nlm.nih.gov/gene")
                 .setCode("" + geneticAlteration.getEntrezGeneId()));
         variant.addComponent(ncbiGeneId);
 
