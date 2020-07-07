@@ -116,6 +116,14 @@ public class GeneticAlterationsAdapter {
             variant.addComponent(af);
         }
 
+        if (geneticAlteration.getDbsnp() != null) {
+            ObservationComponentComponent dbsnp = new ObservationComponentComponent()
+                    .setCode(new CodeableConcept(new Coding("http://loinc.org", "81255-2", "dbSNP [ID]")));
+            dbsnp.getValueCodeableConcept().addCoding(
+                    new Coding("http://www.ncbi.nlm.nih.gov/projects/SNP", geneticAlteration.getDbsnp(), null));
+            variant.addComponent(dbsnp);
+        }
+
         return variant;
 
     }

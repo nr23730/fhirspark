@@ -245,6 +245,9 @@ public class JsonFhirMapper {
                                         g.setAlleleFrequency(
                                                 variant.getValueQuantity().getValue().doubleValue());
                                         break;
+                                    case "81255-2":
+                                        g.setDbsnp(variant.getValueCodeableConcept().getCodingFirstRep().getCode());
+                                        break;
                                     case "62378-5":
                                         switch (variant.getValueCodeableConcept().getCodingFirstRep().getCode()) {
                                             case "LA14033-7":
