@@ -93,6 +93,21 @@ public class GeneticAlterationsAdapter {
         if (startEndPresent) {
             variant.addComponent(startEnd);
         }
+
+        if (geneticAlteration.getAlt() != null) {
+            ObservationComponentComponent alt = new ObservationComponentComponent()
+                    .setCode(new CodeableConcept(new Coding("http://loinc.org", "69551-0", "Genomic alt allele [ID]")));
+            alt.getValueStringType().setValue(geneticAlteration.getAlt());
+            variant.addComponent(alt);
+        }
+
+        if (geneticAlteration.getRef() != null) {
+            ObservationComponentComponent ref = new ObservationComponentComponent()
+                    .setCode(new CodeableConcept(new Coding("http://loinc.org", "69547-8", "Genomic ref allele [ID]")));
+            ref.getValueStringType().setValue(geneticAlteration.getRef());
+            variant.addComponent(ref);
+        }
+
         return variant;
 
     }

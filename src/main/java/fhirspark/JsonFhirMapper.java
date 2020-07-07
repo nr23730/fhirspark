@@ -253,6 +253,12 @@ public class JsonFhirMapper {
                                                 break;
                                         }
                                         break;
+                                    case "69551-0":
+                                        g.setAlt(variant.getValueStringType().getValue());
+                                        break;
+                                    case "69547-8":
+                                        g.setRef(variant.getValueStringType().getValue());
+                                        break;
                                     case "exact-start-end":
                                         if (variant.getValueRange().getLow().getValue() != null) {
                                             g.setStart(Integer
