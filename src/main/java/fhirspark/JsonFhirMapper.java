@@ -241,6 +241,10 @@ public class JsonFhirMapper {
                                         g.setChromosome(
                                                 variant.getValueCodeableConcept().getCodingFirstRep().getCode());
                                         break;
+                                    case "81258-6":
+                                        g.setAlleleFrequency(
+                                                variant.getValueQuantity().getValue().doubleValue());
+                                        break;
                                     case "62378-5":
                                         switch (variant.getValueCodeableConcept().getCodingFirstRep().getCode()) {
                                             case "LA14033-7":

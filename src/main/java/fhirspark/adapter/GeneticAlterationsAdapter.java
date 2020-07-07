@@ -108,6 +108,14 @@ public class GeneticAlterationsAdapter {
             variant.addComponent(ref);
         }
 
+        if (geneticAlteration.getAlleleFrequency() != null) {
+            ObservationComponentComponent af = new ObservationComponentComponent().setCode(new CodeableConcept(
+                    new Coding("http://loinc.org", "81258-6", "Sample variant allelic frequency [NFr]")));
+            af.getValueQuantity().setSystem("http://unitsofmeasure.org")
+                    .setValue(geneticAlteration.getAlleleFrequency());
+            variant.addComponent(af);
+        }
+
         return variant;
 
     }
