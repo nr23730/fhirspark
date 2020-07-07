@@ -9,6 +9,8 @@ import org.hl7.fhir.r4.model.Meta;
 import org.hl7.fhir.r4.model.Observation;
 import org.hl7.fhir.r4.model.Observation.ObservationComponentComponent;
 import org.hl7.fhir.r4.model.Observation.ObservationStatus;
+import org.hl7.fhir.r4.model.Quantity;
+import org.hl7.fhir.r4.model.Range;
 import org.hl7.fhir.r4.model.Resource;
 import org.hl7.fhir.r4.model.codesystems.ChromosomeHuman;
 import org.hl7.fhir.r4.model.codesystems.ObservationCategory;
@@ -75,6 +77,22 @@ public class GeneticAlterationsAdapter {
                 .addCoding(new Coding("http://www.genenames.org/geneId", gn.getHgncId(), gn.getApprovedSymbol()));
         variant.addComponent(hgnc);
 
+        ObservationComponentComponent startEnd = new ObservationComponentComponent().setCode(
+                new CodeableConcept(new Coding("http://hl7.org/fhir/uv/genomics-reporting/CodeSystem/tbd-codes",
+                        "exact-start-end", "Variant exact start and end")));
+        Range startEndRange = startEnd.getValueRange();
+        boolean startEndPresent = false;
+        if (geneticAlteration.getStart() != null) {
+            startEndRange.setLow(new Quantity(geneticAlteration.getStart()));
+            startEndPresent = true;
+        }
+        if (geneticAlteration.getEnd() != null) {
+            startEndRange.setHigh(new Quantity(geneticAlteration.getEnd()));
+            startEndPresent = true;
+        }
+        if (startEndPresent) {
+            variant.addComponent(startEnd);
+        }
         return variant;
 
     }
