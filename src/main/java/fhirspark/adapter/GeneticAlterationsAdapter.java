@@ -9,6 +9,8 @@ import org.hl7.fhir.r4.model.Meta;
 import org.hl7.fhir.r4.model.Observation;
 import org.hl7.fhir.r4.model.Observation.ObservationComponentComponent;
 import org.hl7.fhir.r4.model.Observation.ObservationStatus;
+import org.hl7.fhir.r4.model.Quantity;
+import org.hl7.fhir.r4.model.Range;
 import org.hl7.fhir.r4.model.Resource;
 import org.hl7.fhir.r4.model.codesystems.ChromosomeHuman;
 import org.hl7.fhir.r4.model.codesystems.ObservationCategory;
@@ -61,11 +63,20 @@ public class GeneticAlterationsAdapter {
                 break;
         }
 
-        ObservationComponentComponent ncbiGeneId = new ObservationComponentComponent()
+        ObservationComponentComponent variationCode = new ObservationComponentComponent()
                 .setCode(new CodeableConcept(new Coding("http://loinc.org", "81252-9", "Discrete genetic variant")));
-        ncbiGeneId.getValueCodeableConcept().addCoding(new Coding().setSystem("http://www.ncbi.nlm.nih.gov/clinvar")
-                .setCode("" + geneticAlteration.getEntrezGeneId()));
-        variant.addComponent(ncbiGeneId);
+        variationCode.getValueCodeableConcept().addCoding().setSystem("http://www.ncbi.nlm.nih.gov/gene")
+                .setCode(String.valueOf(geneticAlteration.getEntrezGeneId()));
+        if (geneticAlteration.getClinvar() != null) {
+            variationCode.getValueCodeableConcept().addCoding().setSystem("http://www.ncbi.nlm.nih.gov/clinvar")
+                    .setCode(String.valueOf(geneticAlteration.getClinvar()));
+        }
+        if (geneticAlteration.getCosmic() != null) {
+            variationCode.getValueCodeableConcept().addCoding()
+                    .setSystem("http://cancer.sanger.ac.uk/cancergenome/projects/cosmic")
+                    .setCode(String.valueOf(geneticAlteration.getCosmic()));
+        }
+        variant.addComponent(variationCode);
 
         Genenames gn = HgncGeneName.resolve(geneticAlteration.getEntrezGeneId());
         assert geneticAlteration.getHugoSymbol().equals(gn.getApprovedSymbol());
@@ -74,6 +85,53 @@ public class GeneticAlterationsAdapter {
         hgnc.getValueCodeableConcept()
                 .addCoding(new Coding("http://www.genenames.org/geneId", gn.getHgncId(), gn.getApprovedSymbol()));
         variant.addComponent(hgnc);
+
+        ObservationComponentComponent startEnd = new ObservationComponentComponent().setCode(
+                new CodeableConcept(new Coding("http://hl7.org/fhir/uv/genomics-reporting/CodeSystem/tbd-codes",
+                        "exact-start-end", "Variant exact start and end")));
+        Range startEndRange = startEnd.getValueRange();
+        boolean startEndPresent = false;
+        if (geneticAlteration.getStart() != null) {
+            startEndRange.setLow(new Quantity(geneticAlteration.getStart()));
+            startEndPresent = true;
+        }
+        if (geneticAlteration.getEnd() != null) {
+            startEndRange.setHigh(new Quantity(geneticAlteration.getEnd()));
+            startEndPresent = true;
+        }
+        if (startEndPresent) {
+            variant.addComponent(startEnd);
+        }
+
+        if (geneticAlteration.getAlt() != null) {
+            ObservationComponentComponent alt = new ObservationComponentComponent()
+                    .setCode(new CodeableConcept(new Coding("http://loinc.org", "69551-0", "Genomic alt allele [ID]")));
+            alt.getValueStringType().setValue(geneticAlteration.getAlt());
+            variant.addComponent(alt);
+        }
+
+        if (geneticAlteration.getRef() != null) {
+            ObservationComponentComponent ref = new ObservationComponentComponent()
+                    .setCode(new CodeableConcept(new Coding("http://loinc.org", "69547-8", "Genomic ref allele [ID]")));
+            ref.getValueStringType().setValue(geneticAlteration.getRef());
+            variant.addComponent(ref);
+        }
+
+        if (geneticAlteration.getAlleleFrequency() != null) {
+            ObservationComponentComponent af = new ObservationComponentComponent().setCode(new CodeableConcept(
+                    new Coding("http://loinc.org", "81258-6", "Sample variant allelic frequency [NFr]")));
+            af.getValueQuantity().setSystem("http://unitsofmeasure.org")
+                    .setValue(geneticAlteration.getAlleleFrequency());
+            variant.addComponent(af);
+        }
+
+        if (geneticAlteration.getDbsnp() != null) {
+            ObservationComponentComponent dbsnp = new ObservationComponentComponent()
+                    .setCode(new CodeableConcept(new Coding("http://loinc.org", "81255-2", "dbSNP [ID]")));
+            dbsnp.getValueCodeableConcept().addCoding(
+                    new Coding("http://www.ncbi.nlm.nih.gov/projects/SNP", geneticAlteration.getDbsnp(), null));
+            variant.addComponent(dbsnp);
+        }
 
         return variant;
 

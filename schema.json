@@ -30,9 +30,20 @@
             ],
             "geneticAlterations": [
               {
+                "alleleFrequency": 0.0,
+                "alt": "",
                 "alteration": "",
+                "aminoAcidChange": "",
+                "chromosome": "",
+                "clinvar": 0,
+                "cosmic": "",
+                "dbsnp": "",
+                "end": 0,
                 "entrezGeneId": 0,
-                "hugoSymbol": ""
+                "gnomad": 0.0,
+                "hugoSymbol": "",
+                "ref": "",
+                "start": 0
 
               }
             ]

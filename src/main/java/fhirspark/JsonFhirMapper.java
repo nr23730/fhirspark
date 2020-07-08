@@ -99,7 +99,7 @@ public class JsonFhirMapper {
         Patient fhirPatient = (Patient) bPatient.getEntryFirstRep().getResource();
 
         if (fhirPatient == null) {
-            return "{}";
+            return this.objectMapper.writeValueAsString(new CbioportalRest().withId(patientId).withMtbs(mtbs));
         }
 
         Bundle bDiagnosticReports = (Bundle) client.search().forResource(DiagnosticReport.class)
@@ -230,8 +230,21 @@ public class JsonFhirMapper {
                                                 .replaceFirst("p.", ""));
                                         break;
                                     case "81252-9":
-                                        g.setEntrezGeneId(Integer.valueOf(
-                                                variant.getValueCodeableConcept().getCodingFirstRep().getCode()));
+                                        variant.getValueCodeableConcept().getCoding().forEach(coding -> {
+                                            switch (coding.getSystem()) {
+                                                case "http://www.ncbi.nlm.nih.gov/gene":
+                                                    g.setEntrezGeneId(Integer.valueOf(coding.getCode()));
+                                                    break;
+                                                case "http://www.ncbi.nlm.nih.gov/clinvar":
+                                                    g.setClinvar(Integer.valueOf(coding.getCode()));
+                                                    break;
+                                                case "http://cancer.sanger.ac.uk/cancergenome/projects/cosmic":
+                                                    g.setCosmic(coding.getCode());
+                                                    break;
+                                                default:
+                                                    break;
+                                            }
+                                        });
                                         break;
                                     case "48018-6":
                                         g.setHugoSymbol(
@@ -240,6 +253,13 @@ public class JsonFhirMapper {
                                     case "48001-2":
                                         g.setChromosome(
                                                 variant.getValueCodeableConcept().getCodingFirstRep().getCode());
+                                        break;
+                                    case "81258-6":
+                                        g.setAlleleFrequency(
+                                                variant.getValueQuantity().getValue().doubleValue());
+                                        break;
+                                    case "81255-2":
+                                        g.setDbsnp(variant.getValueCodeableConcept().getCodingFirstRep().getCode());
                                         break;
                                     case "62378-5":
                                         switch (variant.getValueCodeableConcept().getCodingFirstRep().getCode()) {
@@ -251,6 +271,22 @@ public class JsonFhirMapper {
                                                 break;
                                             default:
                                                 break;
+                                        }
+                                        break;
+                                    case "69551-0":
+                                        g.setAlt(variant.getValueStringType().getValue());
+                                        break;
+                                    case "69547-8":
+                                        g.setRef(variant.getValueStringType().getValue());
+                                        break;
+                                    case "exact-start-end":
+                                        if (variant.getValueRange().getLow().getValue() != null) {
+                                            g.setStart(Integer
+                                                    .valueOf(variant.getValueRange().getLow().getValue().toString()));
+                                        }
+                                        if (variant.getValueRange().getHigh().getValue() != null) {
+                                            g.setEnd(Integer
+                                                    .valueOf(variant.getValueRange().getHigh().getValue().toString()));
                                         }
                                         break;
                                     default:
