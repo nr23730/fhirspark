@@ -63,11 +63,20 @@ public class GeneticAlterationsAdapter {
                 break;
         }
 
-        ObservationComponentComponent ncbiGeneId = new ObservationComponentComponent()
+        ObservationComponentComponent variationCode = new ObservationComponentComponent()
                 .setCode(new CodeableConcept(new Coding("http://loinc.org", "81252-9", "Discrete genetic variant")));
-        ncbiGeneId.getValueCodeableConcept().addCoding(new Coding().setSystem("http://www.ncbi.nlm.nih.gov/gene")
-                .setCode("" + geneticAlteration.getEntrezGeneId()));
-        variant.addComponent(ncbiGeneId);
+        variationCode.getValueCodeableConcept().addCoding().setSystem("http://www.ncbi.nlm.nih.gov/gene")
+                .setCode(String.valueOf(geneticAlteration.getEntrezGeneId()));
+        if (geneticAlteration.getClinvar() != null) {
+            variationCode.getValueCodeableConcept().addCoding().setSystem("http://www.ncbi.nlm.nih.gov/clinvar")
+                    .setCode(String.valueOf(geneticAlteration.getClinvar()));
+        }
+        if (geneticAlteration.getCosmic() != null) {
+            variationCode.getValueCodeableConcept().addCoding()
+                    .setSystem("http://cancer.sanger.ac.uk/cancergenome/projects/cosmic")
+                    .setCode(String.valueOf(geneticAlteration.getCosmic()));
+        }
+        variant.addComponent(variationCode);
 
         Genenames gn = HgncGeneName.resolve(geneticAlteration.getEntrezGeneId());
         assert geneticAlteration.getHugoSymbol().equals(gn.getApprovedSymbol());

@@ -230,8 +230,21 @@ public class JsonFhirMapper {
                                                 .replaceFirst("p.", ""));
                                         break;
                                     case "81252-9":
-                                        g.setEntrezGeneId(Integer.valueOf(
-                                                variant.getValueCodeableConcept().getCodingFirstRep().getCode()));
+                                        variant.getValueCodeableConcept().getCoding().forEach(coding -> {
+                                            switch (coding.getSystem()) {
+                                                case "http://www.ncbi.nlm.nih.gov/gene":
+                                                    g.setEntrezGeneId(Integer.valueOf(coding.getCode()));
+                                                    break;
+                                                case "http://www.ncbi.nlm.nih.gov/clinvar":
+                                                    g.setClinvar(Integer.valueOf(coding.getCode()));
+                                                    break;
+                                                case "http://cancer.sanger.ac.uk/cancergenome/projects/cosmic":
+                                                    g.setCosmic(coding.getCode());
+                                                    break;
+                                                default:
+                                                    break;
+                                            }
+                                        });
                                         break;
                                     case "48018-6":
                                         g.setHugoSymbol(
