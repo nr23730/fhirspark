@@ -12,6 +12,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import fhirspark.adapter.DrugAdapter;
 import fhirspark.adapter.GeneticAlterationsAdapter;
 import fhirspark.adapter.SpecimenAdapter;
+import fhirspark.adapter.clinicaldata.GenericAdapter;
 import fhirspark.resolver.PubmedPublication;
 import fhirspark.restmodel.CbioportalRest;
 import fhirspark.restmodel.ClinicalDatum;
@@ -23,6 +24,8 @@ import fhirspark.restmodel.TherapyRecommendation;
 import fhirspark.restmodel.Treatment;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -170,7 +173,12 @@ public class JsonFhirMapper {
 
                         therapyRecommendation.setId(ob.getIdentifierFirstRep().getValue());
 
-                        // PUT CLINICAL DATA HERE
+                        ob.getHasMember().forEach(member -> {
+                            Observation obs = (Observation) member.getResource();
+                            String[] attr = obs.getValueStringType().asStringValue().split(": ");
+                            therapyRecommendation.getReasoning().getClinicalData()
+                                    .add(new ClinicalDatum().withAttributeName(attr[0]).withValue(attr[1]));
+                        });
 
                         List<Treatment> treatments = new ArrayList<Treatment>();
                         therapyRecommendation.setTreatments(treatments);
@@ -415,29 +423,27 @@ public class JsonFhirMapper {
                 therapyRecommendation.getComment()
                         .forEach(comment -> efficacyObservation.getNote().add(new Annotation().setText(comment)));
 
-                // if (therapyRecommendation.getReasoning().getClinicalData() != null) {
-                // therapyRecommendation.getReasoning().getClinicalData().forEach(clinical -> {
-                // try {
-                // Method m = Class.forName("fhirspark.adapter.clinicaldata." +
-                // clinical.getAttributeId())
-                // .getMethod("process", ClinicalDatum.class);
-                // Resource clinicalFhir = (Resource) m.invoke(null, clinical);
-                // diagnosticReport.addResult(new Reference(clinicalFhir));
-                // } catch (ClassNotFoundException e) {
-                // // TODO Auto-generated catch block
-                // e.printStackTrace();
-                // } catch (NoSuchMethodException e) {
-                // // TODO Auto-generated catch block
-                // e.printStackTrace();
-                // } catch (IllegalAccessException e) {
-                // // TODO Auto-generated catch block
-                // e.printStackTrace();
-                // } catch (InvocationTargetException e) {
-                // // TODO Auto-generated catch block
-                // e.printStackTrace();
-                // }
-                // });
-                // }
+                if (therapyRecommendation.getReasoning().getClinicalData() != null) {
+                    therapyRecommendation.getReasoning().getClinicalData().forEach(clinical -> {
+                        try {
+                            Method m = Class.forName("fhirspark.adapter.clinicaldata." + clinical.getAttributeId())
+                                    .getMethod("process", ClinicalDatum.class);
+                            efficacyObservation.addHasMember(new Reference((Resource) m.invoke(null, clinical)));
+                        } catch (ClassNotFoundException e) {
+                            GenericAdapter genericAdapter = new GenericAdapter();
+                            efficacyObservation.addHasMember(new Reference(genericAdapter.process(clinical)));
+                        } catch (NoSuchMethodException e) {
+                            // TODO Auto-generated catch block
+                            e.printStackTrace();
+                        } catch (IllegalAccessException e) {
+                            // TODO Auto-generated catch block
+                            e.printStackTrace();
+                        } catch (InvocationTargetException e) {
+                            // TODO Auto-generated catch block
+                            e.printStackTrace();
+                        }
+                    });
+                }
 
                 if (therapyRecommendation.getReasoning().getGeneticAlterations() != null) {
                     therapyRecommendation.getReasoning().getGeneticAlterations().forEach(geneticAlteration -> {
