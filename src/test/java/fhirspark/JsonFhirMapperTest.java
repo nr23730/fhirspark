@@ -9,6 +9,8 @@ import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
@@ -17,8 +19,6 @@ import fhirspark.resolver.HgncGeneName;
 import fhirspark.resolver.OncoKbDrug;
 import fhirspark.restmodel.*;
 import spark.resource.ClassPathResource;
-
-import static org.junit.Assert.*;
 
 @TestInstance(Lifecycle.PER_CLASS)
 public class JsonFhirMapperTest {
