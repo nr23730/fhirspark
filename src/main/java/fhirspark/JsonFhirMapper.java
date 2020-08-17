@@ -135,18 +135,7 @@ public class JsonFhirMapper {
             mtb.setId("mtb_" + patientId + "_" + diagnosticReport.getIssued().getTime());
 
             if (diagnosticReport.hasStatus()) {
-                switch (diagnosticReport.getStatus().toCode()) {
-                    case "final":
-                        mtb.setMtbState("COMPLETED");
-                        break;
-                    case "cancelled":
-                        mtb.setMtbState("ARCHIVED");
-                        break;
-                    default:
-                    case "partial":
-                        mtb.setMtbState("DRAFT");
-                        break;
-                }
+                mtb.setMtbState(diagnosticReport.getStatus().toCode().toUpperCase());
             }
 
             // REBIOPSY HERE
@@ -367,18 +356,7 @@ public class JsonFhirMapper {
             diagnosticReport.setIssued(new Date(Long.valueOf(mtb.getId().replace("mtb_" + patientId + "_", ""))));
 
             if (mtb.getMtbState() != null) {
-                switch (mtb.getMtbState().toUpperCase()) {
-                    case "COMPLETED":
-                        diagnosticReport.setStatus(DiagnosticReportStatus.FINAL);
-                        break;
-                    case "ARCHIVED":
-                        diagnosticReport.setStatus(DiagnosticReportStatus.CANCELLED);
-                        break;
-                    default:
-                    case "DRAFT":
-                        diagnosticReport.setStatus(DiagnosticReportStatus.PARTIAL);
-                        break;
-                }
+                diagnosticReport.setStatus(DiagnosticReportStatus.fromCode(mtb.getMtbState().toLowerCase()));
             } else {
                 diagnosticReport.setStatus(DiagnosticReportStatus.PARTIAL);
             }

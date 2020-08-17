@@ -6,7 +6,7 @@
 			"date": "2020-05-20",
 			"generalRecommendation": "asdf1",
 			"id": "mtb_Testpatient23_1590601794804",
-			"mtbState": "COMPLETED",
+			"mtbState": "FINAL",
 			"samples": [
 				"Testpatient_01"
 			],
@@ -45,7 +45,7 @@
 			"date": "2020-05-27",
 			"generalRecommendation": "ghjk2",
 			"id": "mtb_Testpatient23_1590601799440",
-			"mtbState": "DRAFT",
+			"mtbState": "PRELIMINARY",
 			"samples": [
 				"Testpatient_01",
 				"Testpatient_02"
