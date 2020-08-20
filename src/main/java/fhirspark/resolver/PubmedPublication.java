@@ -11,11 +11,19 @@ import com.sun.jersey.api.client.WebResource;
 import java.io.IOException;
 import org.eclipse.jetty.http.HttpStatus;
 
+/**
+ * Resolves the title of a pubmed publication if it was not provided.
+ */
 public class PubmedPublication {
 
     private Client client = new Client();
     private ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
 
+    /**
+     *
+     * @param pubmedId id of the article to resolve
+     * @return name of article
+     */
     public String resolvePublication(int pubmedId) {
         WebResource webResource = client
                 .resource("https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&id=" + pubmedId

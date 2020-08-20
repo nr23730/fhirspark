@@ -9,6 +9,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Cache for available Drugs from OncoKB (offline).
+ */
 public final class OncoKbDrug {
 
     private static final Map<String, Drug> DRUG_MAP = new HashMap<>();
@@ -16,6 +19,10 @@ public final class OncoKbDrug {
     private OncoKbDrug() {
     }
 
+    /**
+     * Initalizes cache for Drugs.
+     * @param dbPath Path of the database.
+     */
     public static void initalize(String dbPath) {
         try {
             List<Drug> drugs = new ObjectMapper().readerFor(new TypeReference<List<Drug>>() {
@@ -29,6 +36,11 @@ public final class OncoKbDrug {
         }
     }
 
+    /**
+     *
+     * @param name drug that shall be resolved.
+     * @return Drug entry from OncoKB.
+     */
     public static Drug resolve(String name) {
         return DRUG_MAP.get(name);
     }

@@ -61,6 +61,9 @@ import org.hl7.fhir.r4.model.Task.TaskIntent;
 import org.hl7.fhir.r4.model.Task.TaskStatus;
 import org.hl7.fhir.r4.model.codesystems.ObservationCategory;
 
+/**
+ * Fulfils the persistence in HL7 FHIR resources.
+ */
 public class JsonFhirMapper {
 
     private static final String LOINC_URI = "http://loinc.org";
@@ -94,6 +97,9 @@ public class JsonFhirMapper {
         this.client = ctx.newRestfulGenericClient(settings.getFhirDbBase());
     }
 
+    /**
+     * Retrieves MTB data from FHIR server and transforms it into JSON format for cBioPortal.
+     */
     public String toJson(String patientId) throws JsonProcessingException {
         List<Mtb> mtbs = new ArrayList<Mtb>();
         Bundle bPatient = (Bundle) client.search().forResource(Patient.class)
@@ -306,6 +312,9 @@ public class JsonFhirMapper {
 
     }
 
+    /**
+     * Retrieves MTB data from cBioPortal and persists it in FHIR resources.
+     */
     public void addOrEditMtb(String patientId, List<Mtb> mtbs) throws DataFormatException, IOException {
 
         Bundle bundle = new Bundle();
@@ -499,6 +508,11 @@ public class JsonFhirMapper {
 
     }
 
+    /**
+     *
+     * @param patientId id of the patient.
+     * @param deletions entries that should be deleted. Either MTB or therapy recommendation.
+     */
     public void deleteEntries(String patientId, Deletions deletions) {
         // deletions.getTherapyRecommendation()
         // .forEach(recommendation -> deleteTherapyRecommendation(patientId,

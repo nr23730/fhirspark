@@ -7,6 +7,9 @@ import org.hl7.fhir.r4.model.Observation;
 import org.hl7.fhir.r4.model.Observation.ObservationStatus;
 import org.hl7.fhir.r4.model.Resource;
 
+/**
+ * Generic adapter for clinical data. Also fallback if other adapter was not found.
+ */
 public class GenericAdapter implements ClinicalDataAdapter {
 
     @Override
