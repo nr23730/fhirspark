@@ -18,6 +18,11 @@ import static spark.Spark.options;
 import static spark.Spark.port;
 import static spark.Spark.put;
 
+/**
+ * Fhirspark-Application that stores MTB decisions from cBioPortal and is able
+ * to transfer those to hospital information systems via HL7 Version 2 and HL7
+ * FHIR.
+ */
 public final class FhirSpark {
 
     private static JsonFhirMapper jsonFhirMapper;
@@ -27,6 +32,11 @@ public final class FhirSpark {
     private FhirSpark() {
     }
 
+    /**
+     *
+     * @param args args[0] can contain a path to a custom configuration yaml file.
+     * @throws Exception Exception if the REST API runs into issues.
+     */
     public static void main(final String[] args) throws Exception {
         InputStream settingsYaml = ClassLoader.getSystemClassLoader().getResourceAsStream("settings.yaml");
         if (args.length == 1) {

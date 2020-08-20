@@ -15,8 +15,16 @@ import org.hl7.fhir.r4.model.Resource;
 import org.hl7.fhir.r4.model.codesystems.ChromosomeHuman;
 import org.hl7.fhir.r4.model.codesystems.ObservationCategory;
 
+/**
+ * Maps genetic mutations / CNVs to FHIR Observation.
+ */
 public class GeneticAlterationsAdapter {
 
+    /**
+     *
+     * @param geneticAlteration Specified genetic mutation / CNV.
+     * @return Observation constrained by genomics-reporting IG.
+     */
     public Resource process(GeneticAlteration geneticAlteration) {
 
         Observation variant = new Observation();

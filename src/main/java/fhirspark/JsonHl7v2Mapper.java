@@ -25,6 +25,9 @@ import fhirspark.restmodel.TherapyRecommendation;
 import java.io.IOException;
 import java.util.List;
 
+/**
+ * Fulfils a mapping to the HL7 Version 2 standard and transfers the message to a configured target.
+ */
 public class JsonHl7v2Mapper {
 
     private HapiContext context = new DefaultHapiContext();
@@ -36,6 +39,14 @@ public class JsonHl7v2Mapper {
                 settings.getHl7v2config().get(0).getPort(), false);
     }
 
+    /**
+     *
+     * @param patientId id of the patient.
+     * @param mtbs mtb entries of the patient.
+     * @throws HL7Exception General Exception.
+     * @throws IOException Network Exception.
+     * @throws LLPException Exception when sending message.
+     */
     public void toHl7v2Oru(String patientId, List<Mtb> mtbs) throws HL7Exception, IOException, LLPException {
         ORU_R01 oru = new ORU_R01();
         oru.initQuickstart("ORU", "R01", "P");
