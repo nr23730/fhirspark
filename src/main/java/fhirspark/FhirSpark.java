@@ -2,6 +2,9 @@ package fhirspark;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.WebResource;
 import fhirspark.resolver.HgncGeneName;
 import fhirspark.resolver.OncoKbDrug;
 import fhirspark.restmodel.CbioportalRest;
@@ -10,7 +13,9 @@ import fhirspark.restmodel.Mtb;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.List;
+import javax.ws.rs.core.Cookie;
 import org.eclipse.jetty.http.HttpStatus;
+import spark.Request;
 
 import static spark.Spark.delete;
 import static spark.Spark.get;
@@ -27,6 +32,8 @@ public final class FhirSpark {
 
     private static JsonFhirMapper jsonFhirMapper;
     private static JsonHl7v2Mapper jsonHl7v2Mapper;
+    private static Settings settings;
+    private static Client client = new Client();
     private static ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
 
     private FhirSpark() {
@@ -43,7 +50,7 @@ public final class FhirSpark {
             settingsYaml = new FileInputStream(args[0]);
         }
         ConfigurationLoader configLoader = new ConfigurationLoader();
-        final Settings settings = configLoader.loadConfiguration(settingsYaml, Settings.class);
+        settings = configLoader.loadConfiguration(settingsYaml, Settings.class);
         HgncGeneName.initialize(settings.getHgncPath());
         OncoKbDrug.initalize(settings.getOncokbPath());
         jsonFhirMapper = new JsonFhirMapper(settings);
@@ -66,6 +73,10 @@ public final class FhirSpark {
         });
 
         get("/mtb/:patientId", (req, res) -> {
+            if (settings.getLoginRequired() && !validateRequest(req)) {
+                res.status(HttpStatus.UNAUTHORIZED_401);
+                return res;
+            }
             res.status(HttpStatus.OK_200);
             res.header("Access-Control-Allow-Credentials", "true");
             res.header("Access-Control-Allow-Origin", req.headers("Origin"));
@@ -76,6 +87,10 @@ public final class FhirSpark {
         });
 
         put("/mtb/:patientId", (req, res) -> {
+            if (settings.getLoginRequired() && !validateRequest(req)) {
+                res.status(HttpStatus.UNAUTHORIZED_401);
+                return res;
+            }
             res.status(HttpStatus.CREATED_201);
             res.header("Access-Control-Allow-Credentials", "true");
             res.header("Access-Control-Allow-Origin", req.headers("Origin"));
@@ -92,6 +107,10 @@ public final class FhirSpark {
         });
 
         delete("/mtb/:patientId", (req, res) -> {
+            if (settings.getLoginRequired() && !validateRequest(req)) {
+                res.status(HttpStatus.UNAUTHORIZED_401);
+                return res;
+            }
             res.status(HttpStatus.OK_200);
             res.header("Access-Control-Allow-Credentials", "true");
             res.header("Access-Control-Allow-Origin", req.headers("Origin"));
@@ -103,6 +122,25 @@ public final class FhirSpark {
             return res.body();
         });
 
+    }
+
+    /**
+     * Checks if the session id is authorized to access the clinical data of the patient.
+     *
+     * @param req Incoming Java Spark Request
+     * @return Boolean if the session if able to access the data
+     */
+    private static boolean validateRequest(Request req) {
+        String portalUrl = settings.getPortalUrl() + "api/studies/" + settings.getMtbStudy() + "/patients/"
+                + req.params(":patientId");
+
+        WebResource webResource = client.resource(portalUrl);
+        webResource.cookie(new Cookie("JSESSIONID", req.cookies().get("JSESSIONID")));
+        ClientResponse response = webResource.accept("application/json").get(ClientResponse.class);
+        if (response.getStatus() == HttpStatus.OK_200) {
+            return true;
+        }
+        return false;
     }
 
 }
