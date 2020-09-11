@@ -4,12 +4,12 @@ specimenSystem: ${FHIRSPARK_SPECIMENSYSTEM:-https://cbioportal.org/specimen/}
 diagnosticReportSystem: ${FHIRSPARK_DIAGNOSTICREPORTSYSTEM:-https://cbioportal.org/mtb/}
 observationSystem: ${FHIRSPARK_OBSERVATIONSYSTEM:-https://cbioportal.org/therapyrecommendation/}
 patientSystem: ${FHIRSPARK_PATIENTSYSTEM:-https://cbioportal.org/patient/}
-hgncPath: ${FHIRSPARK_HGNCPATH:-hgnc.csv}
-portalUrl: ${FHIRSPARK_PORTALURL:-http://localhost:8080/}
+portalUrl: ${FHIRSPARK_PORTALURL:-http://cbioportal/}
 mtbStudy: ${FHIRSPARK_MTBSTUDY:-MTB}
 loginRequired: ${FHIRSPARK_LOGINREQUIRED:-true}
+hgncPath: ${FHIRSPARK_HGNCPATH:-hgnc.csv}
 oncokbPath: ${FHIRSPARK_ONCOKBPATH:-drugs.json}
 hl7v2config:
- - sendv2: ${FHIRSPARK_SENDHL7V2:-true}
+ - sendv2: ${FHIRSPARK_SENDHL7V2:-false}
    server: ${FHIRSPARK_HL7V2SERVER:-localhost}
    port: ${FHIRSPARK_HL7V2PORT:-1011}

@@ -40,6 +40,7 @@ public final class FhirSpark {
 
     private static JsonFhirMapper jsonFhirMapper;
     private static JsonHl7v2Mapper jsonHl7v2Mapper;
+    private static Settings settings;
     private static Client client = new Client();
     private static ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
 
@@ -57,7 +58,7 @@ public final class FhirSpark {
             settingsYaml = new FileInputStream(args[0]);
         }
         ConfigurationLoader configLoader = new ConfigurationLoader();
-        final Settings settings = configLoader.loadConfiguration(settingsYaml, Settings.class);
+        settings = configLoader.loadConfiguration(settingsYaml, Settings.class);
         HgncGeneName.initialize(settings.getHgncPath());
         OncoKbDrug.initalize(settings.getOncokbPath());
         jsonFhirMapper = new JsonFhirMapper(settings);
@@ -90,7 +91,7 @@ public final class FhirSpark {
         */
         get("/mtb/:patientId/permission", (req, res) -> {
             if (settings.getLoginRequired()
-                && (!validateRequest(req, settings) || !validateManipulation(req, settings))) {
+                && (!validateRequest(req) || !validateManipulation(req))) {
                 res.status(HttpStatus.FORBIDDEN_403);
                 return res;
             }
@@ -102,7 +103,7 @@ public final class FhirSpark {
         });
 
         get("/mtb/:patientId", (req, res) -> {
-            if (settings.getLoginRequired() && !validateRequest(req, settings)) {
+            if (settings.getLoginRequired() && !validateRequest(req)) {
                 res.status(HttpStatus.FORBIDDEN_403);
                 return res;
             }
@@ -117,7 +118,7 @@ public final class FhirSpark {
 
         put("/mtb/:patientId", (req, res) -> {
             if (settings.getLoginRequired()
-                && (!validateRequest(req, settings) || !validateManipulation(req, settings))) {
+                && (!validateRequest(req) || !validateManipulation(req))) {
                 res.status(HttpStatus.FORBIDDEN_403);
                 return res;
             }
@@ -138,7 +139,7 @@ public final class FhirSpark {
 
         delete("/mtb/:patientId", (req, res) -> {
             if (settings.getLoginRequired()
-                && (!validateRequest(req, settings) || !validateManipulation(req, settings))) {
+                && (!validateRequest(req) || !validateManipulation(req))) {
                 res.status(HttpStatus.FORBIDDEN_403);
                 return res;
             }
@@ -213,7 +214,7 @@ public final class FhirSpark {
      * @param req Incoming Java Spark Request
      * @return Boolean if the session if able to access the data
      */
-    private static boolean validateRequest(Request req, Settings settings) {
+    private static boolean validateRequest(Request req) {
         String portalDomain = settings.getPortalUrl();
         String validatePath = "api/studies/" + settings.getMtbStudy() + "/patients/"
                 + req.params(":patientId");
@@ -242,7 +243,7 @@ public final class FhirSpark {
      * @param req Incoming Java Spark Request
      * @return Boolean if the session is able to access the data
      */
-    private static boolean validateManipulation(Request req, Settings settings) {
+    private static boolean validateManipulation(Request req) {
         String requestedPatientId = req.params(":patientId");
         String mtbStudy = settings.getMtbStudy();
         String userRoles = req.headers("X-USERROLES");
