@@ -17,7 +17,9 @@ import ca.uhn.hl7v2.model.v281.segment.SPM;
 import fhirspark.resolver.HgncGeneName;
 import fhirspark.resolver.PubmedPublication;
 import fhirspark.resolver.model.Genenames;
+import fhirspark.restmodel.GeneticAlteration;
 import fhirspark.restmodel.Mtb;
+import fhirspark.restmodel.Reference;
 import fhirspark.restmodel.TherapyRecommendation;
 import java.io.IOException;
 import java.util.List;
@@ -72,127 +74,20 @@ public class JsonHl7v2Mapper {
                 masterPanel.getUniversalServiceIdentifier().getText()
                         .setValue("Master HL7 genetic variant reporting panel");
                 masterPanel.getUniversalServiceIdentifier().getNameOfCodingSystem().setValue("LN");
-                masterPanel.getUniversalServiceIdentifier().getCodingSystemOID().setValue("2.16.840.1.113883.6.1");
                 masterPanel.getFillerOrderNumber().getEntityIdentifier().setValue(therapyRecommendation.getId());
 
                 masterPanel.getObservationDateTime().setValue(mtb.getDate().replaceAll("-", ""));
 
-                mtb.getSamples().forEach(sample -> {
-                    try {
-                        SPM specimen = result.getORDER_OBSERVATION(therapyRecommendationOrder)
-                                .getSPECIMEN(result.getORDER_OBSERVATION(therapyRecommendationOrder).getSPECIMENReps())
-                                .getSPM();
-                        specimen.getSetIDSPM().setValue(String.valueOf(
-                                result.getORDER_OBSERVATION(result.getORDER_OBSERVATIONReps() - 1).getSPECIMENReps()));
-                        specimen.getSpecimenID().getFillerAssignedIdentifier().getEntityIdentifier().setValue(sample);
-                        specimen.getSpecimenType().getIdentifier().setValue("TUMOR");
-                        specimen.getSpecimenType().getText().setValue("Tumor");
-                    } catch (DataTypeException e) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
-                    }
-                });
+                mtb.getSamples().forEach(sample -> addSample(result, therapyRecommendationOrder, sample));
 
                 masterPanel.getFillerOrderNumber().getEntityIdentifier().setValue(mtb.getId());
 
-                OBX evidence = result.getORDER_OBSERVATION(therapyRecommendationOrder)
-                        .getOBSERVATION(result.getORDER_OBSERVATION(therapyRecommendationOrder).getOBSERVATIONReps())
-                        .getOBX();
-                evidence.getSetIDOBX().setValue(
-                        String.valueOf(result.getORDER_OBSERVATION(therapyRecommendationOrder).getOBSERVATIONReps()));
-                evidence.getValueType().setValue("ST");
-                evidence.getObservationIdentifier().getIdentifier().setValue("93044-6");
-                evidence.getObservationIdentifier().getText().setValue("Level of evidence");
-                evidence.getObservationIdentifier().getCodingSystemOID().setValue("2.16.840.1.113883.6.1");
-                evidence.getObservationIdentifier().getNameOfCodingSystem().setValue("LN");
-                ST evidenceValue = new ST(oru);
-                evidenceValue.setValue(therapyRecommendation.getEvidenceLevel());
-                evidence.insertObservationValue(0).setData(evidenceValue);
+                addEvidenceLevel(oru, result, therapyRecommendationOrder, therapyRecommendation.getEvidenceLevel());
 
-                therapyRecommendation.getReasoning().getGeneticAlterations().forEach(g -> {
-                    try {
-                        int orderNumber = result.getORDER_OBSERVATIONReps();
-                        OBR variant = result.insertORDER_OBSERVATION(orderNumber).getOBR();
-                        variant.getSetIDOBR().setValue(String.valueOf(result.getORDER_OBSERVATIONReps()));
-                        variant.getUniversalServiceIdentifier().getIdentifier().setValue("81250-3");
-                        variant.getUniversalServiceIdentifier().getText().setValue("Discrete genetic variant panel");
-                        variant.getUniversalServiceIdentifier().getNameOfCodingSystem().setValue("LN");
-                        variant.getUniversalServiceIdentifier().getCodingSystemOID().setValue("2.16.840.1.113883.6.1");
+                therapyRecommendation.getReasoning().getGeneticAlterations()
+                        .forEach(g -> addAlteration(oru, result, g));
 
-                        OBX variantAssessment = result.getORDER_OBSERVATION(orderNumber).getOBSERVATION(0).getOBX();
-                        variantAssessment.getSetIDOBX().setValue(String.valueOf(1));
-                        variantAssessment.getObservationIdentifier().getIdentifier().setValue("69548-6");
-                        variantAssessment.getObservationIdentifier().getText().setValue("Genetic variant assessment");
-                        variantAssessment.getObservationIdentifier().getNameOfCodingSystem().setValue("LN");
-                        variantAssessment.getObservationIdentifier().getCodingSystemOID()
-                                .setValue("2.16.840.1.113883.6.1");
-                        variantAssessment.getValueType().setValue("CWE");
-                        CWE variantAssessmentValue = new CWE(oru);
-                        variantAssessmentValue.getNameOfCodingSystem().setValue("LN");
-                        variantAssessmentValue.getCodingSystemOID().setValue("2.16.840.1.113883.6.1");
-                        variantAssessmentValue.getText().setValue("Present");
-                        variantAssessmentValue.getIdentifier().setValue("LA9633-4");
-                        variantAssessment.insertObservationValue(0).setData(variantAssessmentValue);
-
-                        OBX hgvs = result.getORDER_OBSERVATION(orderNumber).getOBSERVATION(1).getOBX();
-                        hgvs.getSetIDOBX().setValue(String.valueOf(2));
-                        hgvs.getObservationIdentifier().getIdentifier().setValue("48005-3");
-                        hgvs.getObservationIdentifier().getText().setValue("Amino acid change (pHGVS)");
-                        hgvs.getObservationIdentifier().getNameOfCodingSystem().setValue("LN");
-                        hgvs.getObservationIdentifier().getCodingSystemOID().setValue("2.16.840.1.113883.6.1");
-                        hgvs.getValueType().setValue("CWE");
-                        CWE hgvsValue = new CWE(oru);
-                        hgvsValue.getCodingSystemOID().setValue("2.16.840.1.113883.6.282");
-                        hgvsValue.getText().setValue("p." + g.getAlteration());
-                        hgvsValue.getIdentifier().setValue("p." + g.getAlteration());
-                        hgvs.insertObservationValue(0).setData(hgvsValue);
-
-                        OBX entrez = result.getORDER_OBSERVATION(orderNumber).getOBSERVATION(2).getOBX();
-                        entrez.getSetIDOBX().setValue(String.valueOf(3));
-                        entrez.getObservationIdentifier().getIdentifier().setValue("81252-9");
-                        entrez.getObservationIdentifier().getText().setValue("Discrete genetic variant");
-                        entrez.getObservationIdentifier().getNameOfCodingSystem().setValue("LN");
-                        entrez.getObservationIdentifier().getCodingSystemOID().setValue("2.16.840.1.113883.6.1");
-                        entrez.getValueType().setValue("CWE");
-                        CWE entrezValue = new CWE(oru);
-                        entrezValue.getCodingSystemOID().setValue("2.16.840.1.113883.4.642.3.1041");
-                        entrezValue.getText().setValue(String.valueOf(g.getEntrezGeneId()));
-                        entrezValue.getIdentifier().setValue(String.valueOf(g.getEntrezGeneId()));
-                        entrez.insertObservationValue(0).setData(entrezValue);
-
-                        OBX hgnc = result.getORDER_OBSERVATION(orderNumber).getOBSERVATION(3).getOBX();
-                        hgnc.getSetIDOBX().setValue(String.valueOf(4));
-                        hgnc.getObservationIdentifier().getIdentifier().setValue("48018-6");
-                        hgnc.getObservationIdentifier().getText().setValue("Gene studied [ID]");
-                        hgnc.getObservationIdentifier().getNameOfCodingSystem().setValue("LN");
-                        hgnc.getObservationIdentifier().getCodingSystemOID().setValue("2.16.840.1.113883.6.1");
-                        hgnc.getValueType().setValue("CWE");
-                        CWE hgncValue = new CWE(oru);
-                        Genenames genenames = HgncGeneName.resolve(g.getEntrezGeneId());
-                        hgncValue.getCodingSystemOID().setValue("2.16.840.1.113883.6.281");
-                        hgncValue.getIdentifier().setValue(genenames.getHgncId());
-                        hgncValue.getText().setValue(genenames.getApprovedSymbol());
-                        hgnc.insertObservationValue(0).setData(hgncValue);
-                    } catch (HL7Exception e) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
-                    }
-
-                });
-
-                therapyRecommendation.getReferences().forEach(reference -> {
-                    try {
-                        CWE v2ref = new CWE(oru);
-                        v2ref.getCodingSystemOID().setValue("2.16.840.1.113883.13.191");
-                        v2ref.getIdentifier().setValue(String.valueOf(reference.getPmid()));
-                        String name = reference.getName() != null ? reference.getName()
-                                : pubmedResolver.resolvePublication(reference.getPmid());
-                        v2ref.getText().setValue(name);
-                    } catch (DataTypeException e) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
-                    }
-                });
+                therapyRecommendation.getReferences().forEach(reference -> addReference(oru, reference));
 
                 therapyRecommendation.getTreatments().forEach(treatment -> {
 
@@ -219,6 +114,7 @@ public class JsonHl7v2Mapper {
                     }
                 });
 
+                // Set authorship
                 result.getORDER_OBSERVATIONAll().forEach(order -> {
                     try {
                         order.getOBSERVATIONAll().forEach(observation -> {
@@ -244,6 +140,116 @@ public class JsonHl7v2Mapper {
             connection.getInitiator().sendAndReceive(oru.getMessage());
         }
 
+    }
+
+    private void addSample(ORU_R01_PATIENT_RESULT result, int position, String sample) {
+        try {
+            SPM specimen = result.getORDER_OBSERVATION(position)
+                    .getSPECIMEN(result.getORDER_OBSERVATION(position).getSPECIMENReps()).getSPM();
+            specimen.getSetIDSPM().setValue(String
+                    .valueOf(result.getORDER_OBSERVATION(result.getORDER_OBSERVATIONReps() - 1).getSPECIMENReps()));
+            specimen.getSpecimenID().getFillerAssignedIdentifier().getEntityIdentifier().setValue(sample);
+            specimen.getSpecimenType().getIdentifier().setValue("TUMOR");
+            specimen.getSpecimenType().getText().setValue("Tumor");
+        } catch (DataTypeException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+    }
+
+    private void addAlteration(ORU_R01 oru, ORU_R01_PATIENT_RESULT result, GeneticAlteration g) {
+        try {
+            int orderNumber = result.getORDER_OBSERVATIONReps();
+            OBR variant = result.insertORDER_OBSERVATION(orderNumber).getOBR();
+            variant.getSetIDOBR().setValue(String.valueOf(result.getORDER_OBSERVATIONReps()));
+            variant.getUniversalServiceIdentifier().getIdentifier().setValue("81250-3");
+            variant.getUniversalServiceIdentifier().getText().setValue("Discrete genetic variant panel");
+            variant.getUniversalServiceIdentifier().getNameOfCodingSystem().setValue("LN");
+
+            OBX variantAssessment = result.getORDER_OBSERVATION(orderNumber).getOBSERVATION(0).getOBX();
+            variantAssessment.getSetIDOBX().setValue(String.valueOf(1));
+            variantAssessment.getObservationIdentifier().getIdentifier().setValue("69548-6");
+            variantAssessment.getObservationIdentifier().getText().setValue("Genetic variant assessment");
+            variantAssessment.getObservationIdentifier().getNameOfCodingSystem().setValue("LN");
+            variantAssessment.getValueType().setValue("CWE");
+            CWE variantAssessmentValue = new CWE(oru);
+            variantAssessmentValue.getNameOfCodingSystem().setValue("LN");
+            variantAssessmentValue.getText().setValue("Present");
+            variantAssessmentValue.getIdentifier().setValue("LA9633-4");
+            variantAssessment.insertObservationValue(0).setData(variantAssessmentValue);
+
+            OBX hgvs = result.getORDER_OBSERVATION(orderNumber).getOBSERVATION(1).getOBX();
+            hgvs.getSetIDOBX().setValue(String.valueOf(2));
+            hgvs.getObservationIdentifier().getIdentifier().setValue("48005-3");
+            hgvs.getObservationIdentifier().getText().setValue("Amino acid change (pHGVS)");
+            hgvs.getObservationIdentifier().getNameOfCodingSystem().setValue("LN");
+            hgvs.getValueType().setValue("CWE");
+            CWE hgvsValue = new CWE(oru);
+            hgvsValue.getCodingSystemOID().setValue("2.16.840.1.113883.6.282");
+            hgvsValue.getText().setValue("p." + g.getAlteration());
+            hgvsValue.getIdentifier().setValue("p." + g.getAlteration());
+            hgvs.insertObservationValue(0).setData(hgvsValue);
+
+            OBX entrez = result.getORDER_OBSERVATION(orderNumber).getOBSERVATION(2).getOBX();
+            entrez.getSetIDOBX().setValue(String.valueOf(3));
+            entrez.getObservationIdentifier().getIdentifier().setValue("81252-9");
+            entrez.getObservationIdentifier().getText().setValue("Discrete genetic variant");
+            entrez.getObservationIdentifier().getNameOfCodingSystem().setValue("LN");
+            entrez.getValueType().setValue("CWE");
+            CWE entrezValue = new CWE(oru);
+            entrezValue.getCodingSystemOID().setValue("2.16.840.1.113883.4.642.3.1041");
+            entrezValue.getText().setValue(String.valueOf(g.getEntrezGeneId()));
+            entrezValue.getIdentifier().setValue(String.valueOf(g.getEntrezGeneId()));
+            entrez.insertObservationValue(0).setData(entrezValue);
+
+            OBX hgnc = result.getORDER_OBSERVATION(orderNumber).getOBSERVATION(3).getOBX();
+            hgnc.getSetIDOBX().setValue(String.valueOf(4));
+            hgnc.getObservationIdentifier().getIdentifier().setValue("48018-6");
+            hgnc.getObservationIdentifier().getText().setValue("Gene studied [ID]");
+            hgnc.getObservationIdentifier().getNameOfCodingSystem().setValue("LN");
+            hgnc.getValueType().setValue("CWE");
+            CWE hgncValue = new CWE(oru);
+            Genenames genenames = HgncGeneName.resolve(g.getEntrezGeneId());
+            hgncValue.getCodingSystemOID().setValue("2.16.840.1.113883.6.281");
+            hgncValue.getIdentifier().setValue(genenames.getHgncId());
+            hgncValue.getText().setValue(genenames.getApprovedSymbol());
+            hgnc.insertObservationValue(0).setData(hgncValue);
+        } catch (HL7Exception e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+    }
+
+    private void addReference(ORU_R01 oru, Reference reference) {
+        try {
+            CWE v2ref = new CWE(oru);
+            v2ref.getCodingSystemOID().setValue("2.16.840.1.113883.13.191");
+            v2ref.getIdentifier().setValue(String.valueOf(reference.getPmid()));
+            String name = reference.getName() != null ? reference.getName()
+                    : pubmedResolver.resolvePublication(reference.getPmid());
+            v2ref.getText().setValue(name);
+        } catch (DataTypeException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+    }
+
+    private void addEvidenceLevel(ORU_R01 oru, ORU_R01_PATIENT_RESULT result, int position, String evidenceLevel) {
+        try {
+            OBX evidence = result.getORDER_OBSERVATION(position)
+                    .getOBSERVATION(result.getORDER_OBSERVATION(position).getOBSERVATIONReps()).getOBX();
+            evidence.getSetIDOBX().setValue(String.valueOf(result.getORDER_OBSERVATION(position).getOBSERVATIONReps()));
+            evidence.getValueType().setValue("ST");
+            evidence.getObservationIdentifier().getIdentifier().setValue("93044-6");
+            evidence.getObservationIdentifier().getText().setValue("Level of evidence");
+            evidence.getObservationIdentifier().getNameOfCodingSystem().setValue("LN");
+            ST evidenceValue = new ST(oru);
+            evidenceValue.setValue(evidenceLevel);
+            evidence.insertObservationValue(0).setData(evidenceValue);
+        } catch (HL7Exception e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
 
 }
