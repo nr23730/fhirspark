@@ -15,12 +15,14 @@ import ca.uhn.hl7v2.model.v281.segment.OBR;
 import ca.uhn.hl7v2.model.v281.segment.OBX;
 import ca.uhn.hl7v2.model.v281.segment.SPM;
 import fhirspark.resolver.HgncGeneName;
+import fhirspark.resolver.OncoKbDrug;
 import fhirspark.resolver.PubmedPublication;
 import fhirspark.resolver.model.Genenames;
 import fhirspark.restmodel.GeneticAlteration;
 import fhirspark.restmodel.Mtb;
 import fhirspark.restmodel.Reference;
 import fhirspark.restmodel.TherapyRecommendation;
+import fhirspark.restmodel.Treatment;
 import java.io.IOException;
 import java.util.List;
 
@@ -58,50 +60,55 @@ public class JsonHl7v2Mapper {
                 continue;
             }
 
+            ORU_R01_PATIENT_RESULT result = oru.insertPATIENT_RESULT(oru.getPATIENT_RESULTReps());
+            result.getPATIENT().getPID().getPid1_SetIDPID().setValue("1");
+            result.getPATIENT().getPID()
+                    .getPatientIdentifierList(result.getPATIENT().getPID().getPatientIdentifierListReps()).getIDNumber()
+                    .setValue(patientId);
+
+            int therapyRecommendationOrder = result.getORDER_OBSERVATIONReps();
+
+            OBR masterPanel = result.getORDER_OBSERVATION(therapyRecommendationOrder).getOBR();
+            masterPanel.getSetIDOBR().setValue(String.valueOf(result.getORDER_OBSERVATIONReps()));
+            masterPanel.getResultStatus().setValue("F");
+            masterPanel.getUniversalServiceIdentifier().getIdentifier().setValue("81247-9");
+            masterPanel.getUniversalServiceIdentifier().getText()
+                    .setValue("Master HL7 genetic variant reporting panel");
+            masterPanel.getUniversalServiceIdentifier().getNameOfCodingSystem().setValue("LN");
+            masterPanel.getFillerOrderNumber().getEntityIdentifier().setValue(mtb.getId());
+
+            masterPanel.getObservationDateTime().setValue(mtb.getDate().replaceAll("-", ""));
+
+            mtb.getSamples().forEach(sample -> addSample(result, therapyRecommendationOrder, sample));
+
+            masterPanel.getFillerOrderNumber().getEntityIdentifier().setValue(mtb.getId());
+
+            NTE generealRecommendation = result.getORDER_OBSERVATION(therapyRecommendationOrder).getNTE(0);
+            generealRecommendation.getSetIDNTE().setValue("1");
+            generealRecommendation.getSourceOfComment().setValue("L");
+            generealRecommendation.getCommentType().getIdentifier().setValue("GI");
+            generealRecommendation.getCommentType().getText().setValue("General Instructions");
+            generealRecommendation.getComment(0).setValue(mtb.getGeneralRecommendation());
+
             for (TherapyRecommendation therapyRecommendation : mtb.getTherapyRecommendations()) {
-                ORU_R01_PATIENT_RESULT result = oru.insertPATIENT_RESULT(oru.getPATIENT_RESULTReps());
-                result.getPATIENT().getPID().getPid1_SetIDPID().setValue("1");
-                result.getPATIENT().getPID()
-                        .getPatientIdentifierList(result.getPATIENT().getPID().getPatientIdentifierListReps())
-                        .getIDNumber().setValue(patientId);
 
-                int therapyRecommendationOrder = result.getORDER_OBSERVATIONReps();
-
-                OBR masterPanel = result.getORDER_OBSERVATION(therapyRecommendationOrder).getOBR();
-                masterPanel.getSetIDOBR().setValue(String.valueOf(result.getORDER_OBSERVATIONReps()));
-                masterPanel.getResultStatus().setValue("F");
-                masterPanel.getUniversalServiceIdentifier().getIdentifier().setValue("81247-9");
-                masterPanel.getUniversalServiceIdentifier().getText()
-                        .setValue("Master HL7 genetic variant reporting panel");
-                masterPanel.getUniversalServiceIdentifier().getNameOfCodingSystem().setValue("LN");
-                masterPanel.getFillerOrderNumber().getEntityIdentifier().setValue(therapyRecommendation.getId());
-
-                masterPanel.getObservationDateTime().setValue(mtb.getDate().replaceAll("-", ""));
-
-                mtb.getSamples().forEach(sample -> addSample(result, therapyRecommendationOrder, sample));
-
-                masterPanel.getFillerOrderNumber().getEntityIdentifier().setValue(mtb.getId());
-
-                addEvidenceLevel(oru, result, therapyRecommendationOrder, therapyRecommendation.getEvidenceLevel());
+                int orderNumber = result.getORDER_OBSERVATIONReps();
+                OBR medicationEfficacy = result.insertORDER_OBSERVATION(orderNumber).getOBR();
+                medicationEfficacy.getResultStatus().setValue("F");
+                medicationEfficacy.getUniversalServiceIdentifier().getIdentifier().setValue("51961-1");
+                medicationEfficacy.getUniversalServiceIdentifier().getText()
+                        .setValue("Genetic variation's effect on drug efficacy");
+                medicationEfficacy.getUniversalServiceIdentifier().getNameOfCodingSystem().setValue("LN");
+                medicationEfficacy.getFillerOrderNumber().getEntityIdentifier().setValue(therapyRecommendation.getId());
 
                 therapyRecommendation.getReasoning().getGeneticAlterations()
                         .forEach(g -> addAlteration(oru, result, g));
 
-                therapyRecommendation.getReferences().forEach(reference -> addReference(oru, reference));
+                therapyRecommendation.getTreatments()
+                        .forEach(treatment -> addTreatment(oru, result, orderNumber, treatment));
 
-                therapyRecommendation.getTreatments().forEach(treatment -> {
-
-                });
-
-                NTE generealRecommendation = result.getORDER_OBSERVATION(therapyRecommendationOrder).getNTE(0);
-                generealRecommendation.getSetIDNTE().setValue("1");
-                generealRecommendation.getSourceOfComment().setValue("L");
-                generealRecommendation.getCommentType().getIdentifier().setValue("GI");
-                generealRecommendation.getCommentType().getText().setValue("General Instructions");
-                generealRecommendation.getComment(0).setValue(mtb.getGeneralRecommendation());
-
-                NTE comments = result.getORDER_OBSERVATION(therapyRecommendationOrder).getNTE(1);
-                comments.getSetIDNTE().setValue("2");
+                NTE comments = result.getORDER_OBSERVATION(orderNumber).getNTE(0);
+                comments.getSetIDNTE().setValue("1");
                 comments.getSourceOfComment().setValue("L");
                 comments.getCommentType().getIdentifier().setValue("1R");
                 comments.getCommentType().getText().setValue("Primary Reason");
@@ -113,6 +120,11 @@ public class JsonHl7v2Mapper {
                         e1.printStackTrace();
                     }
                 });
+
+                addEvidenceLevel(oru, result, orderNumber, therapyRecommendation.getEvidenceLevel());
+
+                therapyRecommendation.getReferences()
+                        .forEach(reference -> addReference(oru, result, orderNumber, reference));
 
                 // Set authorship
                 result.getORDER_OBSERVATIONAll().forEach(order -> {
@@ -220,15 +232,23 @@ public class JsonHl7v2Mapper {
         }
     }
 
-    private void addReference(ORU_R01 oru, Reference reference) {
+    private void addReference(ORU_R01 oru, ORU_R01_PATIENT_RESULT result, int position, Reference reference) {
         try {
+            OBX ref = result.getORDER_OBSERVATION(position)
+                    .getOBSERVATION(result.getORDER_OBSERVATION(position).getOBSERVATIONReps()).getOBX();
+            ref.getSetIDOBX().setValue(String.valueOf(result.getORDER_OBSERVATION(position).getOBSERVATIONReps()));
+            ref.getValueType().setValue("CWE");
+            ref.getObservationIdentifier().getIdentifier().setValue("75608-0");
+            ref.getObservationIdentifier().getText().setValue("Citation in Reference lab test Narrative");
+            ref.getObservationIdentifier().getNameOfCodingSystem().setValue("LN");
             CWE v2ref = new CWE(oru);
             v2ref.getCodingSystemOID().setValue("2.16.840.1.113883.13.191");
             v2ref.getIdentifier().setValue(String.valueOf(reference.getPmid()));
             String name = reference.getName() != null ? reference.getName()
                     : pubmedResolver.resolvePublication(reference.getPmid());
             v2ref.getText().setValue(name);
-        } catch (DataTypeException e) {
+            ref.insertObservationValue(0).setData(v2ref);
+        } catch (HL7Exception e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
@@ -246,6 +266,28 @@ public class JsonHl7v2Mapper {
             ST evidenceValue = new ST(oru);
             evidenceValue.setValue(evidenceLevel);
             evidence.insertObservationValue(0).setData(evidenceValue);
+        } catch (HL7Exception e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+    }
+
+    private void addTreatment(ORU_R01 oru, ORU_R01_PATIENT_RESULT result, int position, Treatment treatment) {
+        try {
+            String ncitCode = treatment.getNcitCode() != null ? treatment.getNcitCode()
+                    : OncoKbDrug.resolve(treatment.getName()).getNcitCode();
+            OBX treat = result.getORDER_OBSERVATION(position)
+                    .getOBSERVATION(result.getORDER_OBSERVATION(position).getOBSERVATIONReps()).getOBX();
+            treat.getSetIDOBX().setValue(String.valueOf(result.getORDER_OBSERVATION(position).getOBSERVATIONReps()));
+            treat.getValueType().setValue("ST");
+            treat.getObservationIdentifier().getIdentifier().setValue("51963-7");
+            treat.getObservationIdentifier().getText().setValue("Medication assessed [ID]");
+            treat.getObservationIdentifier().getNameOfCodingSystem().setValue("LN");
+            CWE v2treat = new CWE(oru);
+            v2treat.getCodingSystemOID().setValue("2.16.840.1.113883.3.26.1.1");
+            v2treat.getIdentifier().setValue(ncitCode);
+            v2treat.getText().setValue(treatment.getName());
+            treat.insertObservationValue(0).setData(v2treat);
         } catch (HL7Exception e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
