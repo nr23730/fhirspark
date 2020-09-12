@@ -10,12 +10,9 @@ import ca.uhn.hl7v2.model.v281.datatype.CWE;
 import ca.uhn.hl7v2.model.v281.datatype.ST;
 import ca.uhn.hl7v2.model.v281.group.ORU_R01_PATIENT_RESULT;
 import ca.uhn.hl7v2.model.v281.message.ORU_R01;
-import ca.uhn.hl7v2.model.v281.message.RDE_O11;
 import ca.uhn.hl7v2.model.v281.segment.NTE;
 import ca.uhn.hl7v2.model.v281.segment.OBR;
 import ca.uhn.hl7v2.model.v281.segment.OBX;
-import ca.uhn.hl7v2.model.v281.segment.PID;
-import ca.uhn.hl7v2.model.v281.segment.RXO;
 import ca.uhn.hl7v2.model.v281.segment.SPM;
 import fhirspark.resolver.HgncGeneName;
 import fhirspark.resolver.PubmedPublication;
@@ -26,7 +23,8 @@ import java.io.IOException;
 import java.util.List;
 
 /**
- * Fulfils a mapping to the HL7 Version 2 standard and transfers the message to a configured target.
+ * Fulfils a mapping to the HL7 Version 2 standard and transfers the message to
+ * a configured target.
  */
 public class JsonHl7v2Mapper {
 
@@ -42,22 +40,19 @@ public class JsonHl7v2Mapper {
     /**
      *
      * @param patientId id of the patient.
-     * @param mtbs mtb entries of the patient.
+     * @param mtbs      mtb entries of the patient.
      * @throws HL7Exception General Exception.
-     * @throws IOException Network Exception.
+     * @throws IOException  Network Exception.
      * @throws LLPException Exception when sending message.
      */
     public void toHl7v2Oru(String patientId, List<Mtb> mtbs) throws HL7Exception, IOException, LLPException {
         ORU_R01 oru = new ORU_R01();
         oru.initQuickstart("ORU", "R01", "P");
 
-        RDE_O11 rde = new RDE_O11();
-        rde.initQuickstart("RDE", "O11", "P");
-
         for (Mtb mtb : mtbs) {
 
             // Send only finished MTB results
-            if (mtb.getMtbState() == null || !mtb.getMtbState().toUpperCase().equals("COMPLETED")) {
+            if (mtb.getMtbState() == null || !mtb.getMtbState().toUpperCase().equals("FINAL")) {
                 continue;
             }
 
@@ -201,20 +196,6 @@ public class JsonHl7v2Mapper {
 
                 therapyRecommendation.getTreatments().forEach(treatment -> {
 
-                    try {
-                        PID pid = rde.getPATIENT().getPID();
-                        pid.getPid1_SetIDPID().setValue("1");
-                        pid.getPatientIdentifierList(pid.getPatientIdentifierListReps()).getIDNumber()
-                                .setValue(patientId);
-                        RXO rxo = rde.getORDER(rde.getORDERReps()).getORDER_DETAIL().getRXO();
-                        rxo.getDispensingPharmacy().getCodingSystemOID().setValue("2.16.840.1.113883.3.26.1.1");
-                        rxo.getDispensingPharmacy().getIdentifier().setValue(treatment.getNcitCode());
-                        rxo.getDispensingPharmacy().getText().setValue(treatment.getName());
-                    } catch (DataTypeException e) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
-                    }
-
                 });
 
                 NTE generealRecommendation = result.getORDER_OBSERVATION(therapyRecommendationOrder).getNTE(0);
@@ -259,8 +240,9 @@ public class JsonHl7v2Mapper {
 
         }
 
-        connection.getInitiator().sendAndReceive(oru.getMessage());
-        connection.getInitiator().sendAndReceive(rde.getMessage());
+        if (oru.getPATIENT_RESULTReps() > 0) {
+            connection.getInitiator().sendAndReceive(oru.getMessage());
+        }
 
     }
 
