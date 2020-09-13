@@ -124,9 +124,9 @@ public class JsonFhirMapper {
             mtbs.add(mtb);
 
             if (diagnosticReport.hasPerformer()) {
-                Bundle b2 = (Bundle) client.search().forResource(Practitioner.class).where(
-                        new TokenClientParam("_id").exactly().code(diagnosticReport.getPerformerFirstRep().getId()))
-                        .prettyPrint().execute();
+                Bundle b2 = (Bundle) client.search().forResource(Practitioner.class).where(new TokenClientParam("_id")
+                        .exactly().code(diagnosticReport.getPerformerFirstRep().getReference())).prettyPrint()
+                        .execute();
                 Practitioner author = (Practitioner) b2.getEntryFirstRep().getResource();
                 mtb.setAuthor(author.getIdentifierFirstRep().getValue());
             }
@@ -164,7 +164,14 @@ public class JsonFhirMapper {
                         therapyRecommendation.getReasoning().withClinicalData(clinicalData)
                                 .withGeneticAlterations(geneticAlterations);
 
-                        therapyRecommendation.setAuthor(mtb.getAuthor());
+                        if (ob.hasPerformer()) {
+                            Bundle b2 = (Bundle) client
+                                    .search().forResource(Practitioner.class).where(new TokenClientParam("_id")
+                                            .exactly().code(ob.getPerformerFirstRep().getReference()))
+                                    .prettyPrint().execute();
+                            Practitioner author = (Practitioner) b2.getEntryFirstRep().getResource();
+                            therapyRecommendation.setAuthor(author.getIdentifierFirstRep().getValue());
+                        }
 
                         therapyRecommendation.setId(ob.getIdentifierFirstRep().getValue());
 

@@ -14,7 +14,7 @@
 			"rebiopsyRecommendation": true,
 			"therapyRecommendations": [
 				{
-					"author": "anonymousUser1",
+					"author": "anonymousUser2",
 					"comment": [
 						"drei",
 						"vier"
@@ -47,7 +47,7 @@
 					]
 				},
 				{
-					"author": "anonymousUser1",
+					"author": "anonymousUser3",
 					"comment": [
 						"fünf",
 						"sechs",
