@@ -7,6 +7,7 @@ import ca.uhn.hl7v2.app.Connection;
 import ca.uhn.hl7v2.llp.LLPException;
 import ca.uhn.hl7v2.model.DataTypeException;
 import ca.uhn.hl7v2.model.v281.datatype.CWE;
+import ca.uhn.hl7v2.model.v281.datatype.NM;
 import ca.uhn.hl7v2.model.v281.datatype.ST;
 import ca.uhn.hl7v2.model.v281.group.ORU_R01_PATIENT_RESULT;
 import ca.uhn.hl7v2.model.v281.message.ORU_R01;
@@ -185,13 +186,14 @@ public class JsonHl7v2Mapper {
         try {
             int orderNumber = result.getORDER_OBSERVATIONReps();
             OBR variant = result.insertORDER_OBSERVATION(orderNumber).getOBR();
+            int obxCounter = 0;
             variant.getSetIDOBR().setValue(String.valueOf(result.getORDER_OBSERVATIONReps()));
             variant.getUniversalServiceIdentifier().getIdentifier().setValue("81250-3");
             variant.getUniversalServiceIdentifier().getText().setValue("Discrete genetic variant panel");
             variant.getUniversalServiceIdentifier().getNameOfCodingSystem().setValue("LN");
 
-            OBX variantAssessment = result.getORDER_OBSERVATION(orderNumber).getOBSERVATION(0).getOBX();
-            variantAssessment.getSetIDOBX().setValue(String.valueOf(1));
+            OBX variantAssessment = result.getORDER_OBSERVATION(orderNumber).getOBSERVATION(obxCounter++).getOBX();
+            variantAssessment.getSetIDOBX().setValue(String.valueOf(obxCounter));
             variantAssessment.getObservationIdentifier().getIdentifier().setValue("69548-6");
             variantAssessment.getObservationIdentifier().getText().setValue("Genetic variant assessment");
             variantAssessment.getObservationIdentifier().getNameOfCodingSystem().setValue("LN");
@@ -202,20 +204,49 @@ public class JsonHl7v2Mapper {
             variantAssessmentValue.getIdentifier().setValue("LA9633-4");
             variantAssessment.insertObservationValue(0).setData(variantAssessmentValue);
 
-            OBX hgvs = result.getORDER_OBSERVATION(orderNumber).getOBSERVATION(1).getOBX();
-            hgvs.getSetIDOBX().setValue(String.valueOf(2));
-            hgvs.getObservationIdentifier().getIdentifier().setValue("48005-3");
-            hgvs.getObservationIdentifier().getText().setValue("Amino acid change (pHGVS)");
-            hgvs.getObservationIdentifier().getNameOfCodingSystem().setValue("LN");
-            hgvs.getValueType().setValue("CWE");
-            CWE hgvsValue = new CWE(oru);
-            hgvsValue.getCodingSystemOID().setValue("2.16.840.1.113883.6.282");
-            hgvsValue.getText().setValue("p." + g.getAlteration());
-            hgvsValue.getIdentifier().setValue("p." + g.getAlteration());
-            hgvs.insertObservationValue(0).setData(hgvsValue);
+            switch (g.getAlteration()) {
+                case "Amplification":
+                    OBX amp = result.getORDER_OBSERVATION(orderNumber).getOBSERVATION(obxCounter++).getOBX();
+                    amp.getSetIDOBX().setValue(String.valueOf(obxCounter));
+                    amp.getObservationIdentifier().getIdentifier().setValue("62378-5");
+                    amp.getObservationIdentifier().getText().setValue("Chromosome copy number change [Type]");
+                    amp.getObservationIdentifier().getNameOfCodingSystem().setValue("LN");
+                    amp.getValueType().setValue("CWE");
+                    CWE ampValue = new CWE(oru);
+                    ampValue.getNameOfCodingSystem().setValue("LN");
+                    ampValue.getText().setValue("Copy number gain");
+                    ampValue.getIdentifier().setValue("LA14033-7");
+                    amp.insertObservationValue(0).setData(ampValue);
+                    break;
+                case "Deletion":
+                    OBX del = result.getORDER_OBSERVATION(orderNumber).getOBSERVATION(obxCounter++).getOBX();
+                    del.getSetIDOBX().setValue(String.valueOf(obxCounter));
+                    del.getObservationIdentifier().getIdentifier().setValue("62378-5");
+                    del.getObservationIdentifier().getText().setValue("Chromosome copy number change [Type]");
+                    del.getObservationIdentifier().getNameOfCodingSystem().setValue("LN");
+                    del.getValueType().setValue("CWE");
+                    CWE delValue = new CWE(oru);
+                    delValue.getNameOfCodingSystem().setValue("LN");
+                    delValue.getText().setValue("Copy number loss");
+                    delValue.getIdentifier().setValue("LA14033-7");
+                    del.insertObservationValue(0).setData(delValue);
+                    break;
+                default:
+                    OBX hgvs = result.getORDER_OBSERVATION(orderNumber).getOBSERVATION(obxCounter++).getOBX();
+                    hgvs.getSetIDOBX().setValue(String.valueOf(obxCounter));
+                    hgvs.getObservationIdentifier().getIdentifier().setValue("48005-3");
+                    hgvs.getObservationIdentifier().getText().setValue("Amino acid change (pHGVS)");
+                    hgvs.getObservationIdentifier().getNameOfCodingSystem().setValue("LN");
+                    hgvs.getValueType().setValue("CWE");
+                    CWE hgvsValue = new CWE(oru);
+                    hgvsValue.getCodingSystemOID().setValue("2.16.840.1.113883.6.282");
+                    hgvsValue.getIdentifier().setValue("p." + g.getAlteration());
+                    hgvs.insertObservationValue(0).setData(hgvsValue);
+                    break;
+            }
 
-            OBX entrez = result.getORDER_OBSERVATION(orderNumber).getOBSERVATION(2).getOBX();
-            entrez.getSetIDOBX().setValue(String.valueOf(3));
+            OBX entrez = result.getORDER_OBSERVATION(orderNumber).getOBSERVATION(obxCounter++).getOBX();
+            entrez.getSetIDOBX().setValue(String.valueOf(obxCounter));
             entrez.getObservationIdentifier().getIdentifier().setValue("81252-9");
             entrez.getObservationIdentifier().getText().setValue("Discrete genetic variant");
             entrez.getObservationIdentifier().getNameOfCodingSystem().setValue("LN");
@@ -226,8 +257,8 @@ public class JsonHl7v2Mapper {
             entrezValue.getIdentifier().setValue(String.valueOf(g.getEntrezGeneId()));
             entrez.insertObservationValue(0).setData(entrezValue);
 
-            OBX hgnc = result.getORDER_OBSERVATION(orderNumber).getOBSERVATION(3).getOBX();
-            hgnc.getSetIDOBX().setValue(String.valueOf(4));
+            OBX hgnc = result.getORDER_OBSERVATION(orderNumber).getOBSERVATION(obxCounter++).getOBX();
+            hgnc.getSetIDOBX().setValue(String.valueOf(obxCounter));
             hgnc.getObservationIdentifier().getIdentifier().setValue("48018-6");
             hgnc.getObservationIdentifier().getText().setValue("Gene studied [ID]");
             hgnc.getObservationIdentifier().getNameOfCodingSystem().setValue("LN");
@@ -238,6 +269,68 @@ public class JsonHl7v2Mapper {
             hgncValue.getIdentifier().setValue(genenames.getHgncId());
             hgncValue.getText().setValue(genenames.getApprovedSymbol());
             hgnc.insertObservationValue(0).setData(hgncValue);
+
+            if (g.getAlt() != null) {
+                OBX alt = result.getORDER_OBSERVATION(orderNumber).getOBSERVATION(obxCounter++).getOBX();
+                alt.getSetIDOBX().setValue(String.valueOf(obxCounter));
+                alt.getObservationIdentifier().getIdentifier().setValue("69551-0");
+                alt.getObservationIdentifier().getText().setValue("Genomic alt allele [ID]");
+                alt.getObservationIdentifier().getNameOfCodingSystem().setValue("LN");
+                alt.getValueType().setValue("ST");
+                ST altValue = new ST(oru);
+                altValue.setValue(g.getAlt());
+                alt.insertObservationValue(0).setData(altValue);
+            }
+
+            if (g.getRef() != null) {
+                OBX ref = result.getORDER_OBSERVATION(orderNumber).getOBSERVATION(obxCounter++).getOBX();
+                ref.getSetIDOBX().setValue(String.valueOf(obxCounter));
+                ref.getObservationIdentifier().getIdentifier().setValue("69547-8");
+                ref.getObservationIdentifier().getText().setValue("Genomic ref allele [ID]");
+                ref.getObservationIdentifier().getNameOfCodingSystem().setValue("LN");
+                ref.getValueType().setValue("ST");
+                ST refValue = new ST(oru);
+                refValue.setValue(g.getRef());
+                ref.insertObservationValue(0).setData(refValue);
+            }
+
+            if (g.getAlleleFrequency() != null) {
+                OBX af = result.getORDER_OBSERVATION(orderNumber).getOBSERVATION(obxCounter++).getOBX();
+                af.getSetIDOBX().setValue(String.valueOf(obxCounter));
+                af.getObservationIdentifier().getIdentifier().setValue("81258-6");
+                af.getObservationIdentifier().getText().setValue("Sample variant allelic frequency [NFr]");
+                af.getObservationIdentifier().getNameOfCodingSystem().setValue("LN");
+                af.getValueType().setValue("NM");
+                NM afValue = new NM(oru);
+                afValue.setValue(String.valueOf(g.getAlleleFrequency()));
+                af.insertObservationValue(0).setData(afValue);
+            }
+
+            if (g.getDbsnp() != null) {
+                OBX dbsnp = result.getORDER_OBSERVATION(orderNumber).getOBSERVATION(obxCounter++).getOBX();
+                dbsnp.getSetIDOBX().setValue(String.valueOf(obxCounter));
+                dbsnp.getObservationIdentifier().getIdentifier().setValue("81255-2");
+                dbsnp.getObservationIdentifier().getText().setValue("dbSNP [ID]");
+                dbsnp.getObservationIdentifier().getNameOfCodingSystem().setValue("LN");
+                dbsnp.getValueType().setValue("CWE");
+                CWE dbsnpValue = new CWE(oru);
+                dbsnpValue.getCodingSystemOID().setValue("2.16.840.1.113883.6.284");
+                dbsnpValue.getIdentifier().setValue(g.getDbsnp());
+                dbsnp.insertObservationValue(0).setData(dbsnpValue);
+            }
+
+            if (g.getChromosome() != null && !g.getChromosome().equals("NA")) {
+                OBX chr = result.getORDER_OBSERVATION(orderNumber).getOBSERVATION(obxCounter++).getOBX();
+                chr.getSetIDOBX().setValue(String.valueOf(obxCounter));
+                chr.getObservationIdentifier().getIdentifier().setValue("48001-2");
+                chr.getObservationIdentifier().getText().setValue("Cytogenetic (chromosome) location");
+                chr.getObservationIdentifier().getNameOfCodingSystem().setValue("LN");
+                chr.getValueType().setValue("CWE");
+                CWE chrValue = new CWE(oru);
+                chrValue.getCodingSystemOID().setValue("2.16.840.1.113883.4.642.3.224");
+                chrValue.getIdentifier().setValue(g.getChromosome());
+                chr.insertObservationValue(0).setData(chrValue);
+            }
         } catch (HL7Exception e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
