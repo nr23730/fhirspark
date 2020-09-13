@@ -91,12 +91,14 @@ public class JsonHl7v2Mapper {
 
             masterPanel.getFillerOrderNumber().getEntityIdentifier().setValue(mtb.getId());
 
-            NTE generealRecommendation = result.getORDER_OBSERVATION(therapyRecommendationOrder).getNTE(0);
-            generealRecommendation.getSetIDNTE().setValue("1");
-            generealRecommendation.getSourceOfComment().setValue("L");
-            generealRecommendation.getCommentType().getIdentifier().setValue("GI");
-            generealRecommendation.getCommentType().getText().setValue("General Instructions");
-            generealRecommendation.getComment(0).setValue(mtb.getGeneralRecommendation());
+            if (mtb.getGeneralRecommendation() != null && mtb.getGeneralRecommendation().length() > 0) {
+                NTE generealRecommendation = result.getORDER_OBSERVATION(therapyRecommendationOrder).getNTE(0);
+                generealRecommendation.getSetIDNTE().setValue("1");
+                generealRecommendation.getSourceOfComment().setValue("L");
+                generealRecommendation.getCommentType().getIdentifier().setValue("GI");
+                generealRecommendation.getCommentType().getText().setValue("General Instructions");
+                generealRecommendation.getComment(0).setValue(mtb.getGeneralRecommendation());
+            }
 
             for (TherapyRecommendation therapyRecommendation : mtb.getTherapyRecommendations()) {
 
@@ -115,19 +117,21 @@ public class JsonHl7v2Mapper {
                 therapyRecommendation.getTreatments()
                         .forEach(treatment -> addTreatment(oru, result, orderNumber, treatment));
 
-                NTE comments = result.getORDER_OBSERVATION(orderNumber).getNTE(0);
-                comments.getSetIDNTE().setValue("1");
-                comments.getSourceOfComment().setValue("L");
-                comments.getCommentType().getIdentifier().setValue("1R");
-                comments.getCommentType().getText().setValue("Primary Reason");
-                therapyRecommendation.getComment().forEach(comment -> {
-                    try {
-                        comments.getComment(therapyRecommendation.getComment().indexOf(comment)).setValue(comment);
-                    } catch (DataTypeException e1) {
-                        // TODO Auto-generated catch block
-                        e1.printStackTrace();
-                    }
-                });
+                if (therapyRecommendation.getComment() != null && therapyRecommendation.getComment().size() > 0) {
+                    NTE comments = result.getORDER_OBSERVATION(orderNumber).getNTE(0);
+                    comments.getSetIDNTE().setValue("1");
+                    comments.getSourceOfComment().setValue("L");
+                    comments.getCommentType().getIdentifier().setValue("1R");
+                    comments.getCommentType().getText().setValue("Primary Reason");
+                    therapyRecommendation.getComment().forEach(comment -> {
+                        try {
+                            comments.getComment(therapyRecommendation.getComment().indexOf(comment)).setValue(comment);
+                        } catch (DataTypeException e1) {
+                            // TODO Auto-generated catch block
+                            e1.printStackTrace();
+                        }
+                    });
+                }
 
                 addEvidenceLevel(oru, result, orderNumber, therapyRecommendation.getEvidenceLevel());
 
