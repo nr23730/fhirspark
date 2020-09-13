@@ -79,6 +79,14 @@ public class JsonHl7v2Mapper {
 
             masterPanel.getObservationDateTime().setValue(mtb.getDate().replaceAll("-", ""));
 
+            if (mtb.getGeneticCounselingRecommendation() != null && mtb.getGeneticCounselingRecommendation()) {
+                addFollowUp(oru, result, therapyRecommendationOrder, "LA14020-4", "Genetic counseling recommended");
+            }
+
+            if (mtb.getRebiopsyRecommendation() != null && mtb.getRebiopsyRecommendation()) {
+                addFollowUp(oru, result, therapyRecommendationOrder, "LA14021-2", "Confirmatory testing recommended");
+            }
+
             mtb.getSamples().forEach(sample -> addSample(result, therapyRecommendationOrder, sample));
 
             masterPanel.getFillerOrderNumber().getEntityIdentifier().setValue(mtb.getId());
@@ -288,6 +296,27 @@ public class JsonHl7v2Mapper {
             v2treat.getIdentifier().setValue(ncitCode);
             v2treat.getText().setValue(treatment.getName());
             treat.insertObservationValue(0).setData(v2treat);
+        } catch (HL7Exception e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+    }
+
+    private void addFollowUp(ORU_R01 oru, ORU_R01_PATIENT_RESULT result, int position, String loincId,
+            String loincText) {
+        try {
+            OBX followUp = result.getORDER_OBSERVATION(position)
+                    .getOBSERVATION(result.getORDER_OBSERVATION(position).getOBSERVATIONReps()).getOBX();
+            followUp.getSetIDOBX().setValue(String.valueOf(result.getORDER_OBSERVATION(position).getOBSERVATIONReps()));
+            followUp.getValueType().setValue("CWE");
+            followUp.getObservationIdentifier().getIdentifier().setValue("62366-0");
+            followUp.getObservationIdentifier().getText().setValue("Recommended follow-up [Identifier]");
+            followUp.getObservationIdentifier().getNameOfCodingSystem().setValue("LN");
+            CWE v2follow = new CWE(oru);
+            v2follow.getCodingSystemOID().setValue("LN");
+            v2follow.getIdentifier().setValue(String.valueOf(loincId));
+            v2follow.getText().setValue(loincText);
+            followUp.insertObservationValue(0).setData(v2follow);
         } catch (HL7Exception e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
