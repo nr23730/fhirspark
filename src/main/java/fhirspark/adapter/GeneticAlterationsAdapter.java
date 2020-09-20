@@ -59,7 +59,7 @@ public class GeneticAlterationsAdapter {
                         .setCode(new CodeableConcept(
                                 new Coding("http://loinc.org", "62378-5", "Chromosome copy number change [Type]")));
                 deletion.getValueCodeableConcept()
-                        .addCoding(new Coding("http://loinc.org", "LA14033-7", "Copy number loss"));
+                        .addCoding(new Coding("http://loinc.org", "LA14034-5", "Copy number loss"));
                 variant.addComponent(deletion);
                 break;
             default:
