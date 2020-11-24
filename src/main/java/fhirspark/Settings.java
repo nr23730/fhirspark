@@ -13,6 +13,10 @@ import java.util.List;
 @JsonPropertyOrder({
     "port",
     "fhirDbBase",
+    "specimenSystem",
+    "diagnosticReportSystem",
+    "observationSystem",
+    "patientSystem",
     "hgncPath",
     "oncokbPath",
     "hl7v2config"
@@ -23,6 +27,14 @@ public final class Settings {
     private Integer port;
     @JsonProperty("fhirDbBase")
     private String fhirDbBase;
+    @JsonProperty("specimenSystem")
+    private String specimenSystem;
+    @JsonProperty("diagnosticReportSystem")
+    private String diagnosticReportSystem;
+    @JsonProperty("observationSystem")
+    private String observationSystem;
+    @JsonProperty("patientSystem")
+    private String patientSystem;
     @JsonProperty("hgncPath")
     private String hgncPath;
     @JsonProperty("oncokbPath")
@@ -48,6 +60,46 @@ public final class Settings {
     @JsonProperty("fhirDbBase")
     public void setFhirDbBase(String fhirDbBase) {
         this.fhirDbBase = fhirDbBase;
+    }
+
+    @JsonProperty("specimenSystem")
+    public String getSpecimenSystem() {
+        return specimenSystem;
+    }
+
+    @JsonProperty("specimenSystem")
+    public void setSpecimenSystem(String specimenSystem) {
+        this.specimenSystem = specimenSystem;
+    }
+
+    @JsonProperty("diagnosticReportSystem")
+    public String getDiagnosticReportSystem() {
+        return diagnosticReportSystem;
+    }
+
+    @JsonProperty("diagnosticReportSystem")
+    public void setDiagnosticReportSystem(String diagnosticReportSystem) {
+        this.diagnosticReportSystem = diagnosticReportSystem;
+    }
+
+    @JsonProperty("observationSystem")
+    public String getObservationSystem() {
+        return observationSystem;
+    }
+
+    @JsonProperty("observationSystem")
+    public void setObservationSystem(String observationSystem) {
+        this.observationSystem = observationSystem;
+    }
+
+    @JsonProperty("patientSystem")
+    public String getPatientSystem() {
+        return patientSystem;
+    }
+
+    @JsonProperty("patientSystem")
+    public void setPatientSystem(String patientSystem) {
+        this.patientSystem = patientSystem;
     }
 
     @JsonProperty("hgncPath")

@@ -9,6 +9,12 @@ import org.hl7.fhir.r4.model.Specimen;
  */
 public class SpecimenAdapter {
 
+    private static String specimenSystem;
+
+    public SpecimenAdapter(String newSpecimenSystem) {
+        specimenSystem = newSpecimenSystem;
+    }
+
     /**
      *
      * @param patient Reference to the patient is medication belongs to.
@@ -19,7 +25,7 @@ public class SpecimenAdapter {
         Specimen fhirSpecimen = new Specimen();
         fhirSpecimen.getMeta().addProfile("http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/specimen");
         fhirSpecimen.setSubject(patient);
-        fhirSpecimen.addIdentifier(new Identifier().setSystem("https://cbioportal.org/specimen/").setValue(specimen));
+        fhirSpecimen.addIdentifier(new Identifier().setSystem(specimenSystem).setValue(specimen));
         fhirSpecimen.getType().addCoding().setSystem("http://terminology.hl7.org/CodeSystem/v2-0487").setCode("TUMOR")
                 .setDisplay("Tumor");
 

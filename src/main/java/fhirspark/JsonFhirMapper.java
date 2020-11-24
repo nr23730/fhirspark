@@ -67,7 +67,6 @@ import org.hl7.fhir.r4.model.codesystems.ObservationCategory;
 public class JsonFhirMapper {
 
     private static final String LOINC_URI = "http://loinc.org";
-    private static final String PATIENT_URI = "https://cbioportal.org/patient/";
     private static final String RECOMMENDEDACTION_URI =
             "http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/RecommendedAction";
     private static final String FOLLOWUP_URI =
@@ -78,11 +77,13 @@ public class JsonFhirMapper {
             "http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/task-med-chg";
     private static final String PUBMED_URI = "https://www.ncbi.nlm.nih.gov/pubmed/";
     private static final String NCIT_URI = "http://ncithesaurus-stage.nci.nih.gov";
-    private static final String THERAPYRECOMMENDATION_URI = "https://cbioportal.org/therapyrecommendation/";
-    private static final String MTB_URI = "https://cbioportal.org/mtb/";
     private static final String GENOMICSREPORT_URI =
             "http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/genomics-report";
     private static final String GENOMIC_URI = "http://terminology.hl7.org/CodeSystem/v2-0074";
+
+    private static String patientUri;
+    private static String therapyRecommendationUri;
+    private static String mtbUri;
 
     private FhirContext ctx = FhirContext.forR4();
     private IGenericClient client;
@@ -91,10 +92,21 @@ public class JsonFhirMapper {
 
     private GeneticAlterationsAdapter geneticAlterationsAdapter = new GeneticAlterationsAdapter();
     private DrugAdapter drugAdapter = new DrugAdapter();
-    private SpecimenAdapter specimenAdapter = new SpecimenAdapter();
+    private SpecimenAdapter specimenAdapter;
 
+    /**
+     *
+     * Constructs a new FHIR mapper and stores the required configuration.
+     *
+     * @param settings Settings object with containing configuration
+     */
     public JsonFhirMapper(Settings settings) {
         this.client = ctx.newRestfulGenericClient(settings.getFhirDbBase());
+        specimenAdapter = new SpecimenAdapter(settings.getSpecimenSystem());
+
+        patientUri = settings.getPatientSystem();
+        mtbUri = settings.getDiagnosticReportSystem();
+        therapyRecommendationUri = settings.getObservationSystem();
     }
 
     /**
@@ -103,7 +115,7 @@ public class JsonFhirMapper {
     public String toJson(String patientId) throws JsonProcessingException {
         List<Mtb> mtbs = new ArrayList<Mtb>();
         Bundle bPatient = (Bundle) client.search().forResource(Patient.class)
-                .where(new TokenClientParam("identifier").exactly().systemAndCode(PATIENT_URI, patientId)).prettyPrint()
+                .where(new TokenClientParam("identifier").exactly().systemAndCode(patientUri, patientId)).prettyPrint()
                 .execute();
         Patient fhirPatient = (Patient) bPatient.getEntryFirstRep().getResource();
 
@@ -353,7 +365,7 @@ public class JsonFhirMapper {
 
             diagnosticReport.setConclusion(mtb.getGeneralRecommendation());
 
-            diagnosticReport.addIdentifier().setSystem(MTB_URI).setValue(mtb.getId());
+            diagnosticReport.addIdentifier().setSystem(mtbUri).setValue(mtb.getId());
 
             if (mtb.getGeneticCounselingRecommendation() != null && mtb.getGeneticCounselingRecommendation()) {
                 Task t = new Task();
@@ -409,7 +421,7 @@ public class JsonFhirMapper {
                 evidenceComponent.getValueCodeableConcept().addCoding(new Coding("https://cbioportal.org/evidence/BW/",
                         therapyRecommendation.getEvidenceLevel(), therapyRecommendation.getEvidenceLevel()));
 
-                efficacyObservation.addIdentifier().setSystem(THERAPYRECOMMENDATION_URI)
+                efficacyObservation.addIdentifier().setSystem(therapyRecommendationUri)
                         .setValue(therapyRecommendation.getId());
 
                 efficacyObservation.addPerformer(getOrCreatePractitioner(bundle, therapyRecommendation.getAuthor()));
@@ -497,8 +509,8 @@ public class JsonFhirMapper {
             }
 
             bundle.addEntry().setFullUrl(diagnosticReport.getIdElement().getValue()).setResource(diagnosticReport)
-                    .getRequest().setUrl("DiagnosticReport?identifier=" + MTB_URI + "|" + mtb.getId())
-                    .setIfNoneExist("identifier=" + MTB_URI + "|" + mtb.getId()).setMethod(Bundle.HTTPVerb.PUT);
+                    .getRequest().setUrl("DiagnosticReport?identifier=" + mtbUri + "|" + mtb.getId())
+                    .setIfNoneExist("identifier=" + mtbUri + "|" + mtb.getId()).setMethod(Bundle.HTTPVerb.PUT);
 
         }
 
@@ -531,26 +543,26 @@ public class JsonFhirMapper {
         assert therapyRecommendationId.startsWith(patientId);
         client.delete()
                 .resourceConditionalByUrl(
-                        "Observation?identifier=" + THERAPYRECOMMENDATION_URI + "|" + therapyRecommendationId)
+                        "Observation?identifier=" + therapyRecommendationUri + "|" + therapyRecommendationId)
                 .execute();
     }
 
     private void deleteMtb(String patientId, String mtbId) {
         assert mtbId.startsWith("mtb_" + patientId + "_");
-        client.delete().resourceConditionalByUrl("DiagnosticReport?identifier=" + MTB_URI + "|" + mtbId).execute();
+        client.delete().resourceConditionalByUrl("DiagnosticReport?identifier=" + mtbUri + "|" + mtbId).execute();
     }
 
     private Reference getOrCreatePatient(Bundle b, String patientId) {
 
         Patient patient = new Patient();
         patient.setId(IdType.newRandomUuid());
-        patient.getIdentifierFirstRep().setSystem(PATIENT_URI).setValue(patientId);
+        patient.getIdentifierFirstRep().setSystem(patientUri).setValue(patientId);
         patient.getIdentifierFirstRep().setUse(IdentifierUse.USUAL);
         patient.getIdentifierFirstRep().getType().addCoding().setSystem("http://terminology.hl7.org/CodeSystem/v2-0203")
                 .setCode("MR");
         b.addEntry().setFullUrl(patient.getIdElement().getValue()).setResource(patient).getRequest()
-                .setUrl("Patient?identifier=" + PATIENT_URI + "|" + patientId)
-                .setIfNoneExist("identifier=" + PATIENT_URI + "|" + patientId).setMethod(Bundle.HTTPVerb.PUT);
+                .setUrl("Patient?identifier=" + patientUri + "|" + patientId)
+                .setIfNoneExist("identifier=" + patientUri + "|" + patientId).setMethod(Bundle.HTTPVerb.PUT);
 
         return new Reference(patient);
     }
@@ -559,10 +571,10 @@ public class JsonFhirMapper {
 
         Practitioner practitioner = new Practitioner();
         practitioner.setId(IdType.newRandomUuid());
-        practitioner.addIdentifier(new Identifier().setSystem(PATIENT_URI).setValue(credentials));
+        practitioner.addIdentifier(new Identifier().setSystem(patientUri).setValue(credentials));
         b.addEntry().setFullUrl(practitioner.getIdElement().getValue()).setResource(practitioner).getRequest()
-                .setUrl("Practitioner?identifier=" + PATIENT_URI + "|" + credentials)
-                .setIfNoneExist("identifier=" + PATIENT_URI + "|" + credentials).setMethod(Bundle.HTTPVerb.PUT);
+                .setUrl("Practitioner?identifier=" + patientUri + "|" + credentials)
+                .setIfNoneExist("identifier=" + patientUri + "|" + credentials).setMethod(Bundle.HTTPVerb.PUT);
 
         return new Reference(practitioner);
 
