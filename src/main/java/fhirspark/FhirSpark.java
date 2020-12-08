@@ -1,11 +1,13 @@
 package fhirspark;
 
 import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fhirspark.resolver.HgncGeneName;
 import fhirspark.resolver.OncoKbDrug;
 import fhirspark.restmodel.CbioportalRest;
 import fhirspark.restmodel.Deletions;
+import fhirspark.restmodel.GeneticAlteration;
 import fhirspark.restmodel.Mtb;
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -16,6 +18,7 @@ import static spark.Spark.delete;
 import static spark.Spark.get;
 import static spark.Spark.options;
 import static spark.Spark.port;
+import static spark.Spark.post;
 import static spark.Spark.put;
 
 /**
@@ -100,6 +103,31 @@ public final class FhirSpark {
             Deletions deletions = objectMapper.readValue(req.body(), Deletions.class);
             jsonFhirMapper.deleteEntries(req.params(":patientId"), deletions);
             res.body(req.body());
+            return res.body();
+        });
+
+        options("/mtb/alteration/pmid", (req, res) -> {
+            res.status(HttpStatus.NO_CONTENT_204);
+            res.header("Access-Control-Allow-Credentials", "true");
+            res.header("Access-Control-Allow-Headers", req.headers("Access-Control-Request-Headers"));
+            res.header("Access-Control-Allow-Methods", "POST");
+            res.header("Access-Control-Allow-Origin", req.headers("Origin"));
+            res.header("Content-Length", "0");
+            res.header("Vary", "Origin, Access-Control-Request-Headers");
+            res.header("Content-Type", "");
+            return res;
+        });
+
+        post("/mtb/alteration/pmid", (req, res) -> {
+            res.status(HttpStatus.OK_200);
+            res.header("Access-Control-Allow-Credentials", "true");
+            res.header("Access-Control-Allow-Origin", req.headers("Origin"));
+            res.type("application/json");
+            res.header("Vary", "Origin, Access-Control-Request-Headers");
+            List<GeneticAlteration> alterations = objectMapper.readValue(req.body(),
+                    new TypeReference<List<GeneticAlteration>>() {
+                    });
+            res.body(objectMapper.writeValueAsString(jsonFhirMapper.getPmidsByAlteration(alterations)));
             return res.body();
         });
 
