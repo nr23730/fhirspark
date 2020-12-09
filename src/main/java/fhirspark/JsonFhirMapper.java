@@ -654,4 +654,128 @@ public class JsonFhirMapper {
 
     }
 
+    /**
+     * Fetches therapy recommendations that have been previously associated with the
+     * same alteration.
+     *
+     * @param alterations List of alterations to consider
+     * @return List of matching therapies
+     */
+    public Collection<TherapyRecommendation> getTherapyRecommendationsByAlteration(
+            List<GeneticAlteration> alterations) {
+
+        Set<String> entrez = new HashSet<String>();
+        for (GeneticAlteration a : alterations) {
+            entrez.add(String.valueOf(a.getEntrezGeneId()));
+        }
+
+        Bundle bStuff = (Bundle) client.search().forResource(Observation.class)
+                .where(new TokenClientParam("component-value-concept").exactly()
+                        .systemAndValues("http://www.ncbi.nlm.nih.gov/gene", new ArrayList<String>(entrez)))
+                .prettyPrint().revInclude(Observation.INCLUDE_DERIVED_FROM).execute();
+
+        Map<String, TherapyRecommendation> tcMap = new HashMap<String, TherapyRecommendation>();
+
+        for (BundleEntryComponent bec : bStuff.getEntry()) {
+            Observation ob = (Observation) bec.getResource();
+            if (!ob.getMeta().getProfile().get(0)
+                    .equals("http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/medication-efficacy")) {
+                continue;
+            }
+
+            TherapyRecommendation therapyRecommendation = new TherapyRecommendation()
+                    .withComment(new ArrayList<String>()).withReasoning(new Reasoning());
+            List<ClinicalDatum> clinicalData = new ArrayList<ClinicalDatum>();
+            List<GeneticAlteration> geneticAlterations = new ArrayList<GeneticAlteration>();
+            therapyRecommendation.getReasoning().withClinicalData(clinicalData)
+                    .withGeneticAlterations(geneticAlterations);
+
+            if (ob.hasPerformer()) {
+                Bundle b2 = (Bundle) client.search().forResource(Practitioner.class)
+                        .where(new TokenClientParam("_id").exactly().code(ob.getPerformerFirstRep().getReference()))
+                        .prettyPrint().execute();
+                Practitioner author = (Practitioner) b2.getEntryFirstRep().getResource();
+                therapyRecommendation.setAuthor(author.getIdentifierFirstRep().getValue());
+            }
+
+            tcMap.put(ob.getIdentifierFirstRep().getValue(), therapyRecommendation);
+
+
+            List<Treatment> treatments = new ArrayList<Treatment>();
+            therapyRecommendation.setTreatments(treatments);
+
+            List<fhirspark.restmodel.Reference> references = new ArrayList<fhirspark.restmodel.Reference>();
+            ob.getExtensionsByUrl(RELATEDARTIFACT_URI).forEach(relatedArtifact -> {
+                if (((RelatedArtifact) relatedArtifact.getValue()).getType() == RelatedArtifactType.CITATION) {
+                    references.add(new fhirspark.restmodel.Reference()
+                            .withPmid(Integer.valueOf(((RelatedArtifact) relatedArtifact.getValue()).getUrl()
+                                    .replaceFirst(PUBMED_URI, "")))
+                            .withName(((RelatedArtifact) relatedArtifact.getValue()).getCitation()));
+                }
+            });
+
+            therapyRecommendation.setReferences(references);
+
+            ob.getComponent().forEach(result -> {
+                if (result.getCode().getCodingFirstRep().getCode().equals("93044-6")) {
+                    therapyRecommendation
+                            .setEvidenceLevel(result.getValueCodeableConcept().getCodingFirstRep().getCode());
+                }
+                if (result.getCode().getCodingFirstRep().getCode().equals("51963-7")) {
+                    therapyRecommendation.getTreatments()
+                            .add(new Treatment()
+                                    .withNcitCode(result.getValueCodeableConcept().getCodingFirstRep().getCode())
+                                    .withName(result.getValueCodeableConcept().getCodingFirstRep().getDisplay()));
+                }
+            });
+
+            ob.getDerivedFrom().forEach(reference1 -> {
+                GeneticAlteration g = new GeneticAlteration();
+                ((Observation) reference1.getResource()).getComponent().forEach(variant -> {
+                    switch (variant.getCode().getCodingFirstRep().getCode()) {
+                        case "48005-3":
+                            g.setAlteration(variant.getValueCodeableConcept().getCodingFirstRep().getCode()
+                                    .replaceFirst("p.", ""));
+                            break;
+                        case "81252-9":
+                            variant.getValueCodeableConcept().getCoding().forEach(coding -> {
+                                switch (coding.getSystem()) {
+                                    case "http://www.ncbi.nlm.nih.gov/gene":
+                                        g.setEntrezGeneId(Integer.valueOf(coding.getCode()));
+                                        break;
+                                    default:
+                                        break;
+                                }
+                            });
+                            break;
+                        case "48018-6":
+                            g.setHugoSymbol(variant.getValueCodeableConcept().getCodingFirstRep().getDisplay());
+                            break;
+                        case "62378-5":
+                            switch (variant.getValueCodeableConcept().getCodingFirstRep().getCode()) {
+                                case "LA14033-7":
+                                    g.setAlteration("Amplification");
+                                    break;
+                                case "LA14034-5":
+                                    g.setAlteration("Deletion");
+                                    break;
+                                default:
+                                    break;
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+                });
+                geneticAlterations.add(g);
+            });
+
+            ob.getNote().forEach(note -> therapyRecommendation.getComment().add(note.getText()));
+
+        }
+
+        return tcMap.values();
+
+    }
+
 }
