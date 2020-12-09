@@ -11,7 +11,6 @@ import org.hl7.fhir.r4.model.Observation.ObservationComponentComponent;
 import org.hl7.fhir.r4.model.Observation.ObservationStatus;
 import org.hl7.fhir.r4.model.Quantity;
 import org.hl7.fhir.r4.model.Range;
-import org.hl7.fhir.r4.model.Resource;
 import org.hl7.fhir.r4.model.codesystems.ChromosomeHuman;
 import org.hl7.fhir.r4.model.codesystems.ObservationCategory;
 
@@ -25,7 +24,7 @@ public class GeneticAlterationsAdapter {
      * @param geneticAlteration Specified genetic mutation / CNV.
      * @return Observation constrained by genomics-reporting IG.
      */
-    public Resource process(GeneticAlteration geneticAlteration) {
+    public Observation process(GeneticAlteration geneticAlteration) {
 
         Observation variant = new Observation();
         variant.setMeta(new Meta().addProfile("http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/variant"));

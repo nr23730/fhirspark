@@ -131,18 +131,13 @@ public class JsonFhirMapper {
                 .where(new ReferenceClientParam("subject").hasId(harmonizeId(fhirPatient))).prettyPrint()
                 .include(DiagnosticReport.INCLUDE_RESULT.asRecursive()).execute();
 
-        List<DiagnosticReport> diagnosticReports = new ArrayList<DiagnosticReport>();
-        Map<String, Resource> bundleEntries = new HashMap<String, Resource>();
+        List<BundleEntryComponent> diagnosticReports = bDiagnosticReports.getEntry();
 
-        for (BundleEntryComponent bec : bDiagnosticReports.getEntry()) {
-            bundleEntries.put(bec.getResource().getIdElement().getResourceType() + "/"
-                    + bec.getResource().getIdElement().getIdPart(), bec.getResource());
-            if (bec.getResource() instanceof DiagnosticReport) {
-                diagnosticReports.add((DiagnosticReport) bec.getResource());
+        for (int i = 0; i < diagnosticReports.size(); i++) {
+            if (!(diagnosticReports.get(i).getResource() instanceof DiagnosticReport)) {
+                continue;
             }
-        }
-
-        for (DiagnosticReport diagnosticReport : diagnosticReports) {
+            DiagnosticReport diagnosticReport = (DiagnosticReport) diagnosticReports.get(i).getResource();
 
             Mtb mtb = new Mtb().withTherapyRecommendations(new ArrayList<TherapyRecommendation>())
                     .withSamples(new ArrayList<String>());
@@ -176,13 +171,9 @@ public class JsonFhirMapper {
             }
 
             for (Reference reference : diagnosticReport.getResult()) {
-                Resource referenceResource = bundleEntries.get(reference.getReference());
-                if (referenceResource == null) {
-                    continue;
-                }
-                switch (referenceResource.getMeta().getProfile().get(0).getValue()) {
+                switch (reference.getResource().getMeta().getProfile().get(0).getValue()) {
                     case "http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/medication-efficacy":
-                        Observation ob = (Observation) referenceResource;
+                        Observation ob = (Observation) reference.getResource();
 
                         TherapyRecommendation therapyRecommendation = new TherapyRecommendation()
                                 .withComment(new ArrayList<String>()).withReasoning(new Reasoning());
@@ -475,9 +466,21 @@ public class JsonFhirMapper {
 
                 if (therapyRecommendation.getReasoning().getGeneticAlterations() != null) {
                     therapyRecommendation.getReasoning().getGeneticAlterations().forEach(geneticAlteration -> {
-                        Resource geneticVariant = geneticAlterationsAdapter.process(geneticAlteration);
+                        Observation geneticVariant = geneticAlterationsAdapter.process(geneticAlteration);
+                        geneticVariant.setId(IdType.newRandomUuid());
+                        geneticVariant.setSubject(fhirPatient);
+                        bundle.addEntry().setFullUrl(geneticVariant.getIdElement().getValue())
+                                .setResource(geneticVariant).getRequest()
+                                .setUrl("Observation?component-value-concept=http://www.ncbi.nlm.nih.gov/gene|"
+                                        + geneticAlteration.getEntrezGeneId() + "&subject="
+                                        + fhirPatient.getResource().getIdElement())
+                                .setIfNoneExist("component-value-concept=http://www.ncbi.nlm.nih.gov/gene|"
+                                + geneticAlteration.getEntrezGeneId() + "&subject="
+                                + fhirPatient.getResource().getIdElement())
+                                .setMethod(Bundle.HTTPVerb.PUT);
                         diagnosticReport.addResult(new Reference(geneticVariant));
                         efficacyObservation.addDerivedFrom(new Reference(geneticVariant));
+
                     });
                 }
 
@@ -516,7 +519,7 @@ public class JsonFhirMapper {
                                 .setResource(medicationChange).getRequest()
                                 .setUrl("Task?identifier=" + NCIT_URI + "|" + ncit + "&subject="
                                         + fhirPatient.getResource().getIdElement())
-                                .setIfNoneExist("identifier=Task?identifier=" + NCIT_URI + "|" + ncit + "&subject="
+                                .setIfNoneExist("identifier=" + NCIT_URI + "|" + ncit + "&subject="
                                         + fhirPatient.getResource().getIdElement())
                                 .setMethod(Bundle.HTTPVerb.PUT);
 
