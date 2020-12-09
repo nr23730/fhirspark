@@ -31,8 +31,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.hl7.fhir.instance.model.api.IAnyResource;
 import org.hl7.fhir.r4.model.Annotation;
 import org.hl7.fhir.r4.model.Bundle;
@@ -618,12 +620,34 @@ public class JsonFhirMapper {
      * @param alterations List of alterations to consider
      * @return List of matching references
      */
-    public Collection<Reference> getPmidsByAlteration(List<GeneticAlteration> alterations) {
+    public Collection<fhirspark.restmodel.Reference> getPmidsByAlteration(List<GeneticAlteration> alterations) {
 
-        Map<Integer, Reference> refMap = new HashMap<Integer, Reference>();
-
+        Set<String> entrez = new HashSet<String>();
         for (GeneticAlteration a : alterations) {
-            refMap.put(123, new Reference());
+            entrez.add(String.valueOf(a.getEntrezGeneId()));
+        }
+
+        Bundle bStuff = (Bundle) client.search().forResource(Observation.class)
+                .where(new TokenClientParam("component-value-concept").exactly()
+                        .systemAndValues("http://www.ncbi.nlm.nih.gov/gene", new ArrayList<String>(entrez)))
+                .prettyPrint().revInclude(Observation.INCLUDE_DERIVED_FROM).execute();
+
+        Map<Integer, fhirspark.restmodel.Reference> refMap = new HashMap<Integer, fhirspark.restmodel.Reference>();
+
+        for (BundleEntryComponent bec : bStuff.getEntry()) {
+            Observation o = (Observation) bec.getResource();
+            if (!o.getMeta().getProfile().get(0)
+                    .equals("http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/medication-efficacy")) {
+                continue;
+            }
+            o.getExtensionsByUrl(RELATEDARTIFACT_URI).forEach(relatedArtifact -> {
+                if (((RelatedArtifact) relatedArtifact.getValue()).getType() == RelatedArtifactType.CITATION) {
+                    Integer pmid = Integer.valueOf(
+                            ((RelatedArtifact) relatedArtifact.getValue()).getUrl().replaceFirst(PUBMED_URI, ""));
+                    refMap.put(pmid, new fhirspark.restmodel.Reference().withPmid(pmid)
+                            .withName(((RelatedArtifact) relatedArtifact.getValue()).getCitation()));
+                }
+            });
         }
 
         return refMap.values();
