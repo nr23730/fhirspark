@@ -28,8 +28,13 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import org.hl7.fhir.instance.model.api.IAnyResource;
 import org.hl7.fhir.r4.model.Annotation;
 import org.hl7.fhir.r4.model.Bundle;
@@ -110,7 +115,8 @@ public class JsonFhirMapper {
     }
 
     /**
-     * Retrieves MTB data from FHIR server and transforms it into JSON format for cBioPortal.
+     * Retrieves MTB data from FHIR server and transforms it into JSON format for
+     * cBioPortal.
      */
     public String toJson(String patientId) throws JsonProcessingException {
         List<Mtb> mtbs = new ArrayList<Mtb>();
@@ -124,11 +130,15 @@ public class JsonFhirMapper {
         }
 
         Bundle bDiagnosticReports = (Bundle) client.search().forResource(DiagnosticReport.class)
-                .where(new ReferenceClientParam("subject").hasId(harmonizeId(fhirPatient))).prettyPrint().execute();
+                .where(new ReferenceClientParam("subject").hasId(harmonizeId(fhirPatient))).prettyPrint()
+                .include(DiagnosticReport.INCLUDE_RESULT.asRecursive()).execute();
 
         List<BundleEntryComponent> diagnosticReports = bDiagnosticReports.getEntry();
 
         for (int i = 0; i < diagnosticReports.size(); i++) {
+            if (!(diagnosticReports.get(i).getResource() instanceof DiagnosticReport)) {
+                continue;
+            }
             DiagnosticReport diagnosticReport = (DiagnosticReport) diagnosticReports.get(i).getResource();
 
             Mtb mtb = new Mtb().withTherapyRecommendations(new ArrayList<TherapyRecommendation>())
@@ -157,7 +167,6 @@ public class JsonFhirMapper {
             }
 
             // REBIOPSY HERE
-
             mtb.getSamples().clear();
             for (Reference specimen : diagnosticReport.getSpecimen()) {
                 mtb.getSamples().add(((Specimen) specimen.getResource()).getIdentifierFirstRep().getValue());
@@ -277,8 +286,7 @@ public class JsonFhirMapper {
                                                 variant.getValueCodeableConcept().getCodingFirstRep().getCode());
                                         break;
                                     case "81258-6":
-                                        g.setAlleleFrequency(
-                                                variant.getValueQuantity().getValue().doubleValue());
+                                        g.setAlleleFrequency(variant.getValueQuantity().getValue().doubleValue());
                                         break;
                                     case "81255-2":
                                         g.setDbsnp(variant.getValueCodeableConcept().getCodingFirstRep().getCode());
@@ -406,6 +414,13 @@ public class JsonFhirMapper {
 
             for (TherapyRecommendation therapyRecommendation : mtb.getTherapyRecommendations()) {
                 Observation efficacyObservation = new Observation();
+                efficacyObservation.setId(IdType.newRandomUuid());
+                bundle.addEntry().setFullUrl(efficacyObservation.getIdElement().getValue())
+                        .setResource(efficacyObservation).getRequest()
+                        .setUrl("Observation?identifier=" + therapyRecommendationUri + "|"
+                                + therapyRecommendation.getId())
+                        .setIfNoneExist("identifier=" + therapyRecommendationUri + "|" + therapyRecommendation.getId())
+                        .setMethod(Bundle.HTTPVerb.PUT);
                 diagnosticReport.addResult(new Reference(efficacyObservation));
                 efficacyObservation.getMeta().addProfile(
                         "http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/medication-efficacy");
@@ -453,9 +468,21 @@ public class JsonFhirMapper {
 
                 if (therapyRecommendation.getReasoning().getGeneticAlterations() != null) {
                     therapyRecommendation.getReasoning().getGeneticAlterations().forEach(geneticAlteration -> {
-                        Resource geneticVariant = geneticAlterationsAdapter.process(geneticAlteration);
+                        Observation geneticVariant = geneticAlterationsAdapter.process(geneticAlteration);
+                        geneticVariant.setId(IdType.newRandomUuid());
+                        geneticVariant.setSubject(fhirPatient);
+                        bundle.addEntry().setFullUrl(geneticVariant.getIdElement().getValue())
+                                .setResource(geneticVariant).getRequest()
+                                .setUrl("Observation?component-value-concept=http://www.ncbi.nlm.nih.gov/gene|"
+                                        + geneticAlteration.getEntrezGeneId() + "&subject="
+                                        + fhirPatient.getResource().getIdElement())
+                                .setIfNoneExist("component-value-concept=http://www.ncbi.nlm.nih.gov/gene|"
+                                + geneticAlteration.getEntrezGeneId() + "&subject="
+                                + fhirPatient.getResource().getIdElement())
+                                .setMethod(Bundle.HTTPVerb.PUT);
                         diagnosticReport.addResult(new Reference(geneticVariant));
                         efficacyObservation.addDerivedFrom(new Reference(geneticVariant));
+
                     });
                 }
 
@@ -494,7 +521,7 @@ public class JsonFhirMapper {
                                 .setResource(medicationChange).getRequest()
                                 .setUrl("Task?identifier=" + NCIT_URI + "|" + ncit + "&subject="
                                         + fhirPatient.getResource().getIdElement())
-                                .setIfNoneExist("identifier=Task?identifier=" + NCIT_URI + "|" + ncit + "&subject="
+                                .setIfNoneExist("identifier=" + NCIT_URI + "|" + ncit + "&subject="
                                         + fhirPatient.getResource().getIdElement())
                                 .setMethod(Bundle.HTTPVerb.PUT);
 
@@ -530,7 +557,8 @@ public class JsonFhirMapper {
     /**
      *
      * @param patientId id of the patient.
-     * @param deletions entries that should be deleted. Either MTB or therapy recommendation.
+     * @param deletions entries that should be deleted. Either MTB or therapy
+     *                  recommendation.
      */
     public void deleteEntries(String patientId, Deletions deletions) {
         // deletions.getTherapyRecommendation()
@@ -541,10 +569,8 @@ public class JsonFhirMapper {
 
     private void deleteTherapyRecommendation(String patientId, String therapyRecommendationId) {
         assert therapyRecommendationId.startsWith(patientId);
-        client.delete()
-                .resourceConditionalByUrl(
-                        "Observation?identifier=" + therapyRecommendationUri + "|" + therapyRecommendationId)
-                .execute();
+        client.delete().resourceConditionalByUrl(
+                "Observation?identifier=" + therapyRecommendationUri + "|" + therapyRecommendationId).execute();
     }
 
     private void deleteMtb(String patientId, String mtbId) {
@@ -586,6 +612,46 @@ public class JsonFhirMapper {
         } else {
             return resource.getIdElement().getResourceType() + "/" + resource.getIdElement().getIdPart();
         }
+    }
+
+    /**
+     * Fetched Pubmed IDs that have been previously associated with the same alteration.
+     *
+     * @param alterations List of alterations to consider
+     * @return List of matching references
+     */
+    public Collection<fhirspark.restmodel.Reference> getPmidsByAlteration(List<GeneticAlteration> alterations) {
+
+        Set<String> entrez = new HashSet<String>();
+        for (GeneticAlteration a : alterations) {
+            entrez.add(String.valueOf(a.getEntrezGeneId()));
+        }
+
+        Bundle bStuff = (Bundle) client.search().forResource(Observation.class)
+                .where(new TokenClientParam("component-value-concept").exactly()
+                        .systemAndValues("http://www.ncbi.nlm.nih.gov/gene", new ArrayList<String>(entrez)))
+                .prettyPrint().revInclude(Observation.INCLUDE_DERIVED_FROM).execute();
+
+        Map<Integer, fhirspark.restmodel.Reference> refMap = new HashMap<Integer, fhirspark.restmodel.Reference>();
+
+        for (BundleEntryComponent bec : bStuff.getEntry()) {
+            Observation o = (Observation) bec.getResource();
+            if (!o.getMeta().getProfile().get(0)
+                    .equals("http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/medication-efficacy")) {
+                continue;
+            }
+            o.getExtensionsByUrl(RELATEDARTIFACT_URI).forEach(relatedArtifact -> {
+                if (((RelatedArtifact) relatedArtifact.getValue()).getType() == RelatedArtifactType.CITATION) {
+                    Integer pmid = Integer.valueOf(
+                            ((RelatedArtifact) relatedArtifact.getValue()).getUrl().replaceFirst(PUBMED_URI, ""));
+                    refMap.put(pmid, new fhirspark.restmodel.Reference().withPmid(pmid)
+                            .withName(((RelatedArtifact) relatedArtifact.getValue()).getCitation()));
+                }
+            });
+        }
+
+        return refMap.values();
+
     }
 
 }
