@@ -11,11 +11,11 @@ jobs:
 
     services:
       hapiserver:
-        image: docker.miracum.org/miracum-data/hapi-fhir-jpaserver:v8.1.1
+        image: hapiproject/hapi:v5.2.1
         ports:
          - 8080:8080
         env:
-          validation.requests.enabled: "false"
+          hapi.fhir.validation.requests_enabled: 'false'
 
     runs-on: ubuntu-latest
 
