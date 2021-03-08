@@ -82,4 +82,8 @@ public class JsonFhirMapperTest {
     public void twoMtbThreeRecommendationTest() {
     }
 
+    @Test
+    public void oneAlterationTwoRecommendationTest() {
+    }
+
 }

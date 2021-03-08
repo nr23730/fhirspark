@@ -98,6 +98,7 @@ public class JsonFhirMapper {
     private GeneticAlterationsAdapter geneticAlterationsAdapter = new GeneticAlterationsAdapter();
     private DrugAdapter drugAdapter = new DrugAdapter();
     private SpecimenAdapter specimenAdapter;
+    private Map<String, Observation> uniqueAlteration = new HashMap<String, Observation>();
 
     /**
      *
@@ -468,18 +469,23 @@ public class JsonFhirMapper {
 
                 if (therapyRecommendation.getReasoning().getGeneticAlterations() != null) {
                     therapyRecommendation.getReasoning().getGeneticAlterations().forEach(geneticAlteration -> {
-                        Observation geneticVariant = geneticAlterationsAdapter.process(geneticAlteration);
-                        geneticVariant.setId(IdType.newRandomUuid());
-                        geneticVariant.setSubject(fhirPatient);
-                        bundle.addEntry().setFullUrl(geneticVariant.getIdElement().getValue())
+                        Observation geneticVariant;
+                        String uniqueString = "component-value-concept=http://www.ncbi.nlm.nih.gov/gene|"
+                            + geneticAlteration.getEntrezGeneId() + "&subject="
+                            + fhirPatient.getResource().getIdElement();
+                        if (uniqueAlteration.containsKey(uniqueString)) {
+                            geneticVariant = uniqueAlteration.get(uniqueString);
+                        } else {
+                            geneticVariant = geneticAlterationsAdapter.process(geneticAlteration);
+                            geneticVariant.setId(IdType.newRandomUuid());
+                            geneticVariant.setSubject(fhirPatient);
+                            uniqueAlteration.put(uniqueString, geneticVariant);
+                            bundle.addEntry().setFullUrl(geneticVariant.getIdElement().getValue())
                                 .setResource(geneticVariant).getRequest()
-                                .setUrl("Observation?component-value-concept=http://www.ncbi.nlm.nih.gov/gene|"
-                                        + geneticAlteration.getEntrezGeneId() + "&subject="
-                                        + fhirPatient.getResource().getIdElement())
-                                .setIfNoneExist("component-value-concept=http://www.ncbi.nlm.nih.gov/gene|"
-                                + geneticAlteration.getEntrezGeneId() + "&subject="
-                                + fhirPatient.getResource().getIdElement())
+                                .setUrl("Observation?" + uniqueString)
+                                .setIfNoneExist(uniqueString)
                                 .setMethod(Bundle.HTTPVerb.PUT);
+                        }
                         diagnosticReport.addResult(new Reference(geneticVariant));
                         efficacyObservation.addDerivedFrom(new Reference(geneticVariant));
 
@@ -542,6 +548,7 @@ public class JsonFhirMapper {
         }
 
         try {
+            uniqueAlteration.clear();
             Bundle resp = client.transaction().withBundle(bundle).execute();
 
             // Log the response

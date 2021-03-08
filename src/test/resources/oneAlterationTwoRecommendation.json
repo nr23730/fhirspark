@@ -1,0 +1,56 @@
+{
+    "id": "Testpatient",
+    "mtbs": [
+        {
+            "author": "anonymousUser",
+            "date": "2021-03-08",
+            "id": "mtb_Testpatient_1615204470219",
+            "mtbState": "PARTIAL",
+            "samples": [],
+            "therapyRecommendations": [
+                {
+                    "author": "anonymousUser",
+                    "comment": [],
+                    "evidenceLevel": "0",
+                    "id": "Testpatient_1615204472309",
+                    "reasoning": {
+                        "clinicalData": [],
+                        "geneticAlterations": [
+                            {
+                                "alteration": "G12C",
+                                "end": 0,
+                                "entrezGeneId": 3845,
+                                "hugoSymbol": "KRAS",
+                                "ref": "NA",
+                                "start": 0
+                            }
+                        ]
+                    },
+                    "references": [],
+                    "treatments": []
+                },
+                {
+                    "author": "anonymousUser",
+                    "comment": [],
+                    "evidenceLevel": "0",
+                    "id": "Testpatient_1615204520960",
+                    "reasoning": {
+                        "clinicalData": [],
+                        "geneticAlterations": [
+                            {
+                                "alteration": "G12C",
+                                "end": 0,
+                                "entrezGeneId": 3845,
+                                "hugoSymbol": "KRAS",
+                                "ref": "NA",
+                                "start": 0
+                            }
+                        ]
+                    },
+                    "references": [],
+                    "treatments": []
+                }
+            ]
+        }
+    ]
+}
