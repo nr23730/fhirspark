@@ -86,4 +86,8 @@ public class JsonFhirMapperTest {
     public void oneAlterationTwoRecommendationTest() {
     }
 
+    @Test
+    public void unknownDrugTest() {
+    }
+
 }

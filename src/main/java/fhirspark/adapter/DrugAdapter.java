@@ -14,7 +14,7 @@ public class DrugAdapter {
 
     /**
      *
-     * @param patient Reference to the patient is medication belongs to.
+     * @param patient   Reference to the patient is medication belongs to.
      * @param treatment The treatment that the patient should receive.
      * @return Composed MedicationStatement resource.
      */
@@ -26,8 +26,13 @@ public class DrugAdapter {
 
         String ncitCode = treatment.getNcitCode() != null ? treatment.getNcitCode()
                 : OncoKbDrug.resolve(treatment.getName()).getNcitCode();
-        medicationStatement.getMedicationCodeableConcept().getCoding()
-                .add(new Coding("http://ncithesaurus-stage.nci.nih.gov", ncitCode, treatment.getName()));
+        if (ncitCode != null) {
+            medicationStatement.getMedicationCodeableConcept().getCoding()
+                    .add(new Coding("http://ncithesaurus-stage.nci.nih.gov", ncitCode, treatment.getName()));
+        } else {
+            medicationStatement.getMedicationCodeableConcept().getCoding()
+                .add(new Coding(null, null, treatment.getName()));
+        }
 
         return medicationStatement;
     }

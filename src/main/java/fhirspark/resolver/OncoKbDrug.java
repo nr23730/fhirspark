@@ -42,6 +42,6 @@ public final class OncoKbDrug {
      * @return Drug entry from OncoKB.
      */
     public static Drug resolve(String name) {
-        return DRUG_MAP.get(name);
+        return DRUG_MAP.getOrDefault(name, new Drug());
     }
 }
