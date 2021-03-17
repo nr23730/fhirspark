@@ -200,8 +200,13 @@ public class JsonFhirMapper {
                         ob.getHasMember().forEach(member -> {
                             Observation obs = (Observation) member.getResource();
                             String[] attr = obs.getValueStringType().asStringValue().split(": ");
+                            ClinicalDatum cd = new ClinicalDatum().withAttributeName(attr[0]).withValue(attr[1]);
+                            if (obs.getSpecimen().getResource() != null) {
+                                Specimen specimen = (Specimen) obs.getSpecimen().getResource();
+                                cd.setSampleId(specimen.getIdentifierFirstRep().getValue());
+                            }
                             therapyRecommendation.getReasoning().getClinicalData()
-                                    .add(new ClinicalDatum().withAttributeName(attr[0]).withValue(attr[1]));
+                                    .add(cd);
                         });
 
                         List<Treatment> treatments = new ArrayList<Treatment>();
@@ -447,13 +452,18 @@ public class JsonFhirMapper {
 
                 if (therapyRecommendation.getReasoning().getClinicalData() != null) {
                     therapyRecommendation.getReasoning().getClinicalData().forEach(clinical -> {
+                        Specimen s = null;
+                        if (clinical.getSampleId() != null && clinical.getSampleId().length() > 0) {
+                            s = specimenAdapter.process(fhirPatient, clinical.getSampleId());
+                        }
                         try {
                             Method m = Class.forName("fhirspark.adapter.clinicaldata." + clinical.getAttributeId())
                                     .getMethod("process", ClinicalDatum.class);
                             efficacyObservation.addHasMember(new Reference((Resource) m.invoke(null, clinical)));
                         } catch (ClassNotFoundException e) {
                             GenericAdapter genericAdapter = new GenericAdapter();
-                            efficacyObservation.addHasMember(new Reference(genericAdapter.process(clinical)));
+                            efficacyObservation
+                                    .addHasMember(new Reference(genericAdapter.process(clinical, new Reference(s))));
                         } catch (NoSuchMethodException e) {
                             // TODO Auto-generated catch block
                             e.printStackTrace();

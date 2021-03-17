@@ -1,0 +1,105 @@
+{
+    "id": "1021536548",
+    "mtbs": [
+        {
+            "author": "anonymousUser",
+            "date": "2021-02-24",
+            "generalRecommendation": "First MTB",
+            "geneticCounselingRecommendation": true,
+            "id": "mtb_1021536548_1615504791938",
+            "mtbState": "PARTIAL",
+            "samples": [
+                "1021536548_01",
+                "1021536548_02"
+            ],
+            "therapyRecommendations": [
+                {
+                    "author": "anonymousUser",
+                    "comment": [
+                        "Recommendation imported from OncoKB."
+                    ],
+                    "evidenceLevel": "0",
+                    "id": "1021536548_1615504806083",
+                    "reasoning": {
+                        "clinicalData": [
+                            {
+                                "attributeName": "MSI",
+                                "value": "13.37"
+                            }
+                        ],
+                        "geneticAlterations": [
+                            {
+                                "alteration": "G12C",
+                                "end": 0,
+                                "entrezGeneId": 3845,
+                                "hugoSymbol": "KRAS",
+                                "ref": "NA",
+                                "start": 0
+                            }
+                        ]
+                    },
+                    "references": [
+                        {
+                            "pmid": 29236635,
+                            "name": "Rosai-Dorfman Disease with Activating KRAS Mutation - Response to Cobimetinib."
+                        },
+                        {
+                            "pmid": 30867592,
+                            "name": "Efficacy of MEK inhibition in patients with histiocytic neoplasms."
+                        }
+                    ],
+                    "treatments": [
+                        {
+                            "name": "uc3x"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "author": "anonymousUser",
+            "date": "2021-03-14",
+            "id": "mtb_1021536548_1615722446302",
+            "mtbState": "PARTIAL",
+            "samples": [],
+            "therapyRecommendations": [
+                {
+                    "author": "anonymousUser",
+                    "comment": [],
+                    "evidenceLevel": "0",
+                    "id": "1021536548_1615722447910",
+                    "reasoning": {
+                        "clinicalData": [
+                            {
+                                "attributeName": "KAS ID",
+                                "value": "42"
+                            },
+                            {
+                                "attributeName": "Analysis Method",
+                                "value": "Oncomine",
+                                "sampleId": "1021536548_02"
+                            }
+                        ],
+                        "geneticAlterations": [
+                            {
+                                "alteration": "R132H",
+                                "end": 0,
+                                "entrezGeneId": 3417,
+                                "hugoSymbol": "IDH1",
+                                "ref": "NA",
+                                "start": 0
+                            }
+                        ]
+                    },
+                    "references": [],
+                    "treatments": [
+                        {
+                            "name": "AZD5363",
+                            "ncit_code": "C102564"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

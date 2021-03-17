@@ -90,4 +90,8 @@ public class JsonFhirMapperTest {
     public void unknownDrugTest() {
     }
 
+    @Test
+    public void samplemanagerTest() {
+    }
+
 }
