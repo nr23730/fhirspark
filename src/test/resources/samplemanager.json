@@ -1,3 +1,147 @@
+Diffchecker logo
+Diffchecker
+
+
+Text
+
+
+Images
+
+
+PDF
+
+
+Excel
+
+
+Folders
+Desktop App
+Pricing
+Sign in
+Create an account
+Download Diffchecker Desktop
+Saved Diffs
+You must be signed in to save diffs
+Sign In
+Diff history
+a minute ago
+Clear
+Diff history is cleared on refresh
+Real-timeRegular
+SplitUnified
+WordCharacter
+
+Tools
+-17 Removals+19 Additions
+EditorClear
+Export as PDF
+Save DiffShare
+No file chosenOriginal Text
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
 {
     "id": "1021536548",
     "mtbs": [
@@ -103,3 +247,228 @@
         }
     ]
 }
+No file chosenChanged Text
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+{
+    "id": "1021536548",
+    "mtbs": [
+        {
+            "id": "mtb_1021536548_1615504791938",
+            "therapyRecommendations": [
+                {
+                    "author": "anonymousUser",
+                    "comment": [
+                        "Recommendation imported from OncoKB."
+                    ],
+                    "evidenceLevel": "0",
+                    "id": "1021536548_1615504806083",
+                    "reasoning": {
+                        "clinicalData": [
+                            {
+                                "attributeName": "MSI",
+                                "value": "13.37"
+                            }
+                        ],
+                        "geneticAlterations": [
+                            {
+                                "alteration": "G12C",
+                                "end": 0,
+                                "entrezGeneId": 3845,
+                                "hugoSymbol": "KRAS",
+                                "ref": "NA",
+                                "start": 0
+                            }
+                        ]
+                    },
+                    "references": [
+                        {
+                            "pmid": 29236635,
+                            "name": "Rosai-Dorfman Disease with Activating KRAS Mutation - Response to Cobimetinib."
+                        },
+                        {
+                            "pmid": 30867592,
+                            "name": "Efficacy of MEK inhibition in patients with histiocytic neoplasms."
+                        }
+                    ],
+                    "treatments": [
+                        {
+                            "name": "uc3x"
+                        }
+                    ]
+                }
+            ],
+            "geneticCounselingRecommendation": true,
+            "generalRecommendation": "First MTB",
+            "date": "2021-02-24",
+            "mtbState": "PARTIAL",
+            "samples": [
+                "1021536548_01",
+                "1021536548_02"
+            ],
+            "author": "anonymousUser"
+        },
+        {
+            "id": "mtb_1021536548_1615722446302",
+            "therapyRecommendations": [
+                {
+                    "author": "anonymousUser",
+                    "comment": [],
+                    "evidenceLevel": "0",
+                    "id": "1021536548_1615722447910",
+                    "reasoning": {
+                        "clinicalData": [
+                            {
+                                "attributeId": "KAS_ID",
+                                "attributeName": "KAS ID",
+                                "value": "42"
+                            },
+                            {
+                                "attributeId": "ANALYSIS_METHOD",
+                                "attributeName": "Analysis Method",
+                                "sampleId": "1021536548_02",
+                                "value": "Oncomine"
+                            }
+                        ],
+                        "geneticAlterations": [
+                            {
+                                "alteration": "R132H",
+                                "end": 0,
+                                "entrezGeneId": 3417,
+                                "hugoSymbol": "IDH1",
+                                "ref": "NA",
+                                "start": 0
+                            }
+                        ]
+                    },
+                    "references": [],
+                    "treatments": [
+                        {
+                            "name": "AZD5363",
+                            "ncit_code": "C102564"
+                        }
+                    ]
+                }
+            ],
+            "date": "2021-03-14",
+            "mtbState": "PARTIAL",
+            "samples": [],
+            "author": "anonymousUser"
+        }
+    ]
+}
+ad
+Diffchecker Desktop
+Run Diffchecker offline, on your computer, with more features!
+CHECK IT OUT
+ad
+Bibcitation
+By Diffchecker: A free online tool to generate citations, reference lists, and bibliographies. APA, MLA, Chicago, and more.
+CHECK IT OUT
+Find Difference
+© 2021 Checker Software Inc.ContactCLITermsPrivacy Policy
