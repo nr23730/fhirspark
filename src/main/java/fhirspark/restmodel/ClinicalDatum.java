@@ -17,6 +17,8 @@ public class ClinicalDatum {
     private String attributeId;
     @JsonProperty("attributeName")
     private String attributeName;
+    @JsonProperty("sampleId")
+    private String sampleId;
     @JsonProperty("value")
     private String value;
 
@@ -47,6 +49,21 @@ public class ClinicalDatum {
 
     public ClinicalDatum withAttributeName(String attributeName) {
         this.attributeName = attributeName;
+        return this;
+    }
+
+    @JsonProperty("sampleId")
+    public String getSampleId() {
+        return sampleId;
+    }
+
+    @JsonProperty("sampleId")
+    public void setSampleId(String sampleId) {
+        this.sampleId = sampleId;
+    }
+
+    public ClinicalDatum withSampleId(String sampleId) {
+        this.sampleId = sampleId;
         return this;
     }
 
