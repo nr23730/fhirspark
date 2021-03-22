@@ -18,6 +18,9 @@ import java.util.List;
     "observationSystem",
     "patientSystem",
     "hgncPath",
+    "portalUrl",
+    "mtbStudy",
+    "loginRequired",
     "oncokbPath",
     "hl7v2config"
 })
@@ -37,6 +40,12 @@ public final class Settings {
     private String patientSystem;
     @JsonProperty("hgncPath")
     private String hgncPath;
+    @JsonProperty("portalUrl")
+    private String portalUrl;
+    @JsonProperty("mtbStudy")
+    private String mtbStudy;
+    @JsonProperty("loginRequired")
+    private Boolean loginRequired;
     @JsonProperty("oncokbPath")
     private String oncokbPath;
     @JsonProperty("hl7v2config")
@@ -110,6 +119,36 @@ public final class Settings {
     @JsonProperty("hgncPath")
     public void setHgncPath(String hgncPath) {
         this.hgncPath = hgncPath;
+    }
+
+    @JsonProperty("portalUrl")
+    public String getPortalUrl() {
+        return portalUrl;
+    }
+
+    @JsonProperty("portalUrl")
+    public void setPortalUrl(String portalUrl) {
+        this.portalUrl = portalUrl;
+    }
+
+    @JsonProperty("mtbStudy")
+    public String getMtbStudy() {
+        return mtbStudy;
+    }
+
+    @JsonProperty("mtbStudy")
+    public void setMtbStudy(String mtbStudy) {
+        this.mtbStudy = mtbStudy;
+    }
+
+    @JsonProperty("loginRequired")
+    public Boolean getLoginRequired() {
+        return loginRequired;
+    }
+
+    @JsonProperty("loginRequired")
+    public void setLoginRequired(Boolean loginRequired) {
+        this.loginRequired = loginRequired;
     }
 
     @JsonProperty("oncokbPath")
