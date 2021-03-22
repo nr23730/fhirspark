@@ -5,6 +5,9 @@ diagnosticReportSystem: ${FHIRSPARK_DIAGNOSTICREPORTSYSTEM:-https://cbioportal.o
 observationSystem: ${FHIRSPARK_OBSERVATIONSYSTEM:-https://cbioportal.org/therapyrecommendation/}
 patientSystem: ${FHIRSPARK_PATIENTSYSTEM:-https://cbioportal.org/patient/}
 hgncPath: ${FHIRSPARK_HGNCPATH:-hgnc.csv}
+portalUrl: ${FHIRSPARK_PORTALURL:-http://192.168.178.77:8080/}
+mtbStudy: ${FHIRSPARK_MTBSTUDY:-MTB}
+loginRequired: ${FHIRSPARK_LOGINREQUIRED:-true}
 oncokbPath: ${FHIRSPARK_ONCOKBPATH:-drugs.json}
 hl7v2config:
  - sendv2: ${FHIRSPARK_SENDHL7V2:-true}
