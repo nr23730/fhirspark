@@ -40,6 +40,7 @@ public final class FhirSpark {
 
     private static JsonFhirMapper jsonFhirMapper;
     private static JsonHl7v2Mapper jsonHl7v2Mapper;
+    private static Settings settings;
     private static Client client = new Client();
     private static ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
 
@@ -57,7 +58,7 @@ public final class FhirSpark {
             settingsYaml = new FileInputStream(args[0]);
         }
         ConfigurationLoader configLoader = new ConfigurationLoader();
-        final Settings settings = configLoader.loadConfiguration(settingsYaml, Settings.class);
+        settings = configLoader.loadConfiguration(settingsYaml, Settings.class);
         HgncGeneName.initialize(settings.getHgncPath());
         OncoKbDrug.initalize(settings.getOncokbPath());
         jsonFhirMapper = new JsonFhirMapper(settings);
@@ -273,7 +274,6 @@ public final class FhirSpark {
 
         System.out.println("no matching role could be found - returning false\n");
         return false;
-
     }
 
 }
