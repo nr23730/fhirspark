@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonPropertyOrder({
     "attributeId",
     "attributeName",
+    "sampleId",
     "value"
 })
 public class ClinicalDatum {
