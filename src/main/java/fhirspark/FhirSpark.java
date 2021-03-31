@@ -3,6 +3,9 @@ package fhirspark;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.WebResource;
 import fhirspark.resolver.HgncGeneName;
 import fhirspark.resolver.OncoKbDrug;
 import fhirspark.restmodel.CbioportalRest;
@@ -11,8 +14,15 @@ import fhirspark.restmodel.GeneticAlteration;
 import fhirspark.restmodel.Mtb;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import javax.ws.rs.core.Cookie;
 import org.eclipse.jetty.http.HttpStatus;
+import spark.Request;
 
 import static spark.Spark.delete;
 import static spark.Spark.get;
@@ -30,6 +40,8 @@ public final class FhirSpark {
 
     private static JsonFhirMapper jsonFhirMapper;
     private static JsonHl7v2Mapper jsonHl7v2Mapper;
+    private static Settings settings;
+    private static Client client = new Client();
     private static ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
 
     private FhirSpark() {
@@ -46,7 +58,7 @@ public final class FhirSpark {
             settingsYaml = new FileInputStream(args[0]);
         }
         ConfigurationLoader configLoader = new ConfigurationLoader();
-        final Settings settings = configLoader.loadConfiguration(settingsYaml, Settings.class);
+        settings = configLoader.loadConfiguration(settingsYaml, Settings.class);
         HgncGeneName.initialize(settings.getHgncPath());
         OncoKbDrug.initalize(settings.getOncokbPath());
         jsonFhirMapper = new JsonFhirMapper(settings);
@@ -68,7 +80,33 @@ public final class FhirSpark {
             return res;
         });
 
+        /**
+        *
+        * Checks whether the client has permission to view and manipulate the data of the given patientId
+        *
+        * @param req Incoming Java Spark Request
+        * @param patientId requested patientId
+        * @return FORBIDDEN_403 if not authorized
+        * @return OK_200 if authorized
+        */
+        get("/mtb/:patientId/permission", (req, res) -> {
+            if (settings.getLoginRequired()
+                && (!validateRequest(req) || !validateManipulation(req))) {
+                res.status(HttpStatus.FORBIDDEN_403);
+                return res;
+            }
+            res.status(HttpStatus.ACCEPTED_202);
+            res.header("Access-Control-Allow-Credentials", "true");
+            res.header("Access-Control-Allow-Origin", req.headers("Origin"));
+            res.header("Cache-Control", "no-cache, no-store, max-age=0");
+            return res;
+        });
+
         get("/mtb/:patientId", (req, res) -> {
+            if (settings.getLoginRequired() && !validateRequest(req)) {
+                res.status(HttpStatus.FORBIDDEN_403);
+                return res;
+            }
             res.status(HttpStatus.OK_200);
             res.header("Access-Control-Allow-Credentials", "true");
             res.header("Access-Control-Allow-Origin", req.headers("Origin"));
@@ -79,6 +117,11 @@ public final class FhirSpark {
         });
 
         put("/mtb/:patientId", (req, res) -> {
+            if (settings.getLoginRequired()
+                && (!validateRequest(req) || !validateManipulation(req))) {
+                res.status(HttpStatus.FORBIDDEN_403);
+                return res;
+            }
             res.status(HttpStatus.CREATED_201);
             res.header("Access-Control-Allow-Credentials", "true");
             res.header("Access-Control-Allow-Origin", req.headers("Origin"));
@@ -95,6 +138,11 @@ public final class FhirSpark {
         });
 
         delete("/mtb/:patientId", (req, res) -> {
+            if (settings.getLoginRequired()
+                && (!validateRequest(req) || !validateManipulation(req))) {
+                res.status(HttpStatus.FORBIDDEN_403);
+                return res;
+            }
             res.status(HttpStatus.OK_200);
             res.header("Access-Control-Allow-Credentials", "true");
             res.header("Access-Control-Allow-Origin", req.headers("Origin"));
@@ -128,7 +176,8 @@ public final class FhirSpark {
                     new TypeReference<List<GeneticAlteration>>() {
                     });
             res.body(
-                    objectMapper.writeValueAsString(jsonFhirMapper.getTherapyRecommendationsByAlteration(alterations)));
+                    objectMapper.writeValueAsString(jsonFhirMapper
+                        .getTherapyRecommendationsByAlteration(alterations)));
             return res.body();
         });
 
@@ -156,6 +205,75 @@ public final class FhirSpark {
             res.body(objectMapper.writeValueAsString(jsonFhirMapper.getPmidsByAlteration(alterations)));
             return res.body();
         });
+
+    }
+
+    /**
+     * Checks if the session id is authorized to access the clinical data of the patient.
+     *
+     * @param req Incoming Java Spark Request
+     * @return Boolean if the session if able to access the data
+     */
+    private static boolean validateRequest(Request req) {
+        String portalDomain = settings.getPortalUrl();
+        String validatePath = "api/studies/" + settings.getMtbStudy() + "/patients/"
+                + req.params(":patientId");
+        String requestUrl = portalDomain + validatePath;
+
+        WebResource webResource = client.resource(requestUrl);
+        WebResource.Builder builder = webResource.getRequestBuilder();
+        builder = builder.cookie(new Cookie("JSESSIONID", req.cookies().get("JSESSIONID")));
+        ClientResponse response = builder.accept("application/json").get(ClientResponse.class);
+
+        System.out.println(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+        System.out.println("Validation request for study:");
+        System.out.println("Sending request at requestUrl: " + requestUrl);
+
+        if (response.getStatus() == HttpStatus.OK_200) {
+            System.out.println("Response code was good: " + response.getStatus() + "\n");
+            return true;
+        }
+        System.out.println("Response code was: " + response.getStatus() + "\n");
+        return false;
+    }
+
+    /**
+     * Checks if the session id is authorized to manipulate the clinical data of the patients in the MTB study.
+     *
+     * @param req Incoming Java Spark Request
+     * @return Boolean if the session is able to access the data
+     */
+    private static boolean validateManipulation(Request req) {
+        String requestedPatientId = req.params(":patientId");
+        String mtbStudy = settings.getMtbStudy();
+        String userRoles = req.headers("X-USERROLES");
+        String userLoginName = req.headers("X-USERLOGIN");
+
+        System.out.println(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+        System.out.println("Manipulation permission request:\nfrom user: " + userLoginName + ", for patientId: "
+            + requestedPatientId + "\nfound header X-USERROLES: " + userRoles);
+
+        if (userRoles == null || userRoles.isEmpty()) {
+            System.out.println("Incoming user roles are null or empty - returning false\n");
+            return false;
+        }
+
+        ArrayList<String> roleList = new ArrayList<String>();
+        Pattern p = Pattern.compile("\"([^\"]*)\"");
+        Matcher m = p.matcher(userRoles);
+        while (m.find()) {
+            roleList.add(m.group(1));
+        }
+
+        for (String s : roleList) {
+            if (s.equals(mtbStudy) || s.equals(requestedPatientId)) {
+                System.out.println("permission granted with role: " + s + "\n");
+                return true;
+            }
+        }
+
+        System.out.println("no matching role could be found - returning false\n");
+        return false;
 
     }
 
