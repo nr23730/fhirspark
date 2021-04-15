@@ -87,7 +87,7 @@ public final class FhirSpark {
         * @param req Incoming Java Spark Request
         * @param patientId requested patientId
         * @return FORBIDDEN_403 if not authorized
-        * @return OK_200 if authorized
+        * @return ACCEPTED_202 if authorized
         */
         get("/mtb/:patientId/permission", (req, res) -> {
             if (settings.getLoginRequired()
@@ -216,9 +216,15 @@ public final class FhirSpark {
      */
     private static boolean validateRequest(Request req) {
         String portalDomain = settings.getPortalUrl();
-        String validatePath = "api/studies/" + settings.getMtbStudy() + "/patients/"
+        String requestedStudyId = req.queryParams("studyId");
+        String validatePath = "api/studies/" + requestedStudyId + "/patients/"
                 + req.params(":patientId");
         String requestUrl = portalDomain + validatePath;
+
+        if (requestedStudyId == null) {
+            System.out.println("No query parameter studyId found - returning false\n");
+            return false;
+        }
 
         WebResource webResource = client.resource(requestUrl);
         WebResource.Builder builder = webResource.getRequestBuilder();
@@ -238,23 +244,25 @@ public final class FhirSpark {
     }
 
     /**
-     * Checks if the session id is authorized to manipulate the clinical data of the patients in the MTB study.
+     * Checks if the user is authorized to manipulate the clinical data of the patients in the requested study.
      *
      * @param req Incoming Java Spark Request
+     + @param studyId query parameter in the request
      * @return Boolean if the session is able to access the data
      */
     private static boolean validateManipulation(Request req) {
         String requestedPatientId = req.params(":patientId");
-        String mtbStudy = settings.getMtbStudy();
+        String requestedStudyId = req.queryParams("studyId");
         String userRoles = req.headers("X-USERROLES");
         String userLoginName = req.headers("X-USERLOGIN");
 
         System.out.println(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
         System.out.println("Manipulation permission request:\nfrom user: " + userLoginName + ", for patientId: "
-            + requestedPatientId + "\nfound header X-USERROLES: " + userRoles);
+            + requestedPatientId + "\nfound header X-USERROLES: " + userRoles
+            + "\nfound query parameter studyId: " + requestedStudyId);
 
-        if (userRoles == null || userRoles.isEmpty()) {
-            System.out.println("Incoming user roles are null or empty - returning false\n");
+        if (userRoles == null || userRoles.isEmpty() || requestedStudyId == null || requestedStudyId.isEmpty()) {
+            System.out.println("Incoming user roles or studyId are null or empty - returning false\n");
             return false;
         }
 
@@ -266,7 +274,7 @@ public final class FhirSpark {
         }
 
         for (String s : roleList) {
-            if (s.equals(mtbStudy) || s.equals(requestedPatientId)) {
+            if (s.equals(requestedStudyId) || s.equals(requestedPatientId)) {
                 System.out.println("permission granted with role: " + s + "\n");
                 return true;
             }
