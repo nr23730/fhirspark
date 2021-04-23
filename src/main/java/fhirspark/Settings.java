@@ -19,7 +19,6 @@ import java.util.List;
     "patientSystem",
     "hgncPath",
     "portalUrl",
-    "mtbStudy",
     "loginRequired",
     "oncokbPath",
     "hl7v2config"
@@ -42,8 +41,6 @@ public final class Settings {
     private String hgncPath;
     @JsonProperty("portalUrl")
     private String portalUrl;
-    @JsonProperty("mtbStudy")
-    private String mtbStudy;
     @JsonProperty("loginRequired")
     private Boolean loginRequired;
     @JsonProperty("oncokbPath")
@@ -129,16 +126,6 @@ public final class Settings {
     @JsonProperty("portalUrl")
     public void setPortalUrl(String portalUrl) {
         this.portalUrl = portalUrl;
-    }
-
-    @JsonProperty("mtbStudy")
-    public String getMtbStudy() {
-        return mtbStudy;
-    }
-
-    @JsonProperty("mtbStudy")
-    public void setMtbStudy(String mtbStudy) {
-        this.mtbStudy = mtbStudy;
     }
 
     @JsonProperty("loginRequired")
