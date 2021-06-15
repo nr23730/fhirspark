@@ -11,7 +11,7 @@ jobs:
 
     services:
       hapiserver:
-        image: hapiproject/hapi:v5.2.1
+        image: hapiproject/hapi:v5.4.1
         ports:
          - 8080:8080
         env:
