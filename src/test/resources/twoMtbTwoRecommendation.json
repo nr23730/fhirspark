@@ -3,48 +3,6 @@
 	"mtbs": [
 		{
 			"author": "anonymousUser1",
-			"date": "2020-05-27",
-			"generalRecommendation": "ghjk2",
-			"id": "mtb_Testpatient22_1590601799440",
-			"mtbState": "PARTIAL",
-			"samples": [
-				"Testpatient_01",
-				"Testpatient_02"
-			],
-			"rebiopsyRecommendation": true,
-			"therapyRecommendations": [
-				{
-					"author": "anonymousUser1",
-					"comment": [
-						"fünf",
-						"sechs",
-						"sieben"
-					],
-					"id": "Testpatient22_1590601827090",
-					"evidenceLevel": "m55a",
-					"reasoning": {
-						"clinicalData": [],
-						"geneticAlterations": [
-							{
-								"alteration": "R248",
-								"entrezGeneId": 7157,
-								"hugoSymbol": "TP53",
-								"chromosome": "10"
-							}
-						]
-					},
-					"references": [],
-					"treatments": [
-						{
-							"name": "Asciminib",
-							"ncit_code": "C114494"
-						}
-					]
-				}
-			]
-		},
-		{
-			"author": "anonymousUser1",
 			"date": "2020-05-20",
 			"generalRecommendation": "asdf1",
 			"id": "mtb_Testpatient22_1590601794804",
@@ -59,16 +17,16 @@
 						"eins",
 						"zwei"
 					],
-					"id": "Testpatient22_1590601800979",
 					"evidenceLevel": "m1a",
+					"id": "Testpatient22_1590601800979",
 					"reasoning": {
 						"clinicalData": [],
 						"geneticAlterations": [
 							{
 								"alteration": "V600E",
+								"chromosome": "13",
 								"entrezGeneId": 673,
-								"hugoSymbol": "BRAF",
-								"chromosome": "13"
+								"hugoSymbol": "BRAF"
 							}
 						]
 					},
@@ -77,6 +35,48 @@
 						{
 							"name": "Afatinib",
 							"ncit_code": "C66940"
+						}
+					]
+				}
+			]
+		},
+		{
+			"author": "anonymousUser1",
+			"date": "2020-05-27",
+			"generalRecommendation": "ghjk2",
+			"id": "mtb_Testpatient22_1590601799440",
+			"mtbState": "PARTIAL",
+			"rebiopsyRecommendation": true,
+			"samples": [
+				"Testpatient_01",
+				"Testpatient_02"
+			],
+			"therapyRecommendations": [
+				{
+					"author": "anonymousUser1",
+					"comment": [
+						"fünf",
+						"sechs",
+						"sieben"
+					],
+					"evidenceLevel": "m55a",
+					"id": "Testpatient22_1590601827090",
+					"reasoning": {
+						"clinicalData": [],
+						"geneticAlterations": [
+							{
+								"alteration": "R248",
+								"chromosome": "10",
+								"entrezGeneId": 7157,
+								"hugoSymbol": "TP53"
+							}
+						]
+					},
+					"references": [],
+					"treatments": [
+						{
+							"name": "Asciminib",
+							"ncit_code": "C114494"
 						}
 					]
 				}

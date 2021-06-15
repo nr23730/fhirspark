@@ -3,54 +3,15 @@
 	"mtbs": [
 		{
 			"author": "anonymousUser1",
-			"date": "2020-05-20",
-			"generalRecommendation": "asdf1",
-			"id": "mtb_Testpatient23_1590601794804",
-			"mtbState": "FINAL",
-			"samples": [
-				"Testpatient_01"
-			],
-			"therapyRecommendations": [
-				{
-					"author": "anonymousUser1",
-					"comment": [
-						"eins",
-						"zwei"
-					],
-					"id": "Testpatient23_1590601800979",
-					"evidenceLevel": "m1a",
-					"reasoning": {
-						"clinicalData": [],
-						"geneticAlterations": [
-							{
-								"alteration": "V600E",
-								"entrezGeneId": 673,
-								"hugoSymbol": "BRAF",
-								"chromosome": "2"
-							}
-						]
-					},
-					"references": [],
-					"treatments": [
-						{
-							"name": "Afatinib",
-							"ncit_code": "C66940"
-						}
-					]
-				}
-			]
-		},
-		{
-			"author": "anonymousUser1",
 			"date": "2020-05-27",
 			"generalRecommendation": "ghjk2",
 			"id": "mtb_Testpatient23_1590601799440",
 			"mtbState": "PRELIMINARY",
+			"rebiopsyRecommendation": true,
 			"samples": [
 				"Testpatient_01",
 				"Testpatient_02"
 			],
-			"rebiopsyRecommendation": true,
 			"therapyRecommendations": [
 				{
 					"author": "anonymousUser1",
@@ -65,15 +26,15 @@
 						"geneticAlterations": [
 							{
 								"alteration": "S2215F",
+								"chromosome": "9",
 								"entrezGeneId": 2475,
-								"hugoSymbol": "MTOR",
-								"chromosome": "9"
+								"hugoSymbol": "MTOR"
 							},
 							{
 								"alteration": "G12C",
+								"chromosome": "8",
 								"entrezGeneId": 3845,
-								"hugoSymbol": "KRAS",
-								"chromosome": "8"
+								"hugoSymbol": "KRAS"
 							}
 						]
 					},
@@ -92,16 +53,16 @@
 						"sechs",
 						"sieben"
 					],
-					"id": "Testpatient23_1590601827090",
 					"evidenceLevel": "m55a",
+					"id": "Testpatient23_1590601827090",
 					"reasoning": {
 						"clinicalData": [],
 						"geneticAlterations": [
 							{
 								"alteration": "R248",
+								"chromosome": "1",
 								"entrezGeneId": 7157,
-								"hugoSymbol": "TP53",
-								"chromosome": "1"
+								"hugoSymbol": "TP53"
 							}
 						]
 					},
@@ -110,6 +71,45 @@
 						{
 							"name": "Asciminib",
 							"ncit_code": "C114494"
+						}
+					]
+				}
+			]
+		},
+		{
+			"author": "anonymousUser1",
+			"date": "2020-05-20",
+			"generalRecommendation": "asdf1",
+			"id": "mtb_Testpatient23_1590601794804",
+			"mtbState": "FINAL",
+			"samples": [
+				"Testpatient_01"
+			],
+			"therapyRecommendations": [
+				{
+					"author": "anonymousUser1",
+					"comment": [
+						"eins",
+						"zwei"
+					],
+					"evidenceLevel": "m1a",
+					"id": "Testpatient23_1590601800979",
+					"reasoning": {
+						"clinicalData": [],
+						"geneticAlterations": [
+							{
+								"alteration": "V600E",
+								"chromosome": "2",
+								"entrezGeneId": 673,
+								"hugoSymbol": "BRAF"
+							}
+						]
+					},
+					"references": [],
+					"treatments": [
+						{
+							"name": "Afatinib",
+							"ncit_code": "C66940"
 						}
 					]
 				}
