@@ -132,7 +132,8 @@ public class JsonFhirMapper {
 
         Bundle bDiagnosticReports = (Bundle) client.search().forResource(DiagnosticReport.class)
                 .where(new ReferenceClientParam("subject").hasId(harmonizeId(fhirPatient))).prettyPrint()
-                .include(DiagnosticReport.INCLUDE_RESULT.asRecursive()).execute();
+                .include(DiagnosticReport.INCLUDE_RESULT.asRecursive())
+                .include(DiagnosticReport.INCLUDE_SPECIMEN.asRecursive()).execute();
 
         List<BundleEntryComponent> diagnosticReports = bDiagnosticReports.getEntry();
 
@@ -415,8 +416,14 @@ public class JsonFhirMapper {
                 diagnosticReport.addExtension(ex);
             }
 
-            mtb.getSamples().forEach(sample -> diagnosticReport
-                    .addSpecimen(new Reference(specimenAdapter.process(fhirPatient, sample))));
+            mtb.getSamples().forEach(sample -> {
+                Specimen s = specimenAdapter.process(fhirPatient, sample);
+                bundle.addEntry().setFullUrl(s.getIdElement().getValue()).setResource(s)
+                        .getRequest().setUrl("Specimen?identifier=https://cbioportal.org/specimen/|" + sample)
+                        .setIfNoneExist("identifier=identifier=https://cbioportal.org/specimen/|" + sample)
+                        .setMethod(Bundle.HTTPVerb.PUT);
+                diagnosticReport.addSpecimen(new Reference(s));
+            });
 
             for (TherapyRecommendation therapyRecommendation : mtb.getTherapyRecommendations()) {
                 Observation efficacyObservation = new Observation();
@@ -455,6 +462,11 @@ public class JsonFhirMapper {
                         Specimen s = null;
                         if (clinical.getSampleId() != null && clinical.getSampleId().length() > 0) {
                             s = specimenAdapter.process(fhirPatient, clinical.getSampleId());
+                            bundle.addEntry().setFullUrl(s.getIdElement().getValue()).setResource(s)
+                                .getRequest().setUrl("Specimen?identifier=https://cbioportal.org/specimen/|"
+                                        + clinical.getSampleId())
+                                .setIfNoneExist("identifier=identifier=https://cbioportal.org/specimen/|"
+                                        + clinical.getSampleId()).setMethod(Bundle.HTTPVerb.PUT);
                         }
                         try {
                             Method m = Class.forName("fhirspark.adapter.clinicaldata." + clinical.getAttributeId())
