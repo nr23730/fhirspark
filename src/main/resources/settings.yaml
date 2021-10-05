@@ -12,3 +12,7 @@ hl7v2config:
  - sendv2: ${FHIRSPARK_SENDHL7V2:-false}
    server: ${FHIRSPARK_HL7V2SERVER:-localhost}
    port: ${FHIRSPARK_HL7V2PORT:-1011}
+regex:
+  -
+    cbio: ${FHIRSPARK_REGEX_CBIO:-/}
+    his: ${FHIRSPARK_REGEX_HIS:-/}

@@ -171,7 +171,11 @@ public class JsonFhirMapper {
             // REBIOPSY HERE
             mtb.getSamples().clear();
             for (Reference specimen : diagnosticReport.getSpecimen()) {
-                mtb.getSamples().add(((Specimen) specimen.getResource()).getIdentifierFirstRep().getValue());
+                String sampleId = ((Specimen) specimen.getResource()).getIdentifierFirstRep().getValue();
+                for(Regex r : Settings.getRegex()) {
+                    sampleId = sampleId.replaceAll(r.getHis(), r.getCbio());
+                }
+                mtb.getSamples().add(sampleId);
             }
 
             for (Reference reference : diagnosticReport.getResult()) {
@@ -204,7 +208,11 @@ public class JsonFhirMapper {
                             ClinicalDatum cd = new ClinicalDatum().withAttributeName(attr[0]).withValue(attr[1]);
                             if (obs.getSpecimen().getResource() != null) {
                                 Specimen specimen = (Specimen) obs.getSpecimen().getResource();
-                                cd.setSampleId(specimen.getIdentifierFirstRep().getValue());
+                                String sampleId = specimen.getIdentifierFirstRep().getValue();
+                                for(Regex r : Settings.getRegex()) {
+                                    sampleId = sampleId.replaceAll(r.getHis(), r.getCbio());
+                                }
+                                cd.setSampleId(sampleId);
                             }
                             therapyRecommendation.getReasoning().getClinicalData()
                                     .add(cd);
@@ -417,10 +425,14 @@ public class JsonFhirMapper {
             }
 
             mtb.getSamples().forEach(sample -> {
-                Specimen s = specimenAdapter.process(fhirPatient, sample);
+                String sampleId = sample;
+                for(Regex r : Settings.getRegex()) {
+                    sampleId = sampleId.replaceAll(r.getCbio(), r.getHis());
+                }
+                Specimen s = specimenAdapter.process(fhirPatient, sampleId);
                 bundle.addEntry().setFullUrl(s.getIdElement().getValue()).setResource(s)
-                        .getRequest().setUrl("Specimen?identifier=https://cbioportal.org/specimen/|" + sample)
-                        .setIfNoneExist("identifier=identifier=https://cbioportal.org/specimen/|" + sample)
+                        .getRequest().setUrl("Specimen?identifier=https://cbioportal.org/specimen/|" + sampleId)
+                        .setIfNoneExist("identifier=identifier=https://cbioportal.org/specimen/|" + sampleId)
                         .setMethod(Bundle.HTTPVerb.PUT);
                 diagnosticReport.addSpecimen(new Reference(s));
             });
@@ -461,12 +473,16 @@ public class JsonFhirMapper {
                     therapyRecommendation.getReasoning().getClinicalData().forEach(clinical -> {
                         Specimen s = null;
                         if (clinical.getSampleId() != null && clinical.getSampleId().length() > 0) {
-                            s = specimenAdapter.process(fhirPatient, clinical.getSampleId());
+                            String sampleId = clinical.getSampleId();
+                            for(Regex r : Settings.getRegex()) {
+                                sampleId = sampleId.replaceAll(r.getCbio(), r.getHis());
+                            }
+                            s = specimenAdapter.process(fhirPatient, sampleId);
                             bundle.addEntry().setFullUrl(s.getIdElement().getValue()).setResource(s)
                                 .getRequest().setUrl("Specimen?identifier=https://cbioportal.org/specimen/|"
-                                        + clinical.getSampleId())
+                                        + sampleId)
                                 .setIfNoneExist("identifier=identifier=https://cbioportal.org/specimen/|"
-                                        + clinical.getSampleId()).setMethod(Bundle.HTTPVerb.PUT);
+                                        + sampleId).setMethod(Bundle.HTTPVerb.PUT);
                         }
                         try {
                             Method m = Class.forName("fhirspark.adapter.clinicaldata." + clinical.getAttributeId())
