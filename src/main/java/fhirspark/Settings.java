@@ -49,7 +49,7 @@ public final class Settings {
     @JsonProperty("hl7v2config")
     private List<Hl7v2config> hl7v2config;
     @JsonProperty("regex")
-    private static List<Regex> regex;
+    private List<Regex> regex;
 
     @JsonProperty("port")
     public Integer getPort() {
@@ -161,7 +161,8 @@ public final class Settings {
         this.hl7v2config = hl7v2config;
     }
 
-    public static List<Regex> getRegex() {
+    @JsonProperty("regex")
+    public List<Regex> getRegex() {
         return regex;
     }
 

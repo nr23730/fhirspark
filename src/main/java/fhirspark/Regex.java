@@ -1,5 +1,8 @@
 package fhirspark;
 
+/**
+ * Regular expressions to convert cBioPortal IDs to HIS IDs.
+ */
 public class Regex {
 
     private String cbio;
@@ -20,5 +23,5 @@ public class Regex {
     public void setHis(String his) {
         this.his = his;
     }
-    
+
 }
