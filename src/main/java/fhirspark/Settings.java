@@ -21,7 +21,8 @@ import java.util.List;
     "portalUrl",
     "loginRequired",
     "oncokbPath",
-    "hl7v2config"
+    "hl7v2config",
+    "regex"
 })
 public final class Settings {
 
@@ -47,6 +48,8 @@ public final class Settings {
     private String oncokbPath;
     @JsonProperty("hl7v2config")
     private List<Hl7v2config> hl7v2config;
+    @JsonProperty("regex")
+    private List<Regex> regex;
 
     @JsonProperty("port")
     public Integer getPort() {
@@ -156,6 +159,16 @@ public final class Settings {
     @JsonProperty("hl7v2config")
     public void setHl7v2config(List<Hl7v2config> hl7v2config) {
         this.hl7v2config = hl7v2config;
+    }
+
+    @JsonProperty("regex")
+    public List<Regex> getRegex() {
+        return regex;
+    }
+
+    @JsonProperty("regex")
+    public void setRegex(List<Regex> newRegex) {
+        regex = newRegex;
     }
 
 }

@@ -89,6 +89,7 @@ public class JsonFhirMapper {
     private static String patientUri;
     private static String therapyRecommendationUri;
     private static String mtbUri;
+    private static List<Regex> regex;
 
     private FhirContext ctx = FhirContext.forR4();
     private IGenericClient client;
@@ -113,6 +114,7 @@ public class JsonFhirMapper {
         patientUri = settings.getPatientSystem();
         mtbUri = settings.getDiagnosticReportSystem();
         therapyRecommendationUri = settings.getObservationSystem();
+        regex = settings.getRegex();
     }
 
     /**
@@ -171,7 +173,8 @@ public class JsonFhirMapper {
             // REBIOPSY HERE
             mtb.getSamples().clear();
             for (Reference specimen : diagnosticReport.getSpecimen()) {
-                mtb.getSamples().add(((Specimen) specimen.getResource()).getIdentifierFirstRep().getValue());
+                mtb.getSamples().add(
+                        applyRegexToCbioportal(((Specimen) specimen.getResource()).getIdentifierFirstRep().getValue()));
             }
 
             for (Reference reference : diagnosticReport.getResult()) {
@@ -204,7 +207,7 @@ public class JsonFhirMapper {
                             ClinicalDatum cd = new ClinicalDatum().withAttributeName(attr[0]).withValue(attr[1]);
                             if (obs.getSpecimen().getResource() != null) {
                                 Specimen specimen = (Specimen) obs.getSpecimen().getResource();
-                                cd.setSampleId(specimen.getIdentifierFirstRep().getValue());
+                                cd.setSampleId(applyRegexToCbioportal(specimen.getIdentifierFirstRep().getValue()));
                             }
                             therapyRecommendation.getReasoning().getClinicalData()
                                     .add(cd);
@@ -417,10 +420,11 @@ public class JsonFhirMapper {
             }
 
             mtb.getSamples().forEach(sample -> {
-                Specimen s = specimenAdapter.process(fhirPatient, sample);
+                String sampleId = applyRegexFromCbioportal(sample);
+                Specimen s = specimenAdapter.process(fhirPatient, sampleId);
                 bundle.addEntry().setFullUrl(s.getIdElement().getValue()).setResource(s)
-                        .getRequest().setUrl("Specimen?identifier=https://cbioportal.org/specimen/|" + sample)
-                        .setIfNoneExist("identifier=identifier=https://cbioportal.org/specimen/|" + sample)
+                        .getRequest().setUrl("Specimen?identifier=https://cbioportal.org/specimen/|" + sampleId)
+                        .setIfNoneExist("identifier=identifier=https://cbioportal.org/specimen/|" + sampleId)
                         .setMethod(Bundle.HTTPVerb.PUT);
                 diagnosticReport.addSpecimen(new Reference(s));
             });
@@ -461,12 +465,13 @@ public class JsonFhirMapper {
                     therapyRecommendation.getReasoning().getClinicalData().forEach(clinical -> {
                         Specimen s = null;
                         if (clinical.getSampleId() != null && clinical.getSampleId().length() > 0) {
-                            s = specimenAdapter.process(fhirPatient, clinical.getSampleId());
+                            String sampleId = applyRegexFromCbioportal(clinical.getSampleId());
+                            s = specimenAdapter.process(fhirPatient, sampleId);
                             bundle.addEntry().setFullUrl(s.getIdElement().getValue()).setResource(s)
                                 .getRequest().setUrl("Specimen?identifier=https://cbioportal.org/specimen/|"
-                                        + clinical.getSampleId())
+                                        + sampleId)
                                 .setIfNoneExist("identifier=identifier=https://cbioportal.org/specimen/|"
-                                        + clinical.getSampleId()).setMethod(Bundle.HTTPVerb.PUT);
+                                        + sampleId).setMethod(Bundle.HTTPVerb.PUT);
                         }
                         try {
                             Method m = Class.forName("fhirspark.adapter.clinicaldata." + clinical.getAttributeId())
@@ -641,6 +646,22 @@ public class JsonFhirMapper {
         } else {
             return resource.getIdElement().getResourceType() + "/" + resource.getIdElement().getIdPart();
         }
+    }
+
+    private String applyRegexToCbioportal(String input) {
+        String output = input;
+        for (Regex r : regex) {
+            output = output.replaceAll(r.getHis(), r.getCbio());
+        }
+        return output;
+    }
+
+    private String applyRegexFromCbioportal(String input) {
+        String output = input;
+        for (Regex r : regex) {
+            output = output.replaceAll(r.getCbio(), r.getHis());
+        }
+        return output;
     }
 
     /**
