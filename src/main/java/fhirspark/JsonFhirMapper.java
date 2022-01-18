@@ -252,8 +252,12 @@ public class JsonFhirMapper {
 
                         ob.getComponent().forEach(result -> {
                             if (result.getCode().getCodingFirstRep().getCode().equals("93044-6")) {
-                                therapyRecommendation.setEvidenceLevel(
-                                        result.getValueCodeableConcept().getCodingFirstRep().getCode());
+                                String[] evidence = result.getValueCodeableConcept().getCodingFirstRep().getCode()
+                                        .split(" ");
+                                therapyRecommendation.setEvidenceLevel(evidence[0]);
+                                if (evidence.length > 1) {
+                                    therapyRecommendation.setEvidenceLevelExtension(evidence[1]);
+                                }
                             }
                             if (result.getCode().getCodingFirstRep().getCode().equals("51963-7")) {
                                 therapyRecommendation.getTreatments().add(new Treatment()
@@ -451,7 +455,10 @@ public class JsonFhirMapper {
                 ObservationComponentComponent evidenceComponent = efficacyObservation.addComponent();
                 evidenceComponent.getCode().addCoding(new Coding(LOINC_URI, "93044-6", "Level of evidence"));
                 evidenceComponent.getValueCodeableConcept().addCoding(new Coding("https://cbioportal.org/evidence/BW/",
-                        therapyRecommendation.getEvidenceLevel(), therapyRecommendation.getEvidenceLevel()));
+                        therapyRecommendation.getEvidenceLevel() + " "
+                                + therapyRecommendation.getEvidenceLevelExtension(),
+                        therapyRecommendation.getEvidenceLevel() + " "
+                                + therapyRecommendation.getEvidenceLevelExtension()));
 
                 efficacyObservation.addIdentifier().setSystem(therapyRecommendationUri)
                         .setValue(therapyRecommendation.getId());
@@ -768,8 +775,11 @@ public class JsonFhirMapper {
 
             ob.getComponent().forEach(result -> {
                 if (result.getCode().getCodingFirstRep().getCode().equals("93044-6")) {
-                    therapyRecommendation
-                            .setEvidenceLevel(result.getValueCodeableConcept().getCodingFirstRep().getCode());
+                    String[] evidence = result.getValueCodeableConcept().getCodingFirstRep().getCode().split(" ");
+                    therapyRecommendation.setEvidenceLevel(evidence[0]);
+                    if (evidence.length > 1) {
+                        therapyRecommendation.setEvidenceLevel(evidence[1]);
+                    }
                 }
                 if (result.getCode().getCodingFirstRep().getCode().equals("51963-7")) {
                     therapyRecommendation.getTreatments()

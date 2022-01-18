@@ -11,6 +11,7 @@ import java.util.List;
     "author",
     "comment",
     "evidenceLevel",
+    "evidenceLevelExtension",
     "id",
     "reasoning",
     "references",
@@ -24,6 +25,8 @@ public class TherapyRecommendation {
     private List<String> comment;
     @JsonProperty("evidenceLevel")
     private String evidenceLevel;
+    @JsonProperty("evidenceLevelExtension")
+    private String evidenceLevelExtension;
     @JsonProperty("id")
     private String id;
     @JsonProperty("reasoning")
@@ -75,6 +78,22 @@ public class TherapyRecommendation {
 
     public TherapyRecommendation withEvidenceLevel(String evidenceLevel) {
         this.evidenceLevel = evidenceLevel;
+        return this;
+    }
+
+    @JsonProperty("evidenceLevelExtension")
+    public String getEvidenceLevelExtension() {
+        return evidenceLevelExtension;
+    }
+
+    @JsonProperty("evidenceLevelExtension")
+    public void setEvidenceLevelExtension(String evidenceLevelExtension) {
+        this.evidenceLevelExtension = evidenceLevelExtension;
+    }
+
+    @JsonProperty("evidenceLevelExtension")
+    public TherapyRecommendation withEvidenceLevelExtensio(String evidenceLevelExtension) {
+        this.evidenceLevelExtension = evidenceLevelExtension;
         return this;
     }
 
