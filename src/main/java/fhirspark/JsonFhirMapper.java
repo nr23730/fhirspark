@@ -28,6 +28,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -258,6 +259,11 @@ public class JsonFhirMapper {
                                 if (evidence.length > 1) {
                                     therapyRecommendation.setEvidenceLevelExtension(evidence[1]);
                                 }
+                                if (evidence.length > 2) {
+                                    therapyRecommendation.setEvidenceLevelM3Text(
+                                            String.join(" ", Arrays.asList(evidence).subList(2, evidence.length))
+                                                    .replace("(", "").replace(")", ""));
+                                }
                             }
                             if (result.getCode().getCodingFirstRep().getCode().equals("51963-7")) {
                                 therapyRecommendation.getTreatments().add(new Treatment()
@@ -454,11 +460,14 @@ public class JsonFhirMapper {
                         .addCoding(new Coding(LOINC_URI, "51961-1", "Genetic variation's effect on drug efficacy"));
                 ObservationComponentComponent evidenceComponent = efficacyObservation.addComponent();
                 evidenceComponent.getCode().addCoding(new Coding(LOINC_URI, "93044-6", "Level of evidence"));
+                String m3Text = therapyRecommendation.getEvidenceLevelM3Text() != null
+                        ? " (" + therapyRecommendation.getEvidenceLevelM3Text() + ")"
+                        : "";
                 evidenceComponent.getValueCodeableConcept().addCoding(new Coding("https://cbioportal.org/evidence/BW/",
                         therapyRecommendation.getEvidenceLevel() + " "
-                                + therapyRecommendation.getEvidenceLevelExtension(),
+                                + therapyRecommendation.getEvidenceLevelExtension() + m3Text,
                         therapyRecommendation.getEvidenceLevel() + " "
-                                + therapyRecommendation.getEvidenceLevelExtension()));
+                                + therapyRecommendation.getEvidenceLevelExtension() + m3Text));
 
                 efficacyObservation.addIdentifier().setSystem(therapyRecommendationUri)
                         .setValue(therapyRecommendation.getId());
@@ -778,7 +787,12 @@ public class JsonFhirMapper {
                     String[] evidence = result.getValueCodeableConcept().getCodingFirstRep().getCode().split(" ");
                     therapyRecommendation.setEvidenceLevel(evidence[0]);
                     if (evidence.length > 1) {
-                        therapyRecommendation.setEvidenceLevel(evidence[1]);
+                        therapyRecommendation.setEvidenceLevelExtension(evidence[1]);
+                    }
+                    if (evidence.length > 2) {
+                        therapyRecommendation.setEvidenceLevelM3Text(
+                            String.join(" ", Arrays.asList(evidence).subList(2, evidence.length))
+                                    .replace("(", "").replace(")", ""));
                     }
                 }
                 if (result.getCode().getCodingFirstRep().getCode().equals("51963-7")) {
