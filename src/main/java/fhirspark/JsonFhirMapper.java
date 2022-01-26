@@ -61,6 +61,8 @@ import org.hl7.fhir.r4.model.Reference;
 import org.hl7.fhir.r4.model.RelatedArtifact;
 import org.hl7.fhir.r4.model.RelatedArtifact.RelatedArtifactType;
 import org.hl7.fhir.r4.model.Resource;
+import org.hl7.fhir.r4.model.ServiceRequest;
+import org.hl7.fhir.r4.model.ServiceRequest.ServiceRequestStatus;
 import org.hl7.fhir.r4.model.Specimen;
 import org.hl7.fhir.r4.model.Task;
 import org.hl7.fhir.r4.model.Task.TaskIntent;
@@ -90,6 +92,7 @@ public class JsonFhirMapper {
     private static String patientUri;
     private static String therapyRecommendationUri;
     private static String mtbUri;
+    private static String serviceRequestUri;
     private static List<Regex> regex;
 
     private FhirContext ctx = FhirContext.forR4();
@@ -115,6 +118,7 @@ public class JsonFhirMapper {
         patientUri = settings.getPatientSystem();
         mtbUri = settings.getDiagnosticReportSystem();
         therapyRecommendationUri = settings.getObservationSystem();
+        serviceRequestUri = settings.getServiceRequestSystem();
         regex = settings.getRegex();
     }
 
@@ -135,6 +139,7 @@ public class JsonFhirMapper {
 
         Bundle bDiagnosticReports = (Bundle) client.search().forResource(DiagnosticReport.class)
                 .where(new ReferenceClientParam("subject").hasId(harmonizeId(fhirPatient))).prettyPrint()
+                .include(DiagnosticReport.INCLUDE_BASED_ON)
                 .include(DiagnosticReport.INCLUDE_RESULT.asRecursive())
                 .include(DiagnosticReport.INCLUDE_SPECIMEN.asRecursive()).execute();
 
@@ -149,6 +154,11 @@ public class JsonFhirMapper {
             Mtb mtb = new Mtb().withTherapyRecommendations(new ArrayList<TherapyRecommendation>())
                     .withSamples(new ArrayList<String>());
             mtbs.add(mtb);
+
+            if (diagnosticReport.hasBasedOn()) {
+                mtb.setOrderId(((ServiceRequest) diagnosticReport.getBasedOnFirstRep().getResource())
+                        .getIdentifierFirstRep().getValue());
+            }
 
             if (diagnosticReport.hasPerformer()) {
                 Bundle b2 = (Bundle) client.search().forResource(Practitioner.class).where(new TokenClientParam("_id")
@@ -386,6 +396,23 @@ public class JsonFhirMapper {
             carePlan.setStatus(CarePlanStatus.ACTIVE);
             carePlan.setAuthor(getOrCreatePractitioner(bundle, mtb.getAuthor()));
             carePlan.getSupportingInfo().add(new Reference(diagnosticReport));
+
+            if (mtb.getOrderId() != null && !mtb.getOrderId().isEmpty()) {
+                ServiceRequest sr = new ServiceRequest();
+                sr.setId(IdType.newRandomUuid());
+                sr.addIdentifier().setSystem(serviceRequestUri).setValue(mtb.getOrderId());
+                sr.setSubject(fhirPatient);
+                sr.setStatus(
+                    DiagnosticReportStatus.fromCode(mtb.getMtbState().toLowerCase())
+                            .equals(DiagnosticReportStatus.FINAL)
+                        ? ServiceRequestStatus.COMPLETED
+                        : ServiceRequestStatus.DRAFT);
+                bundle.addEntry().setFullUrl(sr.getIdElement().getValue()).setResource(sr).getRequest()
+                .setUrl("ServiceRequest?identifier=" + serviceRequestUri + "|" + mtb.getOrderId())
+                .setIfNoneExist("identifier=" + serviceRequestUri
+                        + "|" + mtb.getOrderId()).setMethod(Bundle.HTTPVerb.PUT);
+                diagnosticReport.addBasedOn(new Reference(sr));
+            }
 
             diagnosticReport.addPerformer(getOrCreatePractitioner(bundle, mtb.getAuthor()));
 

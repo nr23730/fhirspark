@@ -14,6 +14,7 @@ import java.util.List;
     "geneticCounselingRecommendation",
     "id",
     "mtbState",
+    "orderId",
     "rebiopsyRecommendation",
     "samples",
     "therapyRecommendations"
@@ -32,6 +33,8 @@ public class Mtb {
     private String id;
     @JsonProperty("mtbState")
     private String mtbState;
+    @JsonProperty("orderId")
+    private String orderId;
     @JsonProperty("rebiopsyRecommendation")
     private Boolean rebiopsyRecommendation;
     @JsonProperty("samples")
@@ -126,6 +129,21 @@ public class Mtb {
 
     public Mtb withMtbState(String mtbState) {
         this.mtbState = mtbState;
+        return this;
+    }
+
+    @JsonProperty("orderId")
+    public String getOrderId() {
+        return orderId;
+    }
+  
+    @JsonProperty("orderId")
+    public void setOrderId(String orderId) {
+        this.orderId = orderId;
+    }
+  
+    public Mtb withOrderId(String orderId) {
+        this.orderId = orderId;
         return this;
     }
 

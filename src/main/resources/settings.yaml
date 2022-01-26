@@ -4,6 +4,7 @@ specimenSystem: ${FHIRSPARK_SPECIMENSYSTEM:-https://cbioportal.org/specimen/}
 diagnosticReportSystem: ${FHIRSPARK_DIAGNOSTICREPORTSYSTEM:-https://cbioportal.org/mtb/}
 observationSystem: ${FHIRSPARK_OBSERVATIONSYSTEM:-https://cbioportal.org/therapyrecommendation/}
 patientSystem: ${FHIRSPARK_PATIENTSYSTEM:-https://cbioportal.org/patient/}
+serviceRequestSystem: ${FHIRSPARK_SERVICEREQUESTSYSTEM:-https://cbioportal.org/servicerequest/}
 portalUrl: ${FHIRSPARK_PORTALURL:-http://localhost:8080/}
 loginRequired: ${FHIRSPARK_LOGINREQUIRED:-false}
 hgncPath: ${FHIRSPARK_HGNCPATH:-hgnc.csv}
