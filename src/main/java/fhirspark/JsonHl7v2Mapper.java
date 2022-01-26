@@ -134,8 +134,8 @@ public class JsonHl7v2Mapper {
                     });
                 }
 
-                addEvidenceLevel(oru, result, orderNumber, therapyRecommendation.getEvidenceLevel());
-
+                addEvidenceLevel(oru, result, orderNumber, therapyRecommendation.getEvidenceLevel() + " "
+                        + therapyRecommendation.getEvidenceLevelExtension());
                 therapyRecommendation.getReferences()
                         .forEach(reference -> addReference(oru, result, orderNumber, reference));
 
