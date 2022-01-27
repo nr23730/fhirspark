@@ -10,9 +10,6 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <junit.version>5.8.2</junit.version>
         <maven-enforcer-plugin.version>3.0.0</maven-enforcer-plugin.version>
-        <maven-checkstyle-plugin.version>3.1.2</maven-checkstyle-plugin.version>
-        <checkstyle.version>8.41.1</checkstyle.version>
-        <checkstyle-rules.version>4.8.0</checkstyle-rules.version>
         <maven-surefire-plugin.version>3.0.0-M5</maven-surefire-plugin.version>
         <maven-javadoc-plugin.version>3.3.1</maven-javadoc-plugin.version>
         <coveralls-maven-plugin.version>4.3.0</coveralls-maven-plugin.version>
@@ -120,18 +117,18 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
-                <version>${maven-checkstyle-plugin.version}</version>
+                <version>3.1.2</version>
                 <dependencies>
-                    <dependency>
-                        <groupId>com.puppycrawl.tools</groupId>
-                        <artifactId>checkstyle</artifactId>
-                        <version>${checkstyle.version}</version>
-                    </dependency>
-                    <dependency>
-                        <groupId>com.github.ngeor</groupId>
-                        <artifactId>checkstyle-rules</artifactId>
-                        <version>${checkstyle-rules.version}</version>
-                    </dependency>
+                  <dependency>
+                    <groupId>com.puppycrawl.tools</groupId>
+                    <artifactId>checkstyle</artifactId>
+                    <version>9.2.1</version>
+                  </dependency>
+                  <dependency>
+                    <groupId>com.github.ngeor</groupId>
+                    <artifactId>checkstyle-rules</artifactId>
+                    <version>4.9.3</version>
+                  </dependency>
                 </dependencies>
                 <configuration>
                     <configLocation>com/github/ngeor/checkstyle.xml</configLocation>
@@ -141,15 +138,15 @@
                     <suppressionsFileExpression>checkstyle.suppressions.file</suppressionsFileExpression>
                 </configuration>
                 <executions>
-                    <execution>
-                        <id>checkstyle</id>
-                        <phase>validate</phase>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
+                  <execution>
+                    <id>checkstyle</id>
+                    <phase>validate</phase>
+                    <goals>
+                      <goal>check</goal>
+                    </goals>
+                  </execution>
                 </executions>
-            </plugin>
+              </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
