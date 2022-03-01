@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Build the Docker image
       run: docker build . --file Dockerfile --tag ${{ secrets.DOCKER_URL }}/cbioportal/fhirspark:latest --label maintainer="Niklas Reimer <${{ secrets.EMAIL }}>"
     - name: Login to Docker registry
