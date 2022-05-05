@@ -587,6 +587,9 @@ public class JsonFhirMapper {
                                 .addCoding(new Coding(LOINC_URI, "LA26421-0", "Consider alternative medication"));
                         medicationChange.setFocus(new Reference(ms));
                         String ncit = ms.getMedicationCodeableConcept().getCodingFirstRep().getCode();
+                        if (ncit == null) {
+                            ncit = treatment.getName();
+                        }
                         medicationChange.addIdentifier(new Identifier().setSystem(NCIT_URI).setValue(ncit));
 
                         Extension ex = new Extension().setUrl(RECOMMENDEDACTION_URI);
