@@ -831,7 +831,7 @@ public class JsonFhirMapper {
             });
 
             ob.getDerivedFrom().forEach(reference1 -> {
-                if(reference1.getResource() == null) {
+                if (reference1.getResource() == null) {
                     return;
                 }
                 GeneticAlteration g = new GeneticAlteration();
