@@ -6,8 +6,6 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
 
@@ -48,12 +46,12 @@ public class JsonFhirMapperTest {
         }
     }
 
-    @BeforeEach
-    public void prepare(TestInfo testInfo) {
-        System.out.println(testInfo.getTestMethod().get().getName().replace("Test", "") + ".json");
+    @Test
+    public void oneMtbZeroRecommendationTest() {
+        System.out.println("oneMtbZeroRecommendation.json");
         try {
             inputBytes = ClassLoader
-                    .getSystemResourceAsStream(testInfo.getTestMethod().get().getName().replace("Test", "") + ".json")
+                    .getSystemResourceAsStream("oneMtbZeroRecommendation.json")
                     .readAllBytes();
             inputObject = objectMapper.readValue(inputBytes, CbioportalRest.class);
             jfm.addOrEditMtb(inputObject.getId(), inputObject.getMtbs());
@@ -65,27 +63,83 @@ public class JsonFhirMapperTest {
     }
 
     @Test
-    public void oneMtbZeroRecommendationTest() {
-    }
-
-    @Test
     public void oneMtbOneRecommendationTest() {
+        System.out.println("oneMtbOneRecommendation.json");
+        try {
+            inputBytes = ClassLoader
+                    .getSystemResourceAsStream("oneMtbOneRecommendation.json")
+                    .readAllBytes();
+            inputObject = objectMapper.readValue(inputBytes, CbioportalRest.class);
+            jfm.addOrEditMtb(inputObject.getId(), inputObject.getMtbs());
+            assertEquals(objectMapper.readTree(inputBytes), objectMapper.readTree(jfm.toJson(inputObject.getId())));
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
 
     @Test
     public void oneMtbTwoRecommendationTest() {
+        System.out.println("oneMtbTwoRecommendationTest.json");
+        try {
+            inputBytes = ClassLoader
+                    .getSystemResourceAsStream("oneMtbTwoRecommendationTest.json")
+                    .readAllBytes();
+            inputObject = objectMapper.readValue(inputBytes, CbioportalRest.class);
+            jfm.addOrEditMtb(inputObject.getId(), inputObject.getMtbs());
+            assertEquals(objectMapper.readTree(inputBytes), objectMapper.readTree(jfm.toJson(inputObject.getId())));
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
 
     @Test
     public void twoMtbTwoRecommendationTest() {
+        System.out.println("twoMtbTwoRecommendationTest.json");
+        try {
+            inputBytes = ClassLoader
+                    .getSystemResourceAsStream("twoMtbTwoRecommendationTest.json")
+                    .readAllBytes();
+            inputObject = objectMapper.readValue(inputBytes, CbioportalRest.class);
+            jfm.addOrEditMtb(inputObject.getId(), inputObject.getMtbs());
+            assertEquals(objectMapper.readTree(inputBytes), objectMapper.readTree(jfm.toJson(inputObject.getId())));
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
 
     @Test
     public void twoMtbThreeRecommendationTest() {
+        System.out.println("twoMtbThreeRecommendationTest.json");
+        try {
+            inputBytes = ClassLoader
+                    .getSystemResourceAsStream("twoMtbThreeRecommendationTest.json")
+                    .readAllBytes();
+            inputObject = objectMapper.readValue(inputBytes, CbioportalRest.class);
+            jfm.addOrEditMtb(inputObject.getId(), inputObject.getMtbs());
+            assertEquals(objectMapper.readTree(inputBytes), objectMapper.readTree(jfm.toJson(inputObject.getId())));
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
 
     @Test
     public void oneAlterationTwoRecommendationTest() {
+        System.out.println("oneAlterationTwoRecommendationTest.json");
+        try {
+            inputBytes = ClassLoader
+                    .getSystemResourceAsStream("oneAlterationTwoRecommendationTest.json")
+                    .readAllBytes();
+            inputObject = objectMapper.readValue(inputBytes, CbioportalRest.class);
+            jfm.addOrEditMtb(inputObject.getId(), inputObject.getMtbs());
+            assertEquals(objectMapper.readTree(inputBytes), objectMapper.readTree(jfm.toJson(inputObject.getId())));
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
 
     @Test
