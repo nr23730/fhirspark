@@ -1,6 +1,7 @@
 
 package fhirspark.restmodel;
 
+import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -261,6 +262,10 @@ public class GeneticAlteration {
     public GeneticAlteration withStart(Integer start) {
         this.start = start;
         return this;
+    }
+
+    @JsonAnySetter
+    public void otherAttributes(String key, Object value) {
     }
 
 }
