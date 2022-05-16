@@ -5,15 +5,17 @@ import org.hl7.fhir.r4.model.Identifier;
 import org.hl7.fhir.r4.model.Reference;
 import org.hl7.fhir.r4.model.Specimen;
 
+import fhirspark.definitions.GenomicsReportingEnum;
+
 /**
  * Builds a HL7 FHIR Speciment object with the provided specimen id.
  */
-public class SpecimenAdapter {
+public final class SpecimenAdapter {
 
     private static String specimenSystem;
 
-    public SpecimenAdapter(String newSpecimenSystem) {
-        specimenSystem = newSpecimenSystem;
+    public static void initialize(String newSpecimenSystem) {
+        SpecimenAdapter.specimenSystem = newSpecimenSystem;
     }
 
     /**
@@ -22,10 +24,10 @@ public class SpecimenAdapter {
      * @param specimen id of the provided specimen.
      * @return HL7 FHIR Specimen object.
      */
-    public Specimen fromJson(Reference patient, String specimen) {
+    public static Specimen fromJson(Reference patient, String specimen) {
         Specimen fhirSpecimen = new Specimen();
         fhirSpecimen.setId(IdType.newRandomUuid());
-        fhirSpecimen.getMeta().addProfile("http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/specimen");
+        fhirSpecimen.getMeta().addProfile(GenomicsReportingEnum.SPECIMEN.system);
         fhirSpecimen.setSubject(patient);
         fhirSpecimen.addIdentifier(new Identifier().setSystem(specimenSystem).setValue(specimen));
         fhirSpecimen.getType().addCoding().setSystem("http://terminology.hl7.org/CodeSystem/v2-0487").setCode("TUMOR")

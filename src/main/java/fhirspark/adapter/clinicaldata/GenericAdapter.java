@@ -1,5 +1,7 @@
 package fhirspark.adapter.clinicaldata;
 
+import fhirspark.definitions.LoincEnum;
+import fhirspark.definitions.UriEnum;
 import fhirspark.restmodel.ClinicalDatum;
 import org.hl7.fhir.r4.model.CodeableConcept;
 import org.hl7.fhir.r4.model.Coding;
@@ -17,7 +19,7 @@ public class GenericAdapter implements ClinicalDataAdapter {
     public Resource fromJson(ClinicalDatum clinicalData) {
         Observation obs = new Observation();
         obs.setStatus(ObservationStatus.UNKNOWN);
-        obs.setCode(new CodeableConcept().addCoding(new Coding("http://loinc.org", "75321-0", "Clinical finding")));
+        obs.setCode(new CodeableConcept().addCoding(new Coding(UriEnum.LOINC_URI.uri, LoincEnum.CLINICAL_FINDING.code, LoincEnum.CLINICAL_FINDING.display)));
 
         obs.getValueStringType().setValue(clinicalData.getAttributeName() + ": " + clinicalData.getValue());
 

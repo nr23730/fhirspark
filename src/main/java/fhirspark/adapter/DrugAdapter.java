@@ -1,5 +1,7 @@
 package fhirspark.adapter;
 
+import fhirspark.definitions.GenomicsReportingEnum;
+import fhirspark.definitions.UriEnum;
 import fhirspark.resolver.OncoKbDrug;
 import fhirspark.restmodel.Treatment;
 import org.hl7.fhir.r4.model.Coding;
@@ -21,14 +23,14 @@ public class DrugAdapter {
     public MedicationStatement fromJson(Reference patient, Treatment treatment) {
         MedicationStatement medicationStatement = new MedicationStatement();
         medicationStatement.getMeta()
-                .addProfile("http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/medicationstatement");
+                .addProfile(GenomicsReportingEnum.MEDICATIONSTATEMENT.system);
         medicationStatement.setStatus(MedicationStatementStatus.UNKNOWN).setSubject(patient);
 
         String ncitCode = treatment.getNcitCode() != null ? treatment.getNcitCode()
                 : OncoKbDrug.resolve(treatment.getName()).getNcitCode();
         if (ncitCode != null) {
             medicationStatement.getMedicationCodeableConcept().getCoding()
-                    .add(new Coding("http://ncithesaurus-stage.nci.nih.gov", ncitCode, treatment.getName()));
+                    .add(new Coding(UriEnum.NCIT_URI.uri, ncitCode, treatment.getName()));
         } else {
             medicationStatement.getMedicationCodeableConcept().getCoding()
                 .add(new Coding(null, null, treatment.getName()));

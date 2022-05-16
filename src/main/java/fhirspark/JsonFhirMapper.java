@@ -10,6 +10,8 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fhirspark.adapter.MtbAdapter;
+import fhirspark.definitions.GenomicsReportingEnum;
+import fhirspark.definitions.UriEnum;
 import fhirspark.restmodel.CbioportalRest;
 import fhirspark.restmodel.ClinicalDatum;
 import fhirspark.restmodel.Deletions;
@@ -46,10 +48,6 @@ import org.hl7.fhir.r4.model.RelatedArtifact.RelatedArtifactType;
  * Fulfils the persistence in HL7 FHIR resources.
  */
 public class JsonFhirMapper {
-
-    private static final String RELATEDARTIFACT_URI =
-            "http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/RelatedArtifact";
-    private static final String PUBMED_URI = "https://www.ncbi.nlm.nih.gov/pubmed/";
 
     private static String patientUri;
     private static String therapyRecommendationUri;
@@ -208,13 +206,13 @@ public class JsonFhirMapper {
         for (BundleEntryComponent bec : bStuff.getEntry()) {
             Observation o = (Observation) bec.getResource();
             if (!o.getMeta().getProfile().get(0)
-                    .equals("http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/medication-efficacy")) {
+                    .equals(GenomicsReportingEnum.MEDICATION_EFFICACY.system)) {
                 continue;
             }
-            o.getExtensionsByUrl(RELATEDARTIFACT_URI).forEach(relatedArtifact -> {
+            o.getExtensionsByUrl(GenomicsReportingEnum.RELATEDARTIFACT.system).forEach(relatedArtifact -> {
                 if (((RelatedArtifact) relatedArtifact.getValue()).getType() == RelatedArtifactType.CITATION) {
                     Integer pmid = Integer.valueOf(
-                            ((RelatedArtifact) relatedArtifact.getValue()).getUrl().replaceFirst(PUBMED_URI, ""));
+                            ((RelatedArtifact) relatedArtifact.getValue()).getUrl().replaceFirst(UriEnum.PUBMED_URI.uri, ""));
                     refMap.put(pmid, new fhirspark.restmodel.Reference().withPmid(pmid)
                             .withName(((RelatedArtifact) relatedArtifact.getValue()).getCitation()));
                 }
@@ -250,7 +248,7 @@ public class JsonFhirMapper {
         for (BundleEntryComponent bec : bStuff.getEntry()) {
             Observation ob = (Observation) bec.getResource();
             if (!ob.getMeta().getProfile().get(0)
-                    .equals("http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/medication-efficacy")) {
+                    .equals(GenomicsReportingEnum.MEDICATION_EFFICACY.system)) {
                 continue;
             }
 
@@ -276,11 +274,11 @@ public class JsonFhirMapper {
             therapyRecommendation.setTreatments(treatments);
 
             List<fhirspark.restmodel.Reference> references = new ArrayList<fhirspark.restmodel.Reference>();
-            ob.getExtensionsByUrl(RELATEDARTIFACT_URI).forEach(relatedArtifact -> {
+            ob.getExtensionsByUrl(GenomicsReportingEnum.RELATEDARTIFACT.system).forEach(relatedArtifact -> {
                 if (((RelatedArtifact) relatedArtifact.getValue()).getType() == RelatedArtifactType.CITATION) {
                     references.add(new fhirspark.restmodel.Reference()
                             .withPmid(Integer.valueOf(((RelatedArtifact) relatedArtifact.getValue()).getUrl()
-                                    .replaceFirst(PUBMED_URI, "")))
+                                    .replaceFirst(UriEnum.PUBMED_URI.uri, "")))
                             .withName(((RelatedArtifact) relatedArtifact.getValue()).getCitation()));
                 }
             });

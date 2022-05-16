@@ -1,5 +1,7 @@
 package fhirspark.adapter;
 
+import fhirspark.definitions.GenomicsReportingEnum;
+import fhirspark.definitions.LoincEnum;
 import fhirspark.resolver.HgncGeneName;
 import fhirspark.resolver.model.Genenames;
 import fhirspark.restmodel.GeneticAlteration;
@@ -27,7 +29,7 @@ public class GeneticAlterationsAdapter {
     public Observation fromJson(GeneticAlteration geneticAlteration) {
 
         Observation variant = new Observation();
-        variant.setMeta(new Meta().addProfile("http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/variant"));
+        variant.setMeta(new Meta().addProfile(GenomicsReportingEnum.VARIANT.system));
 
         variant.setStatus(ObservationStatus.FINAL);
 
@@ -94,8 +96,7 @@ public class GeneticAlterationsAdapter {
         variant.addComponent(hgnc);
 
         ObservationComponentComponent startEnd = new ObservationComponentComponent().setCode(
-                new CodeableConcept(new Coding("http://hl7.org/fhir/uv/genomics-reporting/CodeSystem/tbd-codes",
-                        "exact-start-end", "Variant exact start and end")));
+                new CodeableConcept(GenomicsReportingEnum.EXACT_START_END.toCoding()));
         Range startEndRange = startEnd.getValueRange();
         boolean startEndPresent = false;
         if (geneticAlteration.getStart() != null) {
@@ -112,14 +113,14 @@ public class GeneticAlterationsAdapter {
 
         if (geneticAlteration.getAlt() != null) {
             ObservationComponentComponent alt = new ObservationComponentComponent()
-                    .setCode(new CodeableConcept(new Coding("http://loinc.org", "69551-0", "Genomic alt allele [ID]")));
+                    .setCode(new CodeableConcept(LoincEnum.GENOMIC_ALT_ALLELE.toCoding()));
             alt.getValueStringType().setValue(geneticAlteration.getAlt());
             variant.addComponent(alt);
         }
 
         if (geneticAlteration.getRef() != null) {
             ObservationComponentComponent ref = new ObservationComponentComponent()
-                    .setCode(new CodeableConcept(new Coding("http://loinc.org", "69547-8", "Genomic ref allele [ID]")));
+            .setCode(new CodeableConcept(LoincEnum.GENOMIC_REF_ALLELE.toCoding()));
             ref.getValueStringType().setValue(geneticAlteration.getRef());
             variant.addComponent(ref);
         }

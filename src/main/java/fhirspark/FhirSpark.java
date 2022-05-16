@@ -6,6 +6,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
+
+import fhirspark.adapter.SpecimenAdapter;
+import fhirspark.adapter.TherapyRecommendationAdapter;
 import fhirspark.resolver.HgncGeneName;
 import fhirspark.resolver.OncoKbDrug;
 import fhirspark.restmodel.CbioportalRest;
@@ -62,6 +65,8 @@ public final class FhirSpark {
         settings = configLoader.loadConfiguration(settingsYaml, Settings.class);
         HgncGeneName.initialize(settings.getHgncPath());
         OncoKbDrug.initalize(settings.getOncokbPath());
+        SpecimenAdapter.initialize(settings.getSpecimenSystem());
+        TherapyRecommendationAdapter.initialize(settings.getObservationSystem(), settings.getPatientSystem());
         jsonFhirMapper = new JsonFhirMapper(settings);
 
         port(settings.getPort());

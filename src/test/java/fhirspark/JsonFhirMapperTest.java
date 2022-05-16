@@ -19,6 +19,8 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Properties;
 
+import fhirspark.adapter.SpecimenAdapter;
+import fhirspark.adapter.TherapyRecommendationAdapter;
 import fhirspark.resolver.HgncGeneName;
 import fhirspark.resolver.OncoKbDrug;
 import fhirspark.restmodel.*;
@@ -48,6 +50,8 @@ public class JsonFhirMapperTest {
             settings.setFhirDbBase(p.getProperty("fhir.test.url"));
             HgncGeneName.initialize(settings.getHgncPath());
             OncoKbDrug.initalize(settings.getOncokbPath());
+            SpecimenAdapter.initialize(settings.getSpecimenSystem());
+            TherapyRecommendationAdapter.initialize(settings.getObservationSystem(), settings.getPatientSystem());
             this.jfm = new JsonFhirMapper(settings);
         } catch (IOException e) {
             // TODO Auto-generated catch block
