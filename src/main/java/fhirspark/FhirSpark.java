@@ -12,6 +12,8 @@ import fhirspark.restmodel.CbioportalRest;
 import fhirspark.restmodel.Deletions;
 import fhirspark.restmodel.GeneticAlteration;
 import fhirspark.restmodel.Mtb;
+import fhirspark.settings.ConfigurationLoader;
+import fhirspark.settings.Settings;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.time.LocalDateTime;
@@ -125,7 +127,7 @@ public final class FhirSpark {
             res.header("Vary", "Origin, Access-Control-Request-Headers");
 
             List<Mtb> mtbs = objectMapper.readValue(req.body(), CbioportalRest.class).getMtbs();
-            jsonFhirMapper.addOrEditMtb(req.params(":patientId"), mtbs);
+            jsonFhirMapper.fromJson(req.params(":patientId"), mtbs);
             res.body(req.body());
             return res.body();
         });

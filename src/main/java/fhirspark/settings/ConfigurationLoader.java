@@ -1,4 +1,4 @@
-package fhirspark;
+package fhirspark.settings;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
@@ -17,7 +17,7 @@ public class ConfigurationLoader {
     private final ObjectMapper objectMapper;
     private final StringSubstitutor stringSubstitutor;
 
-    ConfigurationLoader() {
+    public ConfigurationLoader() {
         this.objectMapper = new ObjectMapper(new YAMLFactory());
         this.stringSubstitutor = new StringSubstitutor(StringLookupFactory.INSTANCE.environmentVariableStringLookup());
     }
@@ -29,7 +29,7 @@ public class ConfigurationLoader {
      * @param cls Class of POJO representing the yaml file.
      * @return Initalized object of POJO with values from yaml and environment
      */
-    <T> T loadConfiguration(InputStream config, Class<T> cls) {
+    public <T> T loadConfiguration(InputStream config, Class<T> cls) {
         try {
             String contents = this.stringSubstitutor
                     .replace(new String(ByteStreams.toByteArray(config), StandardCharsets.UTF_8));

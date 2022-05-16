@@ -22,6 +22,8 @@ import fhirspark.restmodel.Mtb;
 import fhirspark.restmodel.Reasoning;
 import fhirspark.restmodel.TherapyRecommendation;
 import fhirspark.restmodel.Treatment;
+import fhirspark.settings.Regex;
+import fhirspark.settings.Settings;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -372,7 +374,7 @@ public class JsonFhirMapper {
     /**
      * Retrieves MTB data from cBioPortal and persists it in FHIR resources.
      */
-    public void addOrEditMtb(String patientId, List<Mtb> mtbs) throws DataFormatException, IOException {
+    public void fromJson(String patientId, List<Mtb> mtbs) throws DataFormatException, IOException {
 
         Bundle bundle = new Bundle();
         bundle.setType(Bundle.BundleType.TRANSACTION);
@@ -458,7 +460,7 @@ public class JsonFhirMapper {
 
             mtb.getSamples().forEach(sample -> {
                 String sampleId = applyRegexFromCbioportal(sample);
-                Specimen s = specimenAdapter.process(fhirPatient, sampleId);
+                Specimen s = specimenAdapter.fromJson(fhirPatient, sampleId);
                 bundle.addEntry().setFullUrl(s.getIdElement().getValue()).setResource(s)
                         .getRequest().setUrl("Specimen?identifier=https://cbioportal.org/specimen/|" + sampleId)
                         .setIfNoneExist("identifier=identifier=https://cbioportal.org/specimen/|" + sampleId)
@@ -509,7 +511,7 @@ public class JsonFhirMapper {
                         Specimen s = null;
                         if (clinical.getSampleId() != null && clinical.getSampleId().length() > 0) {
                             String sampleId = applyRegexFromCbioportal(clinical.getSampleId());
-                            s = specimenAdapter.process(fhirPatient, sampleId);
+                            s = specimenAdapter.fromJson(fhirPatient, sampleId);
                             bundle.addEntry().setFullUrl(s.getIdElement().getValue()).setResource(s)
                                 .getRequest().setUrl("Specimen?identifier=https://cbioportal.org/specimen/|"
                                         + sampleId)
@@ -523,7 +525,7 @@ public class JsonFhirMapper {
                         } catch (ClassNotFoundException e) {
                             GenericAdapter genericAdapter = new GenericAdapter();
                             efficacyObservation
-                                    .addHasMember(new Reference(genericAdapter.process(clinical, new Reference(s))));
+                                    .addHasMember(new Reference(genericAdapter.fromJson(clinical, new Reference(s))));
                         } catch (NoSuchMethodException e) {
                             // TODO Auto-generated catch block
                             e.printStackTrace();
@@ -546,7 +548,7 @@ public class JsonFhirMapper {
                         if (uniqueAlteration.containsKey(uniqueString)) {
                             geneticVariant = uniqueAlteration.get(uniqueString);
                         } else {
-                            geneticVariant = geneticAlterationsAdapter.process(geneticAlteration);
+                            geneticVariant = geneticAlterationsAdapter.fromJson(geneticAlteration);
                             geneticVariant.setId(IdType.newRandomUuid());
                             geneticVariant.setSubject(fhirPatient);
                             uniqueAlteration.put(uniqueString, geneticVariant);
@@ -581,7 +583,7 @@ public class JsonFhirMapper {
                         medicationChange.setId(IdType.newRandomUuid());
                         medicationChange.getMeta().addProfile(MEDICATIONCHANGE_URI);
 
-                        MedicationStatement ms = drugAdapter.process(fhirPatient, treatment);
+                        MedicationStatement ms = drugAdapter.fromJson(fhirPatient, treatment);
 
                         medicationChange.getCode()
                                 .addCoding(new Coding(LOINC_URI, "LA26421-0", "Consider alternative medication"));

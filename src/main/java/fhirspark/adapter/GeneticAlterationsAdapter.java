@@ -24,7 +24,7 @@ public class GeneticAlterationsAdapter {
      * @param geneticAlteration Specified genetic mutation / CNV.
      * @return Observation constrained by genomics-reporting IG.
      */
-    public Observation process(GeneticAlteration geneticAlteration) {
+    public Observation fromJson(GeneticAlteration geneticAlteration) {
 
         Observation variant = new Observation();
         variant.setMeta(new Meta().addProfile("http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/variant"));

@@ -1,4 +1,4 @@
-package fhirspark;
+package fhirspark.settings;
 
 /**
  * Regular expressions to convert cBioPortal IDs to HIS IDs.

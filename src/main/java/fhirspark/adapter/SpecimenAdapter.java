@@ -22,7 +22,7 @@ public class SpecimenAdapter {
      * @param specimen id of the provided specimen.
      * @return HL7 FHIR Specimen object.
      */
-    public Specimen process(Reference patient, String specimen) {
+    public Specimen fromJson(Reference patient, String specimen) {
         Specimen fhirSpecimen = new Specimen();
         fhirSpecimen.setId(IdType.newRandomUuid());
         fhirSpecimen.getMeta().addProfile("http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/specimen");

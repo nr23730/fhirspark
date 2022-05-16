@@ -18,7 +18,7 @@ public class DrugAdapter {
      * @param treatment The treatment that the patient should receive.
      * @return Composed MedicationStatement resource.
      */
-    public MedicationStatement process(Reference patient, Treatment treatment) {
+    public MedicationStatement fromJson(Reference patient, Treatment treatment) {
         MedicationStatement medicationStatement = new MedicationStatement();
         medicationStatement.getMeta()
                 .addProfile("http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/medicationstatement");

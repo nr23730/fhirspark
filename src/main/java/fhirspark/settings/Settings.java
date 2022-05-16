@@ -1,5 +1,5 @@
 
-package fhirspark;
+package fhirspark.settings;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
