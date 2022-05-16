@@ -39,7 +39,6 @@ import static spark.Spark.put;
 public final class FhirSpark {
 
     private static JsonFhirMapper jsonFhirMapper;
-    private static JsonHl7v2Mapper jsonHl7v2Mapper;
     private static Settings settings;
     private static Client client = new Client();
     private static ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
@@ -62,9 +61,6 @@ public final class FhirSpark {
         HgncGeneName.initialize(settings.getHgncPath());
         OncoKbDrug.initalize(settings.getOncokbPath());
         jsonFhirMapper = new JsonFhirMapper(settings);
-        if (settings.getHl7v2config() != null && settings.getHl7v2config().get(0).getSendv2()) {
-            jsonHl7v2Mapper = new JsonHl7v2Mapper(settings);
-        }
 
         port(settings.getPort());
 
@@ -130,9 +126,6 @@ public final class FhirSpark {
 
             List<Mtb> mtbs = objectMapper.readValue(req.body(), CbioportalRest.class).getMtbs();
             jsonFhirMapper.addOrEditMtb(req.params(":patientId"), mtbs);
-            if (settings.getHl7v2config().get(0).getSendv2()) {
-                jsonHl7v2Mapper.toHl7v2Oru(req.params(":patientId"), mtbs);
-            }
             res.body(req.body());
             return res.body();
         });
