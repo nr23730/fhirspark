@@ -1,7 +1,5 @@
 package fhirspark.adapter;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -18,8 +16,6 @@ import org.hl7.fhir.r4.model.Observation;
 import org.hl7.fhir.r4.model.Practitioner;
 import org.hl7.fhir.r4.model.Reference;
 import org.hl7.fhir.r4.model.RelatedArtifact;
-import org.hl7.fhir.r4.model.Resource;
-import org.hl7.fhir.r4.model.Specimen;
 import org.hl7.fhir.r4.model.Task;
 import org.hl7.fhir.r4.model.Observation.ObservationComponentComponent;
 import org.hl7.fhir.r4.model.Observation.ObservationStatus;
@@ -27,16 +23,12 @@ import org.hl7.fhir.r4.model.RelatedArtifact.RelatedArtifactType;
 import org.hl7.fhir.r4.model.Task.TaskIntent;
 import org.hl7.fhir.r4.model.Task.TaskStatus;
 import org.hl7.fhir.r4.model.codesystems.ObservationCategory;
-
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.gclient.TokenClientParam;
-import fhirspark.adapter.clinicaldata.GenericAdapter;
 import fhirspark.definitions.GenomicsReportingEnum;
 import fhirspark.definitions.LoincEnum;
 import fhirspark.definitions.UriEnum;
 import fhirspark.resolver.PubmedPublication;
-import fhirspark.restmodel.ClinicalDatum;
-import fhirspark.restmodel.GeneticAlteration;
 import fhirspark.restmodel.Mtb;
 import fhirspark.restmodel.Reasoning;
 import fhirspark.restmodel.TherapyRecommendation;
@@ -46,7 +38,6 @@ import fhirspark.settings.Regex;
 public final class TherapyRecommendationAdapter {
 
     private static PubmedPublication pubmedResolver = new PubmedPublication();
-    private static GeneticAlterationsAdapter geneticAlterationsAdapter = new GeneticAlterationsAdapter();
     private static DrugAdapter drugAdapter = new DrugAdapter();
     private static String therapyRecommendationUri;
     private static String patientUri;
@@ -90,49 +81,8 @@ public final class TherapyRecommendationAdapter {
         therapyRecommendation.getComment()
                 .forEach(comment -> efficacyObservation.getNote().add(new Annotation().setText(comment)));
 
-        if (therapyRecommendation.getReasoning().getClinicalData() != null) {
-            therapyRecommendation.getReasoning().getClinicalData().forEach(clinical -> {
-                Specimen s = null;
-                if (clinical.getSampleId() != null && clinical.getSampleId().length() > 0) {
-                    String sampleId = RegexAdapter.applyRegexFromCbioportal(regex, clinical.getSampleId());
-                    s = SpecimenAdapter.fromJson(fhirPatient, sampleId);
-                    bundle.addEntry().setFullUrl(s.getIdElement().getValue()).setResource(s)
-                            .getRequest().setUrl("Specimen?identifier=" + SpecimenAdapter.getSpecimenSystem() + "|"
-                                    + sampleId)
-                            .setIfNoneExist("identifier=" + SpecimenAdapter.getSpecimenSystem() + "|"
-                                    + sampleId)
-                            .setMethod(Bundle.HTTPVerb.PUT);
-                }
-                try {
-                    Method m = Class.forName("fhirspark.adapter.clinicaldata." + clinical.getAttributeId())
-                            .getMethod("process", ClinicalDatum.class);
-                    efficacyObservation.addHasMember(new Reference((Resource) m.invoke(null, clinical)));
-                } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException |
-                        InvocationTargetException e) {
-                    GenericAdapter genericAdapter = new GenericAdapter();
-                    efficacyObservation
-                            .addHasMember(new Reference(genericAdapter.fromJson(clinical, new Reference(s))));
-                }
-            });
-        }
-
-        if (therapyRecommendation.getReasoning().getGeneticAlterations() != null) {
-            therapyRecommendation.getReasoning().getGeneticAlterations().forEach(geneticAlteration -> {
-                String uniqueString = "component-value-concept=" + UriEnum.NCBI_GENE.uri + "|"
-                        + geneticAlteration.getEntrezGeneId() + "&subject="
-                        + fhirPatient.getResource().getIdElement();
-                Observation geneticVariant = geneticAlterationsAdapter.fromJson(geneticAlteration);
-                geneticVariant.setId(IdType.newRandomUuid());
-                geneticVariant.setSubject(fhirPatient);
-                bundle.addEntry().setFullUrl(geneticVariant.getIdElement().getValue())
-                        .setResource(geneticVariant).getRequest()
-                        .setUrl("Observation?" + uniqueString)
-                        .setIfNoneExist(uniqueString)
-                        .setMethod(Bundle.HTTPVerb.PUT);
-                diagnosticReport.addResult(new Reference(geneticVariant));
-                efficacyObservation.addDerivedFrom(new Reference(geneticVariant));
-
-            });
+        if (therapyRecommendation.getReasoning() != null) {
+            diagnosticReport.getResult().addAll(ReasoningAdapter.fromJson(bundle, efficacyObservation, regex, fhirPatient, therapyRecommendation.getReasoning()));
         }
 
         if (therapyRecommendation.getReferences() != null) {
@@ -204,10 +154,6 @@ public final class TherapyRecommendationAdapter {
     public static TherapyRecommendation toJson(IGenericClient client, Mtb mtb, List<Regex> regex, Observation ob) {
         TherapyRecommendation therapyRecommendation = new TherapyRecommendation()
                 .withComment(new ArrayList<>()).withReasoning(new Reasoning());
-        List<ClinicalDatum> clinicalData = new ArrayList<>();
-        List<GeneticAlteration> geneticAlterations = new ArrayList<>();
-        therapyRecommendation.getReasoning().withClinicalData(clinicalData)
-                .withGeneticAlterations(geneticAlterations);
 
         if (ob.hasPerformer()) {
             Bundle b2 = (Bundle) client
@@ -220,11 +166,7 @@ public final class TherapyRecommendationAdapter {
 
         therapyRecommendation.setId(ob.getIdentifierFirstRep().getValue());
 
-        ob.getHasMember().forEach(member -> {
-            GenericAdapter genericAdapter = new GenericAdapter();
-            ClinicalDatum cd = genericAdapter.toJson(regex, (Observation) member.getResource());
-            therapyRecommendation.getReasoning().getClinicalData().add(cd);            
-        });
+
 
         List<Treatment> treatments = new ArrayList<>();
         therapyRecommendation.setTreatments(treatments);
@@ -261,9 +203,7 @@ public final class TherapyRecommendationAdapter {
             }
         });
 
-        ob.getDerivedFrom().forEach(reference -> {
-            geneticAlterations.add(geneticAlterationsAdapter.toJson((Observation) reference.getResource()));
-        });
+        therapyRecommendation.setReasoning(ReasoningAdapter.toJson(regex, ob.getDerivedFrom(), ob.getHasMember()));
 
         ob.getNote().forEach(note -> therapyRecommendation.getComment().add(note.getText()));
 
