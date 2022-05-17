@@ -233,8 +233,7 @@ public final class TherapyRecommendationAdapter {
             String[] attr = obs.getValueStringType().asStringValue().split(": ");
             ClinicalDatum cd = new ClinicalDatum().withAttributeName(attr[0]).withValue(attr[1]);
             if (obs.getSpecimen().getResource() != null) {
-                Specimen specimen = (Specimen) obs.getSpecimen().getResource();
-                cd.setSampleId(RegexAdapter.applyRegexToCbioportal(regex, specimen.getIdentifierFirstRep().getValue()));
+                cd.setSampleId(SpecimenAdapter.toJson(regex, obs.getSpecimen()));
             }
             therapyRecommendation.getReasoning().getClinicalData()
                     .add(cd);
@@ -287,14 +286,14 @@ public final class TherapyRecommendationAdapter {
                         break;
                     case DISCRETE_GENETIC_VARIANT:
                         variant.getValueCodeableConcept().getCoding().forEach(coding -> {
-                            switch (coding.getSystem()) {
-                                case "http://www.ncbi.nlm.nih.gov/gene":
+                            switch (UriEnum.fromUri(coding.getSystem())) {
+                                case NCBI_GENE:
                                     g.setEntrezGeneId(Integer.valueOf(coding.getCode()));
                                     break;
-                                case "http://www.ncbi.nlm.nih.gov/clinvar":
+                                case CLINVAR:
                                     g.setClinvar(Integer.valueOf(coding.getCode()));
                                     break;
-                                case "http://cancer.sanger.ac.uk/cancergenome/projects/cosmic":
+                                case COSMIC:
                                     g.setCosmic(coding.getCode());
                                     break;
                                 default:

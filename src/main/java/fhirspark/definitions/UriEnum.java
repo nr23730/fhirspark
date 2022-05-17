@@ -18,5 +18,14 @@ public enum UriEnum {
     private UriEnum(String uri) {
         this.uri = uri;
     }
+
+    public static UriEnum fromUri(String s) {
+        for (UriEnum e : UriEnum.values()) {
+            if (e.uri.equals(s)) {
+                return e;
+            }
+        }
+        return null;
+    }
     
 }

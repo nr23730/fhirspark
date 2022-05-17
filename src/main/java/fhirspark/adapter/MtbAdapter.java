@@ -82,11 +82,7 @@ public final class MtbAdapter {
 
         // REBIOPSY HERE
         mtb.getSamples().clear();
-        for (Reference specimen : diagnosticReport.getSpecimen()) {
-            mtb.getSamples().add(
-                    RegexAdapter.applyRegexToCbioportal(regex,
-                            ((Specimen) specimen.getResource()).getIdentifierFirstRep().getValue()));
-        }
+        mtb.getSamples().addAll(SpecimenAdapter.toJson(regex, diagnosticReport.getSpecimen()));
 
         for (Reference reference : diagnosticReport.getResult()) {
 

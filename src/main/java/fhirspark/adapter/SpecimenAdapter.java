@@ -1,5 +1,9 @@
 package fhirspark.adapter;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
 import org.hl7.fhir.r4.model.IdType;
 import org.hl7.fhir.r4.model.Identifier;
 import org.hl7.fhir.r4.model.Reference;
@@ -7,6 +11,7 @@ import org.hl7.fhir.r4.model.Specimen;
 
 import fhirspark.definitions.GenomicsReportingEnum;
 import fhirspark.definitions.Hl7TerminologyEnum;
+import fhirspark.settings.Regex;
 
 /**
  * Builds a HL7 FHIR Speciment object with the provided specimen id.
@@ -25,7 +30,7 @@ public final class SpecimenAdapter {
 
     /**
      *
-     * @param patient Reference to the patient is medication belongs to.
+     * @param patient  Reference to the patient is medication belongs to.
      * @param specimen id of the provided specimen.
      * @return HL7 FHIR Specimen object.
      */
@@ -38,6 +43,19 @@ public final class SpecimenAdapter {
         fhirSpecimen.getType().addCoding(Hl7TerminologyEnum.TUMOR.toCoding());
 
         return fhirSpecimen;
+    }
+
+    public static Collection<String> toJson(List<Regex> regex, Collection<Reference> specimens) {
+        Collection<String> samples = new ArrayList<String>();
+        for (Reference specimen : specimens) {
+            samples.add(toJson(regex, specimen));
+        }
+        return samples;
+    }
+
+    public static String toJson(List<Regex> regex, Reference specimen) {
+        return RegexAdapter.applyRegexToCbioportal(regex,
+                ((Specimen) specimen.getResource()).getIdentifierFirstRep().getValue());
     }
 
 }
