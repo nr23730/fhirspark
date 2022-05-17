@@ -2,6 +2,7 @@ package fhirspark.adapter;
 
 import fhirspark.definitions.GenomicsReportingEnum;
 import fhirspark.definitions.LoincEnum;
+import fhirspark.definitions.UriEnum;
 import fhirspark.resolver.HgncGeneName;
 import fhirspark.resolver.model.Genenames;
 import fhirspark.restmodel.GeneticAlteration;
@@ -64,7 +65,7 @@ public class GeneticAlterationsAdapter {
             default:
                 ObservationComponentComponent hgvsp = new ObservationComponentComponent().setCode(
                         new CodeableConcept(LoincEnum.AMINO_ACID_CHANGE.toCoding()));
-                hgvsp.getValueCodeableConcept().addCoding(new Coding().setSystem("http://varomen.hgvs.org")
+                hgvsp.getValueCodeableConcept().addCoding(new Coding().setSystem(UriEnum.HGVS.uri)
                         .setCode("p." + geneticAlteration.getAlteration()));
                 variant.addComponent(hgvsp);
                 break;
@@ -72,15 +73,15 @@ public class GeneticAlterationsAdapter {
 
         ObservationComponentComponent variationCode = new ObservationComponentComponent()
                 .setCode(new CodeableConcept(LoincEnum.DISCRETE_GENETIC_VARIANT.toCoding()));
-        variationCode.getValueCodeableConcept().addCoding().setSystem("http://www.ncbi.nlm.nih.gov/gene")
+        variationCode.getValueCodeableConcept().addCoding().setSystem(UriEnum.NCBI_GENE.uri)
                 .setCode(String.valueOf(geneticAlteration.getEntrezGeneId()));
         if (geneticAlteration.getClinvar() != null) {
-            variationCode.getValueCodeableConcept().addCoding().setSystem("http://www.ncbi.nlm.nih.gov/clinvar")
+            variationCode.getValueCodeableConcept().addCoding().setSystem(UriEnum.CLINVAR.uri)
                     .setCode(String.valueOf(geneticAlteration.getClinvar()));
         }
         if (geneticAlteration.getCosmic() != null) {
             variationCode.getValueCodeableConcept().addCoding()
-                    .setSystem("http://cancer.sanger.ac.uk/cancergenome/projects/cosmic")
+                    .setSystem(UriEnum.COSMIC.uri)
                     .setCode(String.valueOf(geneticAlteration.getCosmic()));
         }
         variant.addComponent(variationCode);
@@ -90,7 +91,7 @@ public class GeneticAlterationsAdapter {
         ObservationComponentComponent hgnc = new ObservationComponentComponent()
                 .setCode(new CodeableConcept(LoincEnum.GENE_STUDIED.toCoding()));
         hgnc.getValueCodeableConcept()
-                .addCoding(new Coding("http://www.genenames.org/geneId", gn.getHgncId(), gn.getApprovedSymbol()));
+                .addCoding(new Coding(UriEnum.GENENAMES.uri, gn.getHgncId(), gn.getApprovedSymbol()));
         variant.addComponent(hgnc);
 
         ObservationComponentComponent startEnd = new ObservationComponentComponent().setCode(
@@ -126,7 +127,7 @@ public class GeneticAlterationsAdapter {
         if (geneticAlteration.getAlleleFrequency() != null) {
             ObservationComponentComponent af = new ObservationComponentComponent().setCode(new CodeableConcept(
                     LoincEnum.SAMPLE_VARIANT_ALLELE_FREQUENCY.toCoding()));
-            af.getValueQuantity().setSystem("http://unitsofmeasure.org")
+            af.getValueQuantity().setSystem(UriEnum.UCUM.uri)
                     .setValue(geneticAlteration.getAlleleFrequency());
             variant.addComponent(af);
         }
@@ -135,7 +136,7 @@ public class GeneticAlterationsAdapter {
             ObservationComponentComponent dbsnp = new ObservationComponentComponent()
                     .setCode(new CodeableConcept(LoincEnum.DBSNP.toCoding()));
             dbsnp.getValueCodeableConcept().addCoding(
-                    new Coding("http://www.ncbi.nlm.nih.gov/projects/SNP", geneticAlteration.getDbsnp(), null));
+                    new Coding(UriEnum.DBSNP.uri, geneticAlteration.getDbsnp(), null));
             variant.addComponent(dbsnp);
         }
 

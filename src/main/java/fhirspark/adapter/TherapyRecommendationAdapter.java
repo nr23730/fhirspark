@@ -2,6 +2,8 @@ package fhirspark.adapter;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.hl7.fhir.r4.model.Annotation;
@@ -26,16 +28,23 @@ import org.hl7.fhir.r4.model.Task.TaskIntent;
 import org.hl7.fhir.r4.model.Task.TaskStatus;
 import org.hl7.fhir.r4.model.codesystems.ObservationCategory;
 
+import ca.uhn.fhir.rest.client.api.IGenericClient;
+import ca.uhn.fhir.rest.gclient.TokenClientParam;
 import fhirspark.adapter.clinicaldata.GenericAdapter;
 import fhirspark.definitions.GenomicsReportingEnum;
+import fhirspark.definitions.LoincEnum;
 import fhirspark.definitions.UriEnum;
 import fhirspark.resolver.PubmedPublication;
 import fhirspark.restmodel.ClinicalDatum;
+import fhirspark.restmodel.GeneticAlteration;
+import fhirspark.restmodel.Mtb;
+import fhirspark.restmodel.Reasoning;
 import fhirspark.restmodel.TherapyRecommendation;
+import fhirspark.restmodel.Treatment;
 import fhirspark.settings.Regex;
 
 public final class TherapyRecommendationAdapter {
-    
+
     private static PubmedPublication pubmedResolver = new PubmedPublication();
     private static GeneticAlterationsAdapter geneticAlterationsAdapter = new GeneticAlterationsAdapter();
     private static DrugAdapter drugAdapter = new DrugAdapter();
@@ -50,7 +59,8 @@ public final class TherapyRecommendationAdapter {
         TherapyRecommendationAdapter.patientUri = newPatientUri;
     }
 
-    public static Observation fromJson(Bundle bundle, List<Regex> regex, DiagnosticReport diagnosticReport, Reference fhirPatient, TherapyRecommendation therapyRecommendation) {
+    public static Observation fromJson(Bundle bundle, List<Regex> regex, DiagnosticReport diagnosticReport,
+            Reference fhirPatient, TherapyRecommendation therapyRecommendation) {
         Observation efficacyObservation = new Observation();
         efficacyObservation.setId(IdType.newRandomUuid());
         efficacyObservation.getMeta().addProfile(GenomicsReportingEnum.MEDICATION_EFFICACY.system);
@@ -58,11 +68,11 @@ public final class TherapyRecommendationAdapter {
         efficacyObservation.addCategory().addCoding(new Coding(ObservationCategory.LABORATORY.getSystem(),
                 ObservationCategory.LABORATORY.toCode(), ObservationCategory.LABORATORY.getDisplay()));
         efficacyObservation.getValueCodeableConcept()
-                .addCoding(new Coding(UriEnum.LOINC_URI.uri, "LA9661-5", "Presumed responsive"));
+                .addCoding(LoincEnum.PRESUMED_RESPONSIVE.toCoding());
         efficacyObservation.getCode()
-                .addCoding(new Coding(UriEnum.LOINC_URI.uri, "51961-1", "Genetic variation's effect on drug efficacy"));
+                .addCoding(LoincEnum.GENETIC_VARIATIONS_EFFECT_ON_DRUG_EFFICACY.toCoding());
         ObservationComponentComponent evidenceComponent = efficacyObservation.addComponent();
-        evidenceComponent.getCode().addCoding(new Coding(UriEnum.LOINC_URI.uri, "93044-6", "Level of evidence"));
+        evidenceComponent.getCode().addCoding(LoincEnum.LEVEL_OF_EVIDENCE.toCoding());
         String m3Text = therapyRecommendation.getEvidenceLevelM3Text() != null
                 ? " (" + therapyRecommendation.getEvidenceLevelM3Text() + ")"
                 : "";
@@ -87,9 +97,9 @@ public final class TherapyRecommendationAdapter {
                     String sampleId = RegexAdapter.applyRegexFromCbioportal(regex, clinical.getSampleId());
                     s = SpecimenAdapter.fromJson(fhirPatient, sampleId);
                     bundle.addEntry().setFullUrl(s.getIdElement().getValue()).setResource(s)
-                            .getRequest().setUrl("Specimen?identifier=https://cbioportal.org/specimen/|"
+                            .getRequest().setUrl("Specimen?identifier=" + SpecimenAdapter.getSpecimenSystem() + "|"
                                     + sampleId)
-                            .setIfNoneExist("identifier=https://cbioportal.org/specimen/|"
+                            .setIfNoneExist("identifier=" + SpecimenAdapter.getSpecimenSystem() + "|"
                                     + sampleId)
                             .setMethod(Bundle.HTTPVerb.PUT);
                 }
@@ -116,7 +126,7 @@ public final class TherapyRecommendationAdapter {
 
         if (therapyRecommendation.getReasoning().getGeneticAlterations() != null) {
             therapyRecommendation.getReasoning().getGeneticAlterations().forEach(geneticAlteration -> {
-                String uniqueString = "component-value-concept=http://www.ncbi.nlm.nih.gov/gene|"
+                String uniqueString = "component-value-concept=" + UriEnum.NCBI_GENE.uri + "|"
                         + geneticAlteration.getEntrezGeneId() + "&subject="
                         + fhirPatient.getResource().getIdElement();
                 Observation geneticVariant = geneticAlterationsAdapter.fromJson(geneticAlteration);
@@ -155,7 +165,7 @@ public final class TherapyRecommendationAdapter {
                 MedicationStatement ms = drugAdapter.fromJson(fhirPatient, treatment);
 
                 medicationChange.getCode()
-                        .addCoding(new Coding(UriEnum.LOINC_URI.uri, "LA26421-0", "Consider alternative medication"));
+                        .addCoding(LoincEnum.CONSIDER_ALTERNATIVE_MEDICATION.toCoding());
                 medicationChange.setFocus(new Reference(ms));
                 String ncit = ms.getMedicationCodeableConcept().getCodingFirstRep().getCode();
                 if (ncit == null) {
@@ -176,7 +186,7 @@ public final class TherapyRecommendationAdapter {
                         .setMethod(Bundle.HTTPVerb.PUT);
 
                 ObservationComponentComponent assessed = efficacyObservation.addComponent();
-                assessed.getCode().addCoding(new Coding(UriEnum.LOINC_URI.uri, "51963-7", "Medication assessed [ID]"));
+                assessed.getCode().addCoding(LoincEnum.MEDICATION_ASSESSED.toCoding());
                 assessed.setValue(ms.getMedicationCodeableConcept());
 
             });
@@ -197,6 +207,153 @@ public final class TherapyRecommendationAdapter {
 
         return new Reference(practitioner);
 
+    }
+
+    public static TherapyRecommendation toJson(IGenericClient client, Mtb mtb, List<Regex> regex, Observation ob) {
+        TherapyRecommendation therapyRecommendation = new TherapyRecommendation()
+                .withComment(new ArrayList<String>()).withReasoning(new Reasoning());
+        List<ClinicalDatum> clinicalData = new ArrayList<ClinicalDatum>();
+        List<GeneticAlteration> geneticAlterations = new ArrayList<GeneticAlteration>();
+        therapyRecommendation.getReasoning().withClinicalData(clinicalData)
+                .withGeneticAlterations(geneticAlterations);
+
+        if (ob.hasPerformer()) {
+            Bundle b2 = (Bundle) client
+                    .search().forResource(Practitioner.class).where(new TokenClientParam("_id")
+                            .exactly().code(ob.getPerformerFirstRep().getReference()))
+                    .prettyPrint().execute();
+            Practitioner author = (Practitioner) b2.getEntryFirstRep().getResource();
+            therapyRecommendation.setAuthor(author.getIdentifierFirstRep().getValue());
+        }
+
+        therapyRecommendation.setId(ob.getIdentifierFirstRep().getValue());
+
+        ob.getHasMember().forEach(member -> {
+            Observation obs = (Observation) member.getResource();
+            String[] attr = obs.getValueStringType().asStringValue().split(": ");
+            ClinicalDatum cd = new ClinicalDatum().withAttributeName(attr[0]).withValue(attr[1]);
+            if (obs.getSpecimen().getResource() != null) {
+                Specimen specimen = (Specimen) obs.getSpecimen().getResource();
+                cd.setSampleId(RegexAdapter.applyRegexToCbioportal(regex, specimen.getIdentifierFirstRep().getValue()));
+            }
+            therapyRecommendation.getReasoning().getClinicalData()
+                    .add(cd);
+        });
+
+        List<Treatment> treatments = new ArrayList<Treatment>();
+        therapyRecommendation.setTreatments(treatments);
+
+        List<fhirspark.restmodel.Reference> references = new ArrayList<fhirspark.restmodel.Reference>();
+        ob.getExtensionsByUrl(GenomicsReportingEnum.RELATEDARTIFACT.system).forEach(relatedArtifact -> {
+            if (((RelatedArtifact) relatedArtifact.getValue())
+                    .getType() == RelatedArtifactType.CITATION) {
+                references.add(new fhirspark.restmodel.Reference()
+                        .withPmid(Integer.valueOf(((RelatedArtifact) relatedArtifact.getValue())
+                                .getUrl().replaceFirst(UriEnum.PUBMED_URI.uri, "")))
+                        .withName(((RelatedArtifact) relatedArtifact.getValue()).getCitation()));
+            }
+        });
+
+        therapyRecommendation.setReferences(references);
+
+        ob.getComponent().forEach(result -> {
+            if (result.getCode().getCodingFirstRep().getCode().equals("93044-6")) {
+                String[] evidence = result.getValueCodeableConcept().getCodingFirstRep().getCode()
+                        .split(" ");
+                therapyRecommendation.setEvidenceLevel(evidence[0]);
+                if (evidence.length > 1) {
+                    therapyRecommendation.setEvidenceLevelExtension(evidence[1]);
+                }
+                if (evidence.length > 2) {
+                    therapyRecommendation.setEvidenceLevelM3Text(
+                            String.join(" ", Arrays.asList(evidence).subList(2, evidence.length))
+                                    .replace("(", "").replace(")", ""));
+                }
+            }
+            if (result.getCode().getCodingFirstRep().getCode().equals("51963-7")) {
+                therapyRecommendation.getTreatments().add(new Treatment()
+                        .withNcitCode(result.getValueCodeableConcept().getCodingFirstRep().getCode())
+                        .withName(result.getValueCodeableConcept().getCodingFirstRep().getDisplay()));
+            }
+        });
+
+        ob.getDerivedFrom().forEach(reference1 -> {
+            GeneticAlteration g = new GeneticAlteration();
+            ((Observation) reference1.getResource()).getComponent().forEach(variant -> {
+                switch (LoincEnum.fromCode(variant.getCode().getCodingFirstRep().getCode())) {
+                    case AMINO_ACID_CHANGE:
+                        g.setAlteration(variant.getValueCodeableConcept().getCodingFirstRep().getCode()
+                                .replaceFirst("p.", ""));
+                        break;
+                    case DISCRETE_GENETIC_VARIANT:
+                        variant.getValueCodeableConcept().getCoding().forEach(coding -> {
+                            switch (coding.getSystem()) {
+                                case "http://www.ncbi.nlm.nih.gov/gene":
+                                    g.setEntrezGeneId(Integer.valueOf(coding.getCode()));
+                                    break;
+                                case "http://www.ncbi.nlm.nih.gov/clinvar":
+                                    g.setClinvar(Integer.valueOf(coding.getCode()));
+                                    break;
+                                case "http://cancer.sanger.ac.uk/cancergenome/projects/cosmic":
+                                    g.setCosmic(coding.getCode());
+                                    break;
+                                default:
+                                    break;
+                            }
+                        });
+                        break;
+                    case GENE_STUDIED:
+                        g.setHugoSymbol(
+                                variant.getValueCodeableConcept().getCodingFirstRep().getDisplay());
+                        break;
+                    case CYTOGENETIC_CHROMOSOME_LOCATION:
+                        g.setChromosome(
+                                variant.getValueCodeableConcept().getCodingFirstRep().getCode());
+                        break;
+                    case SAMPLE_VARIANT_ALLELE_FREQUENCY:
+                        g.setAlleleFrequency(variant.getValueQuantity().getValue().doubleValue());
+                        break;
+                    case DBSNP:
+                        g.setDbsnp(variant.getValueCodeableConcept().getCodingFirstRep().getCode());
+                        break;
+                    case CHROMOSOME_COPY_NUMBER_CHANGE:
+                        switch (LoincEnum.fromCode(variant.getValueCodeableConcept().getCodingFirstRep().getCode())) {
+                            case COPY_NUMBER_GAIN:
+                                g.setAlteration("Amplification");
+                                break;
+                            case COPY_NUMBER_LOSS:
+                                g.setAlteration("Deletion");
+                                break;
+                            default:
+                                break;
+                        }
+                        break;
+                    case GENOMIC_ALT_ALLELE:
+                        g.setAlt(variant.getValueStringType().getValue());
+                        break;
+                    case GENOMIC_REF_ALLELE:
+                        g.setRef(variant.getValueStringType().getValue());
+                        break;
+                    case EXACT_START_END:
+                        if (variant.getValueRange().getLow().getValue() != null) {
+                            g.setStart(Integer
+                                    .valueOf(variant.getValueRange().getLow().getValue().toString()));
+                        }
+                        if (variant.getValueRange().getHigh().getValue() != null) {
+                            g.setEnd(Integer
+                                    .valueOf(variant.getValueRange().getHigh().getValue().toString()));
+                        }
+                        break;
+                    default:
+                        break;
+                }
+            });
+            geneticAlterations.add(g);
+        });
+
+        ob.getNote().forEach(note -> therapyRecommendation.getComment().add(note.getText()));
+
+        return therapyRecommendation;
     }
 
 }

@@ -11,6 +11,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fhirspark.adapter.MtbAdapter;
 import fhirspark.definitions.GenomicsReportingEnum;
+import fhirspark.definitions.Hl7TerminologyEnum;
+import fhirspark.definitions.LoincEnum;
 import fhirspark.definitions.UriEnum;
 import fhirspark.restmodel.CbioportalRest;
 import fhirspark.restmodel.ClinicalDatum;
@@ -166,8 +168,7 @@ public class JsonFhirMapper {
         patient.setId(IdType.newRandomUuid());
         patient.getIdentifierFirstRep().setSystem(patientUri).setValue(patientId);
         patient.getIdentifierFirstRep().setUse(IdentifierUse.USUAL);
-        patient.getIdentifierFirstRep().getType().addCoding().setSystem("http://terminology.hl7.org/CodeSystem/v2-0203")
-                .setCode("MR");
+        patient.getIdentifierFirstRep().getType().addCoding(Hl7TerminologyEnum.MR.toCoding());
         b.addEntry().setFullUrl(patient.getIdElement().getValue()).setResource(patient).getRequest()
                 .setUrl("Patient?identifier=" + patientUri + "|" + patientId)
                 .setIfNoneExist("identifier=" + patientUri + "|" + patientId).setMethod(Bundle.HTTPVerb.PUT);
@@ -198,7 +199,7 @@ public class JsonFhirMapper {
 
         Bundle bStuff = (Bundle) client.search().forResource(Observation.class)
                 .where(new TokenClientParam("component-value-concept").exactly()
-                        .systemAndValues("http://www.ncbi.nlm.nih.gov/gene", new ArrayList<String>(entrez)))
+                        .systemAndValues(UriEnum.NCBI_GENE.uri, new ArrayList<String>(entrez)))
                 .prettyPrint().revInclude(Observation.INCLUDE_DERIVED_FROM).execute();
 
         Map<Integer, fhirspark.restmodel.Reference> refMap = new HashMap<Integer, fhirspark.restmodel.Reference>();
@@ -240,7 +241,7 @@ public class JsonFhirMapper {
 
         Bundle bStuff = (Bundle) client.search().forResource(Observation.class)
                 .where(new TokenClientParam("component-value-concept").exactly()
-                        .systemAndValues("http://www.ncbi.nlm.nih.gov/gene", new ArrayList<String>(entrez)))
+                        .systemAndValues(UriEnum.NCBI_GENE.uri, new ArrayList<String>(entrez)))
                 .prettyPrint().revInclude(Observation.INCLUDE_DERIVED_FROM).execute();
 
         Map<String, TherapyRecommendation> tcMap = new HashMap<String, TherapyRecommendation>();
@@ -312,12 +313,12 @@ public class JsonFhirMapper {
                 }
                 GeneticAlteration g = new GeneticAlteration();
                 ((Observation) reference1.getResource()).getComponent().forEach(variant -> {
-                    switch (variant.getCode().getCodingFirstRep().getCode()) {
-                        case "48005-3":
+                    switch (LoincEnum.fromCode(variant.getCode().getCodingFirstRep().getCode())) {
+                        case AMINO_ACID_CHANGE:
                             g.setAlteration(variant.getValueCodeableConcept().getCodingFirstRep().getCode()
                                     .replaceFirst("p.", ""));
                             break;
-                        case "81252-9":
+                        case DISCRETE_GENETIC_VARIANT:
                             variant.getValueCodeableConcept().getCoding().forEach(coding -> {
                                 switch (coding.getSystem()) {
                                     case "http://www.ncbi.nlm.nih.gov/gene":
@@ -328,15 +329,15 @@ public class JsonFhirMapper {
                                 }
                             });
                             break;
-                        case "48018-6":
+                        case GENE_STUDIED:
                             g.setHugoSymbol(variant.getValueCodeableConcept().getCodingFirstRep().getDisplay());
                             break;
-                        case "62378-5":
-                            switch (variant.getValueCodeableConcept().getCodingFirstRep().getCode()) {
-                                case "LA14033-7":
+                        case CHROMOSOME_COPY_NUMBER_CHANGE:
+                            switch (LoincEnum.fromCode(variant.getValueCodeableConcept().getCodingFirstRep().getCode())) {
+                                case COPY_NUMBER_GAIN:
                                     g.setAlteration("Amplification");
                                     break;
-                                case "LA14034-5":
+                                case COPY_NUMBER_LOSS:
                                     g.setAlteration("Deletion");
                                     break;
                                 default:
