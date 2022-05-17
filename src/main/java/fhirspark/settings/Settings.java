@@ -1,9 +1,10 @@
 
-package fhirspark;
+package fhirspark.settings;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+
 import java.util.List;
 
 /**
@@ -22,7 +23,6 @@ import java.util.List;
     "portalUrl",
     "loginRequired",
     "oncokbPath",
-    "hl7v2config",
     "regex"
 })
 public final class Settings {
@@ -49,8 +49,6 @@ public final class Settings {
     private Boolean loginRequired;
     @JsonProperty("oncokbPath")
     private String oncokbPath;
-    @JsonProperty("hl7v2config")
-    private List<Hl7v2config> hl7v2config;
     @JsonProperty("regex")
     private List<Regex> regex;
 
@@ -162,16 +160,6 @@ public final class Settings {
     @JsonProperty("oncokbPath")
     public void setOncokbPath(String oncokbPath) {
         this.oncokbPath = oncokbPath;
-    }
-
-    @JsonProperty("hl7v2config")
-    public List<Hl7v2config> getHl7v2config() {
-        return hl7v2config;
-    }
-
-    @JsonProperty("hl7v2config")
-    public void setHl7v2config(List<Hl7v2config> hl7v2config) {
-        this.hl7v2config = hl7v2config;
     }
 
     @JsonProperty("regex")

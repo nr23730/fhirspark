@@ -6,12 +6,21 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
+import fhirspark.adapter.SpecimenAdapter;
+import fhirspark.adapter.TherapyRecommendationAdapter;
 import fhirspark.resolver.HgncGeneName;
 import fhirspark.resolver.OncoKbDrug;
 import fhirspark.restmodel.CbioportalRest;
 import fhirspark.restmodel.Deletions;
 import fhirspark.restmodel.GeneticAlteration;
 import fhirspark.restmodel.Mtb;
+import fhirspark.settings.ConfigurationLoader;
+import fhirspark.settings.Settings;
+import org.eclipse.jetty.http.HttpStatus;
+import spark.Request;
+
+import javax.ws.rs.core.Cookie;
+
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.time.LocalDateTime;
@@ -20,9 +29,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.ws.rs.core.Cookie;
-import org.eclipse.jetty.http.HttpStatus;
-import spark.Request;
 
 import static spark.Spark.delete;
 import static spark.Spark.get;
@@ -39,7 +45,6 @@ import static spark.Spark.put;
 public final class FhirSpark {
 
     private static JsonFhirMapper jsonFhirMapper;
-    private static JsonHl7v2Mapper jsonHl7v2Mapper;
     private static Settings settings;
     private static Client client = new Client();
     private static ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
@@ -61,10 +66,9 @@ public final class FhirSpark {
         settings = configLoader.loadConfiguration(settingsYaml, Settings.class);
         HgncGeneName.initialize(settings.getHgncPath());
         OncoKbDrug.initalize(settings.getOncokbPath());
+        SpecimenAdapter.initialize(settings.getSpecimenSystem());
+        TherapyRecommendationAdapter.initialize(settings.getObservationSystem(), settings.getPatientSystem());
         jsonFhirMapper = new JsonFhirMapper(settings);
-        if (settings.getHl7v2config() != null && settings.getHl7v2config().get(0).getSendv2()) {
-            jsonHl7v2Mapper = new JsonHl7v2Mapper(settings);
-        }
 
         port(settings.getPort());
 
@@ -129,10 +133,7 @@ public final class FhirSpark {
             res.header("Vary", "Origin, Access-Control-Request-Headers");
 
             List<Mtb> mtbs = objectMapper.readValue(req.body(), CbioportalRest.class).getMtbs();
-            jsonFhirMapper.addOrEditMtb(req.params(":patientId"), mtbs);
-            if (settings.getHl7v2config().get(0).getSendv2()) {
-                jsonHl7v2Mapper.toHl7v2Oru(req.params(":patientId"), mtbs);
-            }
+            jsonFhirMapper.fromJson(req.params(":patientId"), mtbs);
             res.body(req.body());
             return res.body();
         });
@@ -266,7 +267,7 @@ public final class FhirSpark {
             return false;
         }
 
-        ArrayList<String> roleList = new ArrayList<String>();
+        ArrayList<String> roleList = new ArrayList<>();
         Pattern p = Pattern.compile("\"([^\"]*)\"");
         Matcher m = p.matcher(userRoles);
         while (m.find()) {

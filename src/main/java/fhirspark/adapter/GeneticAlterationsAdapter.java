@@ -1,5 +1,8 @@
 package fhirspark.adapter;
 
+import fhirspark.definitions.GenomicsReportingEnum;
+import fhirspark.definitions.LoincEnum;
+import fhirspark.definitions.UriEnum;
 import fhirspark.resolver.HgncGeneName;
 import fhirspark.resolver.model.Genenames;
 import fhirspark.restmodel.GeneticAlteration;
@@ -17,30 +20,35 @@ import org.hl7.fhir.r4.model.codesystems.ObservationCategory;
 /**
  * Maps genetic mutations / CNVs to FHIR Observation.
  */
-public class GeneticAlterationsAdapter {
+public final class GeneticAlterationsAdapter {
+
+    private GeneticAlterationsAdapter() {
+    }
 
     /**
      *
      * @param geneticAlteration Specified genetic mutation / CNV.
      * @return Observation constrained by genomics-reporting IG.
      */
-    public Observation process(GeneticAlteration geneticAlteration) {
+    public static Observation fromJson(GeneticAlteration geneticAlteration) {
 
         Observation variant = new Observation();
-        variant.setMeta(new Meta().addProfile("http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/variant"));
+        variant.setMeta(new Meta().addProfile(GenomicsReportingEnum.VARIANT.getSystem()));
 
         variant.setStatus(ObservationStatus.FINAL);
 
         variant.addCategory(new CodeableConcept(new Coding(ObservationCategory.LABORATORY.getSystem(),
                 ObservationCategory.LABORATORY.toCode(), ObservationCategory.LABORATORY.getDisplay())));
-        variant.setCode(new CodeableConcept(new Coding("http://loinc.org", "69548-6", "Genetic variant assessment")));
-        variant.getValueCodeableConcept().addCoding(new Coding("http://loinc.org", "LA9633-4", "Present"));
+        variant.setCode(new CodeableConcept(LoincEnum.GENETIC_VARIANT_ASSESSMENT.toCoding()));
+        variant.getValueCodeableConcept().addCoding(LoincEnum.PRESENT.toCoding());
 
         if (geneticAlteration.getChromosome() != null && !geneticAlteration.getChromosome().equals("NA")) {
-            ObservationComponentComponent chromosome = new ObservationComponentComponent().setCode(new CodeableConcept(
-                    new Coding("http://loinc.org", "48001-2", "Cytogenetic (chromosome) location")));
-            chromosome.getValueCodeableConcept().addCoding(new Coding().setSystem(ChromosomeHuman.NULL.getSystem())
-                    .setCode(geneticAlteration.getChromosome()));
+            ObservationComponentComponent chromosome = new ObservationComponentComponent()
+                    .setCode(new CodeableConcept(
+                            LoincEnum.CYTOGENETIC_CHROMOSOME_LOCATION.toCoding()));
+            chromosome.getValueCodeableConcept()
+                    .addCoding(new Coding().setSystem(ChromosomeHuman.NULL.getSystem())
+                            .setCode(geneticAlteration.getChromosome()));
             variant.addComponent(chromosome);
         }
 
@@ -48,54 +56,52 @@ public class GeneticAlterationsAdapter {
             case "Amplification":
                 ObservationComponentComponent amplification = new ObservationComponentComponent()
                         .setCode(new CodeableConcept(
-                                new Coding("http://loinc.org", "62378-5", "Chromosome copy number change [Type]")));
+                                LoincEnum.CHROMOSOME_COPY_NUMBER_CHANGE.toCoding()));
                 amplification.getValueCodeableConcept()
-                        .addCoding(new Coding("http://loinc.org", "LA14033-7", "Copy number gain"));
+                        .addCoding(LoincEnum.COPY_NUMBER_GAIN.toCoding());
                 variant.addComponent(amplification);
                 break;
             case "Deletion":
                 ObservationComponentComponent deletion = new ObservationComponentComponent()
                         .setCode(new CodeableConcept(
-                                new Coding("http://loinc.org", "62378-5", "Chromosome copy number change [Type]")));
+                                LoincEnum.CHROMOSOME_COPY_NUMBER_CHANGE.toCoding()));
                 deletion.getValueCodeableConcept()
-                        .addCoding(new Coding("http://loinc.org", "LA14034-5", "Copy number loss"));
+                        .addCoding(LoincEnum.COPY_NUMBER_LOSS.toCoding());
                 variant.addComponent(deletion);
                 break;
             default:
                 ObservationComponentComponent hgvsp = new ObservationComponentComponent().setCode(
-                        new CodeableConcept(new Coding("http://loinc.org", "48005-3", "Amino acid change (pHGVS)")));
-                hgvsp.getValueCodeableConcept().addCoding(new Coding().setSystem("http://varomen.hgvs.org")
+                        new CodeableConcept(LoincEnum.AMINO_ACID_CHANGE.toCoding()));
+                hgvsp.getValueCodeableConcept().addCoding(new Coding().setSystem(UriEnum.HGVS.getUri())
                         .setCode("p." + geneticAlteration.getAlteration()));
                 variant.addComponent(hgvsp);
                 break;
         }
 
         ObservationComponentComponent variationCode = new ObservationComponentComponent()
-                .setCode(new CodeableConcept(new Coding("http://loinc.org", "81252-9", "Discrete genetic variant")));
-        variationCode.getValueCodeableConcept().addCoding().setSystem("http://www.ncbi.nlm.nih.gov/gene")
+                .setCode(new CodeableConcept(LoincEnum.DISCRETE_GENETIC_VARIANT.toCoding()));
+        variationCode.getValueCodeableConcept().addCoding().setSystem(UriEnum.NCBI_GENE.getUri())
                 .setCode(String.valueOf(geneticAlteration.getEntrezGeneId()));
         if (geneticAlteration.getClinvar() != null) {
-            variationCode.getValueCodeableConcept().addCoding().setSystem("http://www.ncbi.nlm.nih.gov/clinvar")
+            variationCode.getValueCodeableConcept().addCoding().setSystem(UriEnum.CLINVAR.getUri())
                     .setCode(String.valueOf(geneticAlteration.getClinvar()));
         }
         if (geneticAlteration.getCosmic() != null) {
             variationCode.getValueCodeableConcept().addCoding()
-                    .setSystem("http://cancer.sanger.ac.uk/cancergenome/projects/cosmic")
+                    .setSystem(UriEnum.COSMIC.getUri())
                     .setCode(String.valueOf(geneticAlteration.getCosmic()));
         }
         variant.addComponent(variationCode);
 
         Genenames gn = HgncGeneName.resolve(geneticAlteration.getEntrezGeneId());
-        assert geneticAlteration.getHugoSymbol().equals(gn.getApprovedSymbol());
         ObservationComponentComponent hgnc = new ObservationComponentComponent()
-                .setCode(new CodeableConcept(new Coding("http://loinc.org", "48018-6", "Gene studied [ID]")));
+                .setCode(new CodeableConcept(LoincEnum.GENE_STUDIED.toCoding()));
         hgnc.getValueCodeableConcept()
-                .addCoding(new Coding("http://www.genenames.org/geneId", gn.getHgncId(), gn.getApprovedSymbol()));
+                .addCoding(new Coding(UriEnum.GENENAMES.getUri(), gn.getHgncId(), gn.getApprovedSymbol()));
         variant.addComponent(hgnc);
 
         ObservationComponentComponent startEnd = new ObservationComponentComponent().setCode(
-                new CodeableConcept(new Coding("http://hl7.org/fhir/uv/genomics-reporting/CodeSystem/tbd-codes",
-                        "exact-start-end", "Variant exact start and end")));
+                new CodeableConcept(GenomicsReportingEnum.EXACT_START_END.toCoding()));
         Range startEndRange = startEnd.getValueRange();
         boolean startEndPresent = false;
         if (geneticAlteration.getStart() != null) {
@@ -112,36 +118,117 @@ public class GeneticAlterationsAdapter {
 
         if (geneticAlteration.getAlt() != null) {
             ObservationComponentComponent alt = new ObservationComponentComponent()
-                    .setCode(new CodeableConcept(new Coding("http://loinc.org", "69551-0", "Genomic alt allele [ID]")));
+                    .setCode(new CodeableConcept(LoincEnum.GENOMIC_ALT_ALLELE.toCoding()));
             alt.getValueStringType().setValue(geneticAlteration.getAlt());
             variant.addComponent(alt);
         }
 
         if (geneticAlteration.getRef() != null) {
             ObservationComponentComponent ref = new ObservationComponentComponent()
-                    .setCode(new CodeableConcept(new Coding("http://loinc.org", "69547-8", "Genomic ref allele [ID]")));
+                    .setCode(new CodeableConcept(LoincEnum.GENOMIC_REF_ALLELE.toCoding()));
             ref.getValueStringType().setValue(geneticAlteration.getRef());
             variant.addComponent(ref);
         }
 
         if (geneticAlteration.getAlleleFrequency() != null) {
-            ObservationComponentComponent af = new ObservationComponentComponent().setCode(new CodeableConcept(
-                    new Coding("http://loinc.org", "81258-6", "Sample variant allelic frequency [NFr]")));
-            af.getValueQuantity().setSystem("http://unitsofmeasure.org")
+            ObservationComponentComponent af = new ObservationComponentComponent()
+                    .setCode(new CodeableConcept(
+                            LoincEnum.SAMPLE_VARIANT_ALLELE_FREQUENCY.toCoding()));
+            af.getValueQuantity().setSystem(UriEnum.UCUM.getUri())
                     .setValue(geneticAlteration.getAlleleFrequency());
             variant.addComponent(af);
         }
 
         if (geneticAlteration.getDbsnp() != null) {
             ObservationComponentComponent dbsnp = new ObservationComponentComponent()
-                    .setCode(new CodeableConcept(new Coding("http://loinc.org", "81255-2", "dbSNP [ID]")));
+                    .setCode(new CodeableConcept(LoincEnum.DBSNP.toCoding()));
             dbsnp.getValueCodeableConcept().addCoding(
-                    new Coding("http://www.ncbi.nlm.nih.gov/projects/SNP", geneticAlteration.getDbsnp(), null));
+                    new Coding(UriEnum.DBSNP.getUri(), geneticAlteration.getDbsnp(), null));
             variant.addComponent(dbsnp);
         }
 
         return variant;
 
+    }
+
+    public static GeneticAlteration toJson(Observation o) {
+        GeneticAlteration g = new GeneticAlteration();
+        o.getComponent().forEach(variant -> {
+            switch (LoincEnum.fromCode(variant.getCode().getCodingFirstRep().getCode())) {
+                case AMINO_ACID_CHANGE:
+                    g.setAlteration(variant.getValueCodeableConcept().getCodingFirstRep().getCode()
+                            .replaceFirst("p.", ""));
+                    break;
+                case DISCRETE_GENETIC_VARIANT:
+                    variant.getValueCodeableConcept().getCoding().forEach(coding -> {
+                        switch (UriEnum.fromUri(coding.getSystem())) {
+                            case NCBI_GENE:
+                                g.setEntrezGeneId(Integer.valueOf(coding.getCode()));
+                                break;
+                            case CLINVAR:
+                                g.setClinvar(Integer.valueOf(coding.getCode()));
+                                break;
+                            case COSMIC:
+                                g.setCosmic(coding.getCode());
+                                break;
+                            default:
+                                break;
+                        }
+                    });
+                    break;
+                case GENE_STUDIED:
+                    g.setHugoSymbol(
+                            variant.getValueCodeableConcept().getCodingFirstRep()
+                                    .getDisplay());
+                    break;
+                case CYTOGENETIC_CHROMOSOME_LOCATION:
+                    g.setChromosome(
+                            variant.getValueCodeableConcept().getCodingFirstRep()
+                                    .getCode());
+                    break;
+                case SAMPLE_VARIANT_ALLELE_FREQUENCY:
+                    g.setAlleleFrequency(variant.getValueQuantity().getValue().doubleValue());
+                    break;
+                case DBSNP:
+                    g.setDbsnp(variant.getValueCodeableConcept().getCodingFirstRep().getCode());
+                    break;
+                case CHROMOSOME_COPY_NUMBER_CHANGE:
+                    switch (LoincEnum.fromCode(variant.getValueCodeableConcept().getCodingFirstRep()
+                            .getCode())) {
+                        case COPY_NUMBER_GAIN:
+                            g.setAlteration("Amplification");
+                            break;
+                        case COPY_NUMBER_LOSS:
+                            g.setAlteration("Deletion");
+                            break;
+                        default:
+                            break;
+                    }
+                    break;
+                case GENOMIC_ALT_ALLELE:
+                    g.setAlt(variant.getValueStringType().getValue());
+                    break;
+                case GENOMIC_REF_ALLELE:
+                    g.setRef(variant.getValueStringType().getValue());
+                    break;
+                case EXACT_START_END:
+                    if (variant.getValueRange().getLow().getValue() != null) {
+                        g.setStart(Integer
+                                .valueOf(variant.getValueRange().getLow().getValue()
+                                        .toString()));
+                    }
+                    if (variant.getValueRange().getHigh().getValue() != null) {
+                        g.setEnd(Integer
+                                .valueOf(variant.getValueRange().getHigh().getValue()
+                                        .toString()));
+                    }
+                    break;
+                default:
+                    break;
+            }
+        });
+
+        return g;
     }
 
 }

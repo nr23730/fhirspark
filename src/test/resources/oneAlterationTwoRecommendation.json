@@ -12,6 +12,7 @@
                     "author": "anonymousUser",
                     "comment": [],
                     "evidenceLevel": "0",
+                    "evidenceLevelExtension": "null",
                     "id": "Testpatient_1615204472309",
                     "reasoning": {
                         "clinicalData": [],
@@ -33,6 +34,7 @@
                     "author": "anonymousUser",
                     "comment": [],
                     "evidenceLevel": "0",
+                    "evidenceLevelExtension": "null",
                     "id": "Testpatient_1615204520960",
                     "reasoning": {
                         "clinicalData": [],

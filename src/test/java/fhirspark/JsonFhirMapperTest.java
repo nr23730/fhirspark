@@ -1,8 +1,11 @@
 package fhirspark;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.google.common.collect.MapDifference;
+import com.google.common.collect.Maps;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -13,11 +16,16 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Properties;
 
+import fhirspark.adapter.SpecimenAdapter;
+import fhirspark.adapter.TherapyRecommendationAdapter;
 import fhirspark.resolver.HgncGeneName;
 import fhirspark.resolver.OncoKbDrug;
 import fhirspark.restmodel.*;
+import fhirspark.settings.ConfigurationLoader;
+import fhirspark.settings.Settings;
 import spark.resource.ClassPathResource;
 
 @TestInstance(Lifecycle.PER_CLASS)
@@ -26,6 +34,9 @@ public class JsonFhirMapperTest {
     byte[] inputBytes;
     CbioportalRest inputObject;
     ObjectMapper objectMapper = new ObjectMapper().configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true).configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
+    TypeReference<HashMap<String, Object>> type = 
+    new TypeReference<HashMap<String, Object>>() {};
+
     JsonFhirMapper jfm;
 
     @BeforeAll
@@ -39,6 +50,8 @@ public class JsonFhirMapperTest {
             settings.setFhirDbBase(p.getProperty("fhir.test.url"));
             HgncGeneName.initialize(settings.getHgncPath());
             OncoKbDrug.initalize(settings.getOncokbPath());
+            SpecimenAdapter.initialize(settings.getSpecimenSystem());
+            TherapyRecommendationAdapter.initialize(settings.getObservationSystem(), settings.getPatientSystem());
             this.jfm = new JsonFhirMapper(settings);
         } catch (IOException e) {
             // TODO Auto-generated catch block
@@ -54,8 +67,9 @@ public class JsonFhirMapperTest {
                     .getSystemResourceAsStream("oneMtbZeroRecommendation.json")
                     .readAllBytes();
             inputObject = objectMapper.readValue(inputBytes, CbioportalRest.class);
-            jfm.addOrEditMtb(inputObject.getId(), inputObject.getMtbs());
-            assertEquals(objectMapper.readTree(inputBytes), objectMapper.readTree(jfm.toJson(inputObject.getId())));
+            jfm.fromJson(inputObject.getId(), inputObject.getMtbs());
+            MapDifference<String, Object> diff = Maps.difference(objectMapper.readValue(inputBytes, type), objectMapper.readValue(jfm.toJson(inputObject.getId()), type));
+            assertEquals(true, diff.areEqual());
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -70,8 +84,9 @@ public class JsonFhirMapperTest {
                     .getSystemResourceAsStream("oneMtbOneRecommendation.json")
                     .readAllBytes();
             inputObject = objectMapper.readValue(inputBytes, CbioportalRest.class);
-            jfm.addOrEditMtb(inputObject.getId(), inputObject.getMtbs());
-            assertEquals(objectMapper.readTree(inputBytes), objectMapper.readTree(jfm.toJson(inputObject.getId())));
+            jfm.fromJson(inputObject.getId(), inputObject.getMtbs());
+            MapDifference<String, Object> diff = Maps.difference(objectMapper.readValue(inputBytes, type), objectMapper.readValue(jfm.toJson(inputObject.getId()), type));
+            assertEquals(true, diff.areEqual());
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -80,15 +95,16 @@ public class JsonFhirMapperTest {
 
     @Test
     public void oneMtbTwoRecommendationTest() {
-        System.out.println("oneMtbTwoRecommendationTest.json");
+        System.out.println("oneMtbTwoRecommendation.json");
         try {
             inputBytes = ClassLoader
-                    .getSystemResourceAsStream("oneMtbTwoRecommendationTest.json")
+                    .getSystemResourceAsStream("oneMtbTwoRecommendation.json")
                     .readAllBytes();
             inputObject = objectMapper.readValue(inputBytes, CbioportalRest.class);
-            jfm.addOrEditMtb(inputObject.getId(), inputObject.getMtbs());
-            assertEquals(objectMapper.readTree(inputBytes), objectMapper.readTree(jfm.toJson(inputObject.getId())));
-        } catch (IOException e) {
+            jfm.fromJson(inputObject.getId(), inputObject.getMtbs());
+            MapDifference<String, Object> diff = Maps.difference(objectMapper.readValue(inputBytes, type), objectMapper.readValue(jfm.toJson(inputObject.getId()), type));
+            assertEquals(true, diff.areEqual());
+            } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
@@ -96,14 +112,15 @@ public class JsonFhirMapperTest {
 
     @Test
     public void twoMtbTwoRecommendationTest() {
-        System.out.println("twoMtbTwoRecommendationTest.json");
+        System.out.println("twoMtbTwoRecommendation.json");
         try {
             inputBytes = ClassLoader
-                    .getSystemResourceAsStream("twoMtbTwoRecommendationTest.json")
+                    .getSystemResourceAsStream("twoMtbTwoRecommendation.json")
                     .readAllBytes();
             inputObject = objectMapper.readValue(inputBytes, CbioportalRest.class);
-            jfm.addOrEditMtb(inputObject.getId(), inputObject.getMtbs());
-            assertEquals(objectMapper.readTree(inputBytes), objectMapper.readTree(jfm.toJson(inputObject.getId())));
+            jfm.fromJson(inputObject.getId(), inputObject.getMtbs());
+            MapDifference<String, Object> diff = Maps.difference(objectMapper.readValue(inputBytes, type), objectMapper.readValue(jfm.toJson(inputObject.getId()), type));
+            assertEquals(true, diff.areEqual());
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -112,14 +129,15 @@ public class JsonFhirMapperTest {
 
     @Test
     public void twoMtbThreeRecommendationTest() {
-        System.out.println("twoMtbThreeRecommendationTest.json");
+        System.out.println("twoMtbThreeRecommendation.json");
         try {
             inputBytes = ClassLoader
-                    .getSystemResourceAsStream("twoMtbThreeRecommendationTest.json")
+                    .getSystemResourceAsStream("twoMtbThreeRecommendation.json")
                     .readAllBytes();
             inputObject = objectMapper.readValue(inputBytes, CbioportalRest.class);
-            jfm.addOrEditMtb(inputObject.getId(), inputObject.getMtbs());
-            assertEquals(objectMapper.readTree(inputBytes), objectMapper.readTree(jfm.toJson(inputObject.getId())));
+            jfm.fromJson(inputObject.getId(), inputObject.getMtbs());
+            MapDifference<String, Object> diff = Maps.difference(objectMapper.readValue(inputBytes, type), objectMapper.readValue(jfm.toJson(inputObject.getId()), type));
+            assertEquals(true, diff.areEqual());
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -128,14 +146,15 @@ public class JsonFhirMapperTest {
 
     @Test
     public void oneAlterationTwoRecommendationTest() {
-        System.out.println("oneAlterationTwoRecommendationTest.json");
+        System.out.println("oneAlterationTwoRecommendation.json");
         try {
             inputBytes = ClassLoader
-                    .getSystemResourceAsStream("oneAlterationTwoRecommendationTest.json")
+                    .getSystemResourceAsStream("oneAlterationTwoRecommendation.json")
                     .readAllBytes();
             inputObject = objectMapper.readValue(inputBytes, CbioportalRest.class);
-            jfm.addOrEditMtb(inputObject.getId(), inputObject.getMtbs());
-            assertEquals(objectMapper.readTree(inputBytes), objectMapper.readTree(jfm.toJson(inputObject.getId())));
+            jfm.fromJson(inputObject.getId(), inputObject.getMtbs());
+            MapDifference<String, Object> diff = Maps.difference(objectMapper.readValue(inputBytes, type), objectMapper.readValue(jfm.toJson(inputObject.getId()), type));
+            assertEquals(true, diff.areEqual());
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -144,10 +163,36 @@ public class JsonFhirMapperTest {
 
     @Test
     public void unknownDrugTest() {
+        System.out.println("unknownDrug.json");
+        try {
+            inputBytes = ClassLoader
+                    .getSystemResourceAsStream("unknownDrug.json")
+                    .readAllBytes();
+            inputObject = objectMapper.readValue(inputBytes, CbioportalRest.class);
+            jfm.fromJson(inputObject.getId(), inputObject.getMtbs());
+            MapDifference<String, Object> diff = Maps.difference(objectMapper.readValue(inputBytes, type), objectMapper.readValue(jfm.toJson(inputObject.getId()), type));
+            assertEquals(true, diff.areEqual());
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
 
     @Test
     public void samplemanagerTest() {
+        System.out.println("samplemanager.json");
+        try {
+            inputBytes = ClassLoader
+                    .getSystemResourceAsStream("samplemanager.json")
+                    .readAllBytes();
+            inputObject = objectMapper.readValue(inputBytes, CbioportalRest.class);
+            jfm.fromJson(inputObject.getId(), inputObject.getMtbs());
+            MapDifference<String, Object> diff = Maps.difference(objectMapper.readValue(inputBytes, type), objectMapper.readValue(jfm.toJson(inputObject.getId()), type));
+            assertEquals(true, diff.areEqual());
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
 
 }
