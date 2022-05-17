@@ -203,9 +203,9 @@ public final class TherapyRecommendationAdapter {
 
     public static TherapyRecommendation toJson(IGenericClient client, Mtb mtb, List<Regex> regex, Observation ob) {
         TherapyRecommendation therapyRecommendation = new TherapyRecommendation()
-                .withComment(new ArrayList<String>()).withReasoning(new Reasoning());
-        List<ClinicalDatum> clinicalData = new ArrayList<ClinicalDatum>();
-        List<GeneticAlteration> geneticAlterations = new ArrayList<GeneticAlteration>();
+                .withComment(new ArrayList<>()).withReasoning(new Reasoning());
+        List<ClinicalDatum> clinicalData = new ArrayList<>();
+        List<GeneticAlteration> geneticAlterations = new ArrayList<>();
         therapyRecommendation.getReasoning().withClinicalData(clinicalData)
                 .withGeneticAlterations(geneticAlterations);
 
@@ -226,10 +226,10 @@ public final class TherapyRecommendationAdapter {
             therapyRecommendation.getReasoning().getClinicalData().add(cd);            
         });
 
-        List<Treatment> treatments = new ArrayList<Treatment>();
+        List<Treatment> treatments = new ArrayList<>();
         therapyRecommendation.setTreatments(treatments);
 
-        List<fhirspark.restmodel.Reference> references = new ArrayList<fhirspark.restmodel.Reference>();
+        List<fhirspark.restmodel.Reference> references = new ArrayList<>();
         ob.getExtensionsByUrl(GenomicsReportingEnum.RELATEDARTIFACT.system).forEach(relatedArtifact -> {
             if (((RelatedArtifact) relatedArtifact.getValue())
                     .getType() == RelatedArtifactType.CITATION) {

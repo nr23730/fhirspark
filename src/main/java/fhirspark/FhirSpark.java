@@ -266,7 +266,7 @@ public final class FhirSpark {
             return false;
         }
 
-        ArrayList<String> roleList = new ArrayList<String>();
+        ArrayList<String> roleList = new ArrayList<>();
         Pattern p = Pattern.compile("\"([^\"]*)\"");
         Matcher m = p.matcher(userRoles);
         while (m.find()) {

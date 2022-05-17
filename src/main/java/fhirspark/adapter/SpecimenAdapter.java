@@ -46,7 +46,7 @@ public final class SpecimenAdapter {
     }
 
     public static Collection<String> toJson(List<Regex> regex, Collection<Reference> specimens) {
-        Collection<String> samples = new ArrayList<String>();
+        Collection<String> samples = new ArrayList<>();
         for (Reference specimen : specimens) {
             samples.add(toJson(regex, specimen));
         }

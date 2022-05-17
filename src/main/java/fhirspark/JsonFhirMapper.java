@@ -192,17 +192,17 @@ public class JsonFhirMapper {
      */
     public Collection<fhirspark.restmodel.Reference> getPmidsByAlteration(List<GeneticAlteration> alterations) {
 
-        Set<String> entrez = new HashSet<String>();
+        Set<String> entrez = new HashSet<>();
         for (GeneticAlteration a : alterations) {
             entrez.add(String.valueOf(a.getEntrezGeneId()));
         }
 
         Bundle bStuff = (Bundle) client.search().forResource(Observation.class)
                 .where(new TokenClientParam("component-value-concept").exactly()
-                        .systemAndValues(UriEnum.NCBI_GENE.uri, new ArrayList<String>(entrez)))
+                        .systemAndValues(UriEnum.NCBI_GENE.uri, new ArrayList<>(entrez)))
                 .prettyPrint().revInclude(Observation.INCLUDE_DERIVED_FROM).execute();
 
-        Map<Integer, fhirspark.restmodel.Reference> refMap = new HashMap<Integer, fhirspark.restmodel.Reference>();
+        Map<Integer, fhirspark.restmodel.Reference> refMap = new HashMap<>();
 
         for (BundleEntryComponent bec : bStuff.getEntry()) {
             Observation o = (Observation) bec.getResource();
@@ -234,17 +234,17 @@ public class JsonFhirMapper {
     public Collection<TherapyRecommendation> getTherapyRecommendationsByAlteration(
             List<GeneticAlteration> alterations) {
 
-        Set<String> entrez = new HashSet<String>();
+        Set<String> entrez = new HashSet<>();
         for (GeneticAlteration a : alterations) {
             entrez.add(String.valueOf(a.getEntrezGeneId()));
         }
 
         Bundle bStuff = (Bundle) client.search().forResource(Observation.class)
                 .where(new TokenClientParam("component-value-concept").exactly()
-                        .systemAndValues(UriEnum.NCBI_GENE.uri, new ArrayList<String>(entrez)))
+                        .systemAndValues(UriEnum.NCBI_GENE.uri, new ArrayList<>(entrez)))
                 .prettyPrint().revInclude(Observation.INCLUDE_DERIVED_FROM).execute();
 
-        Map<String, TherapyRecommendation> tcMap = new HashMap<String, TherapyRecommendation>();
+        Map<String, TherapyRecommendation> tcMap = new HashMap<>();
 
         for (BundleEntryComponent bec : bStuff.getEntry()) {
             Observation ob = (Observation) bec.getResource();
@@ -254,9 +254,9 @@ public class JsonFhirMapper {
             }
 
             TherapyRecommendation therapyRecommendation = new TherapyRecommendation()
-                    .withComment(new ArrayList<String>()).withReasoning(new Reasoning());
-            List<ClinicalDatum> clinicalData = new ArrayList<ClinicalDatum>();
-            List<GeneticAlteration> geneticAlterations = new ArrayList<GeneticAlteration>();
+                    .withComment(new ArrayList<>()).withReasoning(new Reasoning());
+            List<ClinicalDatum> clinicalData = new ArrayList<>();
+            List<GeneticAlteration> geneticAlterations = new ArrayList<>();
             therapyRecommendation.getReasoning().withClinicalData(clinicalData)
                     .withGeneticAlterations(geneticAlterations);
 
@@ -271,10 +271,10 @@ public class JsonFhirMapper {
             tcMap.put(ob.getIdentifierFirstRep().getValue(), therapyRecommendation);
 
 
-            List<Treatment> treatments = new ArrayList<Treatment>();
+            List<Treatment> treatments = new ArrayList<>();
             therapyRecommendation.setTreatments(treatments);
 
-            List<fhirspark.restmodel.Reference> references = new ArrayList<fhirspark.restmodel.Reference>();
+            List<fhirspark.restmodel.Reference> references = new ArrayList<>();
             ob.getExtensionsByUrl(GenomicsReportingEnum.RELATEDARTIFACT.system).forEach(relatedArtifact -> {
                 if (((RelatedArtifact) relatedArtifact.getValue()).getType() == RelatedArtifactType.CITATION) {
                     references.add(new fhirspark.restmodel.Reference()

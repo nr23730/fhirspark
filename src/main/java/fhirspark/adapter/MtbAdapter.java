@@ -51,8 +51,8 @@ public final class MtbAdapter {
 
     public static Mtb toJson(List<Regex> regex, String patientId,
             DiagnosticReport diagnosticReport) {
-        Mtb mtb = new Mtb().withTherapyRecommendations(new ArrayList<TherapyRecommendation>())
-                .withSamples(new ArrayList<String>());
+        Mtb mtb = new Mtb().withTherapyRecommendations(new ArrayList<>())
+                .withSamples(new ArrayList<>());
 
         if (diagnosticReport.hasBasedOn()) {
             mtb.setOrderId(((ServiceRequest) diagnosticReport.getBasedOnFirstRep().getResource())
