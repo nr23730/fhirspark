@@ -13,8 +13,7 @@ public enum GenomicsReportingEnum {
     RELATEDARTIFACT("http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/medicationstatement", null, null),
     EXACT_START_END("http://hl7.org/fhir/uv/genomics-reporting/CodeSystem/tbd-codes", "exact-start-end", "Variant exact start and end"),
     MEDICATIONCHANGE("http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/task-med-chg", null, null),
-    TASK_REC_FOLLOWUP("http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/task-rec-followup", null, null)
-    ;
+    TASK_REC_FOLLOWUP("http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/task-rec-followup", null, null);
 
     public final String system;
     public final String code;
@@ -28,6 +27,15 @@ public enum GenomicsReportingEnum {
 
     public Coding toCoding() {
         return new Coding(this.system, this.code, this.display);
+    }
+
+    public static GenomicsReportingEnum fromSystem(String s) {
+        for (GenomicsReportingEnum e : GenomicsReportingEnum.values()) {
+            if (e.system.equals(s)) {
+                return e;
+            }
+        }
+        return null;
     }
     
 }

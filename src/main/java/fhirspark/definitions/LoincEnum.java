@@ -16,8 +16,16 @@ public enum LoincEnum {
     COPY_NUMBER_GAIN("LA14033-7", "Copy number gain"),
     COPY_NUMBER_LOSS("LA14034-5", "Copy number loss"),
     AMINO_ACID_CHANGE("48005-3", "Amino acid change (pHGVS)"),
-    DISCRETE_GENETIC_VARIANT("81252-9", "Discrete genetic variant")
-    ;
+    DISCRETE_GENETIC_VARIANT("81252-9", "Discrete genetic variant"),
+    MASTER_HL7_GENETIC_VARIANT_REPORTING_PANEL("81247-9", "Master HL7 genetic variant reporting panel"),
+    GENETIC_COUNSELING_RECOMMENDED("LA14020-4", "Genetic counseling recommended"),
+    CONFIRMATORY_TESTING_RECOMMENDED("LA14021-2", "Confirmatory testing recommended"),
+    PRESUMED_RESPONSIVE("LA9661-5", "Presumed responsive"),
+    GENETIC_VARIATIONS_EFFECT_ON_DRUG_EFFICACY("51961-1", "Genetic variation's effect on drug efficacy"),
+    LEVEL_OF_EVIDENCE("93044-6", "Level of evidence"),
+    CONSIDER_ALTERNATIVE_MEDICATION("LA26421-0", "Consider alternative medication"),
+    MEDICATION_ASSESSED("51963-7", "Medication assessed [ID]"),
+    EXACT_START_END("exact-start-end", "Variant exact start and end");
 
     public final String code;
     public final String display;
@@ -29,6 +37,15 @@ public enum LoincEnum {
     
     public Coding toCoding() {
         return new Coding(UriEnum.LOINC_URI.uri, this.code, this.display);
+    }
+
+    public static LoincEnum fromCode(String s) {
+        for (LoincEnum e : LoincEnum.values()) {
+            if (e.code.equals(s)) {
+                return e;
+            }
+        }
+        return null;
     }
 
 }
