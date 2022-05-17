@@ -107,19 +107,11 @@ public final class TherapyRecommendationAdapter {
                     Method m = Class.forName("fhirspark.adapter.clinicaldata." + clinical.getAttributeId())
                             .getMethod("process", ClinicalDatum.class);
                     efficacyObservation.addHasMember(new Reference((Resource) m.invoke(null, clinical)));
-                } catch (ClassNotFoundException e) {
+                } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException |
+                        InvocationTargetException e) {
                     GenericAdapter genericAdapter = new GenericAdapter();
                     efficacyObservation
                             .addHasMember(new Reference(genericAdapter.fromJson(clinical, new Reference(s))));
-                } catch (NoSuchMethodException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                } catch (IllegalAccessException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                } catch (InvocationTargetException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
                 }
             });
         }
@@ -229,14 +221,9 @@ public final class TherapyRecommendationAdapter {
         therapyRecommendation.setId(ob.getIdentifierFirstRep().getValue());
 
         ob.getHasMember().forEach(member -> {
-            Observation obs = (Observation) member.getResource();
-            String[] attr = obs.getValueStringType().asStringValue().split(": ");
-            ClinicalDatum cd = new ClinicalDatum().withAttributeName(attr[0]).withValue(attr[1]);
-            if (obs.getSpecimen().getResource() != null) {
-                cd.setSampleId(SpecimenAdapter.toJson(regex, obs.getSpecimen()));
-            }
-            therapyRecommendation.getReasoning().getClinicalData()
-                    .add(cd);
+            GenericAdapter genericAdapter = new GenericAdapter();
+            ClinicalDatum cd = genericAdapter.toJson(regex, (Observation) member.getResource());
+            therapyRecommendation.getReasoning().getClinicalData().add(cd);            
         });
 
         List<Treatment> treatments = new ArrayList<Treatment>();
@@ -270,84 +257,12 @@ public final class TherapyRecommendationAdapter {
                 }
             }
             if (result.getCode().getCodingFirstRep().getCode().equals("51963-7")) {
-                therapyRecommendation.getTreatments().add(new Treatment()
-                        .withNcitCode(result.getValueCodeableConcept().getCodingFirstRep().getCode())
-                        .withName(result.getValueCodeableConcept().getCodingFirstRep().getDisplay()));
+                therapyRecommendation.getTreatments().add(drugAdapter.toJson(result));
             }
         });
 
-        ob.getDerivedFrom().forEach(reference1 -> {
-            GeneticAlteration g = new GeneticAlteration();
-            ((Observation) reference1.getResource()).getComponent().forEach(variant -> {
-                switch (LoincEnum.fromCode(variant.getCode().getCodingFirstRep().getCode())) {
-                    case AMINO_ACID_CHANGE:
-                        g.setAlteration(variant.getValueCodeableConcept().getCodingFirstRep().getCode()
-                                .replaceFirst("p.", ""));
-                        break;
-                    case DISCRETE_GENETIC_VARIANT:
-                        variant.getValueCodeableConcept().getCoding().forEach(coding -> {
-                            switch (UriEnum.fromUri(coding.getSystem())) {
-                                case NCBI_GENE:
-                                    g.setEntrezGeneId(Integer.valueOf(coding.getCode()));
-                                    break;
-                                case CLINVAR:
-                                    g.setClinvar(Integer.valueOf(coding.getCode()));
-                                    break;
-                                case COSMIC:
-                                    g.setCosmic(coding.getCode());
-                                    break;
-                                default:
-                                    break;
-                            }
-                        });
-                        break;
-                    case GENE_STUDIED:
-                        g.setHugoSymbol(
-                                variant.getValueCodeableConcept().getCodingFirstRep().getDisplay());
-                        break;
-                    case CYTOGENETIC_CHROMOSOME_LOCATION:
-                        g.setChromosome(
-                                variant.getValueCodeableConcept().getCodingFirstRep().getCode());
-                        break;
-                    case SAMPLE_VARIANT_ALLELE_FREQUENCY:
-                        g.setAlleleFrequency(variant.getValueQuantity().getValue().doubleValue());
-                        break;
-                    case DBSNP:
-                        g.setDbsnp(variant.getValueCodeableConcept().getCodingFirstRep().getCode());
-                        break;
-                    case CHROMOSOME_COPY_NUMBER_CHANGE:
-                        switch (LoincEnum.fromCode(variant.getValueCodeableConcept().getCodingFirstRep().getCode())) {
-                            case COPY_NUMBER_GAIN:
-                                g.setAlteration("Amplification");
-                                break;
-                            case COPY_NUMBER_LOSS:
-                                g.setAlteration("Deletion");
-                                break;
-                            default:
-                                break;
-                        }
-                        break;
-                    case GENOMIC_ALT_ALLELE:
-                        g.setAlt(variant.getValueStringType().getValue());
-                        break;
-                    case GENOMIC_REF_ALLELE:
-                        g.setRef(variant.getValueStringType().getValue());
-                        break;
-                    case EXACT_START_END:
-                        if (variant.getValueRange().getLow().getValue() != null) {
-                            g.setStart(Integer
-                                    .valueOf(variant.getValueRange().getLow().getValue().toString()));
-                        }
-                        if (variant.getValueRange().getHigh().getValue() != null) {
-                            g.setEnd(Integer
-                                    .valueOf(variant.getValueRange().getHigh().getValue().toString()));
-                        }
-                        break;
-                    default:
-                        break;
-                }
-            });
-            geneticAlterations.add(g);
+        ob.getDerivedFrom().forEach(reference -> {
+            geneticAlterations.add(geneticAlterationsAdapter.toJson((Observation) reference.getResource()));
         });
 
         ob.getNote().forEach(note -> therapyRecommendation.getComment().add(note.getText()));

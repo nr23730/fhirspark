@@ -7,6 +7,7 @@ import fhirspark.restmodel.Treatment;
 import org.hl7.fhir.r4.model.Coding;
 import org.hl7.fhir.r4.model.MedicationStatement;
 import org.hl7.fhir.r4.model.MedicationStatement.MedicationStatementStatus;
+import org.hl7.fhir.r4.model.Observation.ObservationComponentComponent;
 import org.hl7.fhir.r4.model.Reference;
 
 /**
@@ -33,10 +34,16 @@ public class DrugAdapter {
                     .add(new Coding(UriEnum.NCIT_URI.uri, ncitCode, treatment.getName()));
         } else {
             medicationStatement.getMedicationCodeableConcept().getCoding()
-                .add(new Coding(null, null, treatment.getName()));
+                    .add(new Coding(null, null, treatment.getName()));
         }
 
         return medicationStatement;
+    }
+
+    public Treatment toJson(ObservationComponentComponent result) {
+        return new Treatment()
+                .withNcitCode(result.getValueCodeableConcept().getCodingFirstRep().getCode())
+                .withName(result.getValueCodeableConcept().getCodingFirstRep().getDisplay());
     }
 
 }
