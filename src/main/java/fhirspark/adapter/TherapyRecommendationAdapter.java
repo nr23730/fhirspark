@@ -29,7 +29,6 @@ import fhirspark.definitions.GenomicsReportingEnum;
 import fhirspark.definitions.LoincEnum;
 import fhirspark.definitions.UriEnum;
 import fhirspark.resolver.PubmedPublication;
-import fhirspark.restmodel.Mtb;
 import fhirspark.restmodel.Reasoning;
 import fhirspark.restmodel.TherapyRecommendation;
 import fhirspark.restmodel.Treatment;
@@ -38,7 +37,6 @@ import fhirspark.settings.Regex;
 public final class TherapyRecommendationAdapter {
 
     private static PubmedPublication pubmedResolver = new PubmedPublication();
-    private static DrugAdapter drugAdapter = new DrugAdapter();
     private static String therapyRecommendationUri;
     private static String patientUri;
 
@@ -104,7 +102,7 @@ public final class TherapyRecommendationAdapter {
                 medicationChange.setId(IdType.newRandomUuid());
                 medicationChange.getMeta().addProfile(GenomicsReportingEnum.MEDICATIONCHANGE.system);
 
-                MedicationStatement ms = drugAdapter.fromJson(fhirPatient, treatment);
+                MedicationStatement ms = DrugAdapter.fromJson(fhirPatient, treatment);
 
                 medicationChange.getCode()
                         .addCoding(LoincEnum.CONSIDER_ALTERNATIVE_MEDICATION.toCoding());
@@ -151,7 +149,7 @@ public final class TherapyRecommendationAdapter {
 
     }
 
-    public static TherapyRecommendation toJson(IGenericClient client, Mtb mtb, List<Regex> regex, Observation ob) {
+    public static TherapyRecommendation toJson(IGenericClient client, List<Regex> regex, Observation ob) {
         TherapyRecommendation therapyRecommendation = new TherapyRecommendation()
                 .withComment(new ArrayList<>()).withReasoning(new Reasoning());
 
@@ -165,8 +163,6 @@ public final class TherapyRecommendationAdapter {
         }
 
         therapyRecommendation.setId(ob.getIdentifierFirstRep().getValue());
-
-
 
         List<Treatment> treatments = new ArrayList<>();
         therapyRecommendation.setTreatments(treatments);
@@ -199,7 +195,7 @@ public final class TherapyRecommendationAdapter {
                 }
             }
             if (result.getCode().getCodingFirstRep().getCode().equals("51963-7")) {
-                therapyRecommendation.getTreatments().add(drugAdapter.toJson(result));
+                therapyRecommendation.getTreatments().add(DrugAdapter.toJson(result));
             }
         });
 

@@ -22,12 +22,15 @@ import org.hl7.fhir.r4.model.codesystems.ObservationCategory;
  */
 public class GeneticAlterationsAdapter {
 
+    private GeneticAlterationsAdapter() {
+    }
+
     /**
      *
      * @param geneticAlteration Specified genetic mutation / CNV.
      * @return Observation constrained by genomics-reporting IG.
      */
-    public Observation fromJson(GeneticAlteration geneticAlteration) {
+    public static Observation fromJson(GeneticAlteration geneticAlteration) {
 
         Observation variant = new Observation();
         variant.setMeta(new Meta().addProfile(GenomicsReportingEnum.VARIANT.system));
@@ -149,7 +152,7 @@ public class GeneticAlterationsAdapter {
 
     }
 
-    public GeneticAlteration toJson(Observation o) {
+    public static GeneticAlteration toJson(Observation o) {
         GeneticAlteration g = new GeneticAlteration();
         o.getComponent().forEach(variant -> {
             switch (LoincEnum.fromCode(variant.getCode().getCodingFirstRep().getCode())) {

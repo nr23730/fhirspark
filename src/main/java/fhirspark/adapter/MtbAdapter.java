@@ -112,7 +112,7 @@ public final class MtbAdapter {
             switch (GenomicsReportingEnum
                     .fromSystem(reference.getResource().getMeta().getProfile().get(0).getValue())) {
                 case MEDICATION_EFFICACY:
-                    TherapyRecommendation therapyRecommendation = TherapyRecommendationAdapter.toJson(client, mtb,
+                    TherapyRecommendation therapyRecommendation = TherapyRecommendationAdapter.toJson(client,
                             regex, (Observation) reference.getResource());
                     mtb.getTherapyRecommendations().add(therapyRecommendation);
                     break;

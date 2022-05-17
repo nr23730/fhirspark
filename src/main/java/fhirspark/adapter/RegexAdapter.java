@@ -5,6 +5,10 @@ import java.util.List;
 import fhirspark.settings.Regex;
 
 public final class RegexAdapter {
+
+    private RegexAdapter() {
+    }
+
     public static String applyRegexToCbioportal(List<Regex> regex, String input) {
         String output = input;
         for (Regex r : regex) {

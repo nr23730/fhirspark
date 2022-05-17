@@ -20,6 +20,9 @@ public final class SpecimenAdapter {
 
     private static String specimenSystem;
 
+    private SpecimenAdapter() {
+    }
+
     public static void initialize(String newSpecimenSystem) {
         SpecimenAdapter.specimenSystem = newSpecimenSystem;
     }

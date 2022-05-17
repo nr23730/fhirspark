@@ -152,13 +152,17 @@ public class JsonFhirMapper {
     }
 
     private void deleteTherapyRecommendation(String patientId, String therapyRecommendationId) {
-        assert therapyRecommendationId.startsWith(patientId);
+        if (!therapyRecommendationId.startsWith(patientId)) {
+            throw new IllegalArgumentException("Invalid patientId!");
+        }
         client.delete().resourceConditionalByUrl(
                 "Observation?identifier=" + therapyRecommendationUri + "|" + therapyRecommendationId).execute();
     }
 
     private void deleteMtb(String patientId, String mtbId) {
-        assert mtbId.startsWith("mtb_" + patientId + "_");
+        if (!mtbId.startsWith("mtb_" + patientId + "_")) {
+            throw new IllegalArgumentException("Invalid patientId!");
+        }
         client.delete().resourceConditionalByUrl("DiagnosticReport?identifier=" + mtbUri + "|" + mtbId).execute();
     }
 

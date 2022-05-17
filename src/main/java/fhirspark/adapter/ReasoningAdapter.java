@@ -20,7 +20,8 @@ import fhirspark.settings.Regex;
 
 public class ReasoningAdapter {
 
-    private static GeneticAlterationsAdapter geneticAlterationsAdapter = new GeneticAlterationsAdapter();
+    private ReasoningAdapter() {
+    }
 
     public static List<Reference> fromJson(Bundle bundle, Observation efficacyObservation, List<Regex> regex, Reference fhirPatient, Reasoning reasoning) {
         if (reasoning.getClinicalData() != null) {
@@ -54,7 +55,7 @@ public class ReasoningAdapter {
                 String uniqueString = "component-value-concept=" + UriEnum.NCBI_GENE.uri + "|"
                         + geneticAlteration.getEntrezGeneId() + "&subject="
                         + fhirPatient.getResource().getIdElement();
-                Observation geneticVariant = geneticAlterationsAdapter.fromJson(geneticAlteration);
+                Observation geneticVariant = GeneticAlterationsAdapter.fromJson(geneticAlteration);
                 geneticVariant.setId(IdType.newRandomUuid());
                 geneticVariant.setSubject(fhirPatient);
                 bundle.addEntry().setFullUrl(geneticVariant.getIdElement().getValue())
@@ -76,7 +77,7 @@ public class ReasoningAdapter {
         List<GeneticAlteration> geneticAlterations = new ArrayList<>();
 
         genetic.forEach(reference -> {
-            geneticAlterations.add(geneticAlterationsAdapter.toJson((Observation) reference.getResource()));
+            geneticAlterations.add(GeneticAlterationsAdapter.toJson((Observation) reference.getResource()));
         });
 
         clinical.forEach(member -> {
