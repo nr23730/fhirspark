@@ -94,7 +94,6 @@ public class GeneticAlterationsAdapter {
         variant.addComponent(variationCode);
 
         Genenames gn = HgncGeneName.resolve(geneticAlteration.getEntrezGeneId());
-        assert geneticAlteration.getHugoSymbol().equals(gn.getApprovedSymbol());
         ObservationComponentComponent hgnc = new ObservationComponentComponent()
                 .setCode(new CodeableConcept(LoincEnum.GENE_STUDIED.toCoding()));
         hgnc.getValueCodeableConcept()

@@ -23,7 +23,8 @@ public class ReasoningAdapter {
     private ReasoningAdapter() {
     }
 
-    public static List<Reference> fromJson(Bundle bundle, Observation efficacyObservation, List<Regex> regex, Reference fhirPatient, Reasoning reasoning) {
+    public static List<Reference> fromJson(Bundle bundle, Observation efficacyObservation, List<Regex> regex,
+            Reference fhirPatient, Reasoning reasoning) {
         if (reasoning.getClinicalData() != null) {
             reasoning.getClinicalData().forEach(clinical -> {
                 Specimen s = null;
@@ -41,8 +42,8 @@ public class ReasoningAdapter {
                     Method m = Class.forName("fhirspark.adapter.clinicaldata." + clinical.getAttributeId())
                             .getMethod("process", ClinicalDatum.class);
                     efficacyObservation.addHasMember(new Reference((Resource) m.invoke(null, clinical)));
-                } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException |
-                        InvocationTargetException e) {
+                } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException
+                        | InvocationTargetException e) {
                     GenericAdapter genericAdapter = new GenericAdapter();
                     efficacyObservation
                             .addHasMember(new Reference(genericAdapter.fromJson(clinical, new Reference(s))));
@@ -76,16 +77,15 @@ public class ReasoningAdapter {
         List<ClinicalDatum> clinicalData = new ArrayList<>();
         List<GeneticAlteration> geneticAlterations = new ArrayList<>();
 
-        genetic.forEach(reference -> {
-            geneticAlterations.add(GeneticAlterationsAdapter.toJson((Observation) reference.getResource()));
-        });
+        genetic.forEach(reference -> geneticAlterations
+                .add(GeneticAlterationsAdapter.toJson((Observation) reference.getResource())));
 
         clinical.forEach(member -> {
             GenericAdapter genericAdapter = new GenericAdapter();
             ClinicalDatum cd = genericAdapter.toJson(regex, (Observation) member.getResource());
-            clinicalData.add(cd);            
+            clinicalData.add(cd);
         });
-        
+
         return new Reasoning().withClinicalData(clinicalData).withGeneticAlterations(geneticAlterations);
     }
 

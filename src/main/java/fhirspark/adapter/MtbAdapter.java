@@ -92,9 +92,8 @@ public final class MtbAdapter {
             recommendedActionReferences.forEach(recommendedActionReference -> {
 
                 Task t = (Task) ((Reference) recommendedActionReference.getValue()).getResource();
-                if (t != null) {
-                    assert t.getMeta().getProfile().get(0).getValue()
-                            .equals(GenomicsReportingEnum.TASK_REC_FOLLOWUP.system);
+                if (t != null && t.getMeta().getProfile().get(0).getValue()
+                        .equals(GenomicsReportingEnum.TASK_REC_FOLLOWUP.system)) {
                     Coding c = t.getCode().getCodingFirstRep();
                     switch (LoincEnum.fromCode(c.getCode())) {
                         case CONFIRMATORY_TESTING_RECOMMENDED:
@@ -109,15 +108,11 @@ public final class MtbAdapter {
                 }
             });
 
-            switch (GenomicsReportingEnum
-                    .fromSystem(reference.getResource().getMeta().getProfile().get(0).getValue())) {
-                case MEDICATION_EFFICACY:
-                    TherapyRecommendation therapyRecommendation = TherapyRecommendationAdapter.toJson(client,
-                            regex, (Observation) reference.getResource());
-                    mtb.getTherapyRecommendations().add(therapyRecommendation);
-                    break;
-                default:
-                    break;
+            if (GenomicsReportingEnum.MEDICATION_EFFICACY.equals(GenomicsReportingEnum
+                    .fromSystem(reference.getResource().getMeta().getProfile().get(0).getValue()))) {
+                TherapyRecommendation therapyRecommendation = TherapyRecommendationAdapter.toJson(client,
+                        regex, (Observation) reference.getResource());
+                mtb.getTherapyRecommendations().add(therapyRecommendation);
             }
         }
 
@@ -172,7 +167,9 @@ public final class MtbAdapter {
             diagnosticReport.addExtension(ex);
         }
 
-        assert mtb.getId().startsWith("mtb_" + patientId + "_");
+        if (!mtb.getId().startsWith("mtb_" + patientId + "_")) {
+            throw new IllegalArgumentException("Invalid mtb id!");
+        }
         diagnosticReport.setIssued(new Date(Long.valueOf(mtb.getId().replace("mtb_" + patientId + "_", ""))));
 
         if (mtb.getMtbState() != null) {
