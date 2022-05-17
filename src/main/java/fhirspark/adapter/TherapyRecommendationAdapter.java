@@ -1,28 +1,5 @@
 package fhirspark.adapter;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import org.hl7.fhir.r4.model.Annotation;
-import org.hl7.fhir.r4.model.Bundle;
-import org.hl7.fhir.r4.model.Coding;
-import org.hl7.fhir.r4.model.DiagnosticReport;
-import org.hl7.fhir.r4.model.Extension;
-import org.hl7.fhir.r4.model.IdType;
-import org.hl7.fhir.r4.model.Identifier;
-import org.hl7.fhir.r4.model.MedicationStatement;
-import org.hl7.fhir.r4.model.Observation;
-import org.hl7.fhir.r4.model.Practitioner;
-import org.hl7.fhir.r4.model.Reference;
-import org.hl7.fhir.r4.model.RelatedArtifact;
-import org.hl7.fhir.r4.model.Task;
-import org.hl7.fhir.r4.model.Observation.ObservationComponentComponent;
-import org.hl7.fhir.r4.model.Observation.ObservationStatus;
-import org.hl7.fhir.r4.model.RelatedArtifact.RelatedArtifactType;
-import org.hl7.fhir.r4.model.Task.TaskIntent;
-import org.hl7.fhir.r4.model.Task.TaskStatus;
-import org.hl7.fhir.r4.model.codesystems.ObservationCategory;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.gclient.TokenClientParam;
 import fhirspark.definitions.GenomicsReportingEnum;
@@ -33,6 +10,29 @@ import fhirspark.restmodel.Reasoning;
 import fhirspark.restmodel.TherapyRecommendation;
 import fhirspark.restmodel.Treatment;
 import fhirspark.settings.Regex;
+import org.hl7.fhir.r4.model.Annotation;
+import org.hl7.fhir.r4.model.Bundle;
+import org.hl7.fhir.r4.model.Coding;
+import org.hl7.fhir.r4.model.DiagnosticReport;
+import org.hl7.fhir.r4.model.Extension;
+import org.hl7.fhir.r4.model.IdType;
+import org.hl7.fhir.r4.model.Identifier;
+import org.hl7.fhir.r4.model.MedicationStatement;
+import org.hl7.fhir.r4.model.Observation;
+import org.hl7.fhir.r4.model.Observation.ObservationComponentComponent;
+import org.hl7.fhir.r4.model.Observation.ObservationStatus;
+import org.hl7.fhir.r4.model.Practitioner;
+import org.hl7.fhir.r4.model.Reference;
+import org.hl7.fhir.r4.model.RelatedArtifact;
+import org.hl7.fhir.r4.model.RelatedArtifact.RelatedArtifactType;
+import org.hl7.fhir.r4.model.Task;
+import org.hl7.fhir.r4.model.Task.TaskIntent;
+import org.hl7.fhir.r4.model.Task.TaskStatus;
+import org.hl7.fhir.r4.model.codesystems.ObservationCategory;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public final class TherapyRecommendationAdapter {
 
@@ -52,7 +52,7 @@ public final class TherapyRecommendationAdapter {
             Reference fhirPatient, TherapyRecommendation therapyRecommendation) {
         Observation efficacyObservation = new Observation();
         efficacyObservation.setId(IdType.newRandomUuid());
-        efficacyObservation.getMeta().addProfile(GenomicsReportingEnum.MEDICATION_EFFICACY.system);
+        efficacyObservation.getMeta().addProfile(GenomicsReportingEnum.MEDICATION_EFFICACY.getSystem());
         efficacyObservation.setStatus(ObservationStatus.FINAL);
         efficacyObservation.addCategory().addCoding(new Coding(ObservationCategory.LABORATORY.getSystem(),
                 ObservationCategory.LABORATORY.toCode(), ObservationCategory.LABORATORY.getDisplay()));
@@ -80,16 +80,17 @@ public final class TherapyRecommendationAdapter {
                 .forEach(comment -> efficacyObservation.getNote().add(new Annotation().setText(comment)));
 
         if (therapyRecommendation.getReasoning() != null) {
-            diagnosticReport.getResult().addAll(ReasoningAdapter.fromJson(bundle, efficacyObservation, regex, fhirPatient, therapyRecommendation.getReasoning()));
+            diagnosticReport.getResult().addAll(ReasoningAdapter.fromJson(bundle, efficacyObservation, regex,
+                    fhirPatient, therapyRecommendation.getReasoning()));
         }
 
         if (therapyRecommendation.getReferences() != null) {
             therapyRecommendation.getReferences().forEach(reference -> {
                 String title = reference.getName() != null ? reference.getName()
                         : pubmedResolver.resolvePublication(reference.getPmid());
-                Extension ex = new Extension().setUrl(GenomicsReportingEnum.RELATEDARTIFACT.system);
+                Extension ex = new Extension().setUrl(GenomicsReportingEnum.RELATEDARTIFACT.getSystem());
                 RelatedArtifact relatedArtifact = new RelatedArtifact().setType(RelatedArtifactType.CITATION)
-                        .setUrl(UriEnum.PUBMED_URI.uri + reference.getPmid()).setCitation(title);
+                        .setUrl(UriEnum.PUBMED_URI.getUri() + reference.getPmid()).setCitation(title);
                 ex.setValue(relatedArtifact);
                 efficacyObservation.addExtension(ex);
             });
@@ -100,7 +101,7 @@ public final class TherapyRecommendationAdapter {
                 Task medicationChange = new Task().setStatus(TaskStatus.REQUESTED)
                         .setIntent(TaskIntent.PROPOSAL).setFor(fhirPatient);
                 medicationChange.setId(IdType.newRandomUuid());
-                medicationChange.getMeta().addProfile(GenomicsReportingEnum.MEDICATIONCHANGE.system);
+                medicationChange.getMeta().addProfile(GenomicsReportingEnum.MEDICATIONCHANGE.getSystem());
 
                 MedicationStatement ms = DrugAdapter.fromJson(fhirPatient, treatment);
 
@@ -111,17 +112,17 @@ public final class TherapyRecommendationAdapter {
                 if (ncit == null) {
                     ncit = treatment.getName();
                 }
-                medicationChange.addIdentifier(new Identifier().setSystem(UriEnum.NCIT_URI.uri).setValue(ncit));
+                medicationChange.addIdentifier(new Identifier().setSystem(UriEnum.NCIT_URI.getUri()).setValue(ncit));
 
-                Extension ex = new Extension().setUrl(GenomicsReportingEnum.RECOMMENDEDACTION.system);
+                Extension ex = new Extension().setUrl(GenomicsReportingEnum.RECOMMENDEDACTION.getSystem());
                 ex.setValue(new Reference(medicationChange));
                 diagnosticReport.addExtension(ex);
 
                 bundle.addEntry().setFullUrl(medicationChange.getIdElement().getValue())
                         .setResource(medicationChange).getRequest()
-                        .setUrl("Task?identifier=" + UriEnum.NCIT_URI.uri + "|" + ncit + "&subject="
+                        .setUrl("Task?identifier=" + UriEnum.NCIT_URI.getUri() + "|" + ncit + "&subject="
                                 + fhirPatient.getResource().getIdElement())
-                        .setIfNoneExist("identifier=" + UriEnum.NCIT_URI.uri + "|" + ncit + "&subject="
+                        .setIfNoneExist("identifier=" + UriEnum.NCIT_URI.getUri() + "|" + ncit + "&subject="
                                 + fhirPatient.getResource().getIdElement())
                         .setMethod(Bundle.HTTPVerb.PUT);
 
@@ -168,12 +169,12 @@ public final class TherapyRecommendationAdapter {
         therapyRecommendation.setTreatments(treatments);
 
         List<fhirspark.restmodel.Reference> references = new ArrayList<>();
-        ob.getExtensionsByUrl(GenomicsReportingEnum.RELATEDARTIFACT.system).forEach(relatedArtifact -> {
+        ob.getExtensionsByUrl(GenomicsReportingEnum.RELATEDARTIFACT.getSystem()).forEach(relatedArtifact -> {
             if (((RelatedArtifact) relatedArtifact.getValue())
                     .getType() == RelatedArtifactType.CITATION) {
                 references.add(new fhirspark.restmodel.Reference()
                         .withPmid(Integer.valueOf(((RelatedArtifact) relatedArtifact.getValue())
-                                .getUrl().replaceFirst(UriEnum.PUBMED_URI.uri, "")))
+                                .getUrl().replaceFirst(UriEnum.PUBMED_URI.getUri(), "")))
                         .withName(((RelatedArtifact) relatedArtifact.getValue()).getCitation()));
             }
         });

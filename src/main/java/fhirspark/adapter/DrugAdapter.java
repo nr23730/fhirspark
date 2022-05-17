@@ -13,7 +13,7 @@ import org.hl7.fhir.r4.model.Reference;
 /**
  * Adapter that processes Drugs to a HL7 FHIR MedicationStatement.
  */
-public class DrugAdapter {
+public final class DrugAdapter {
 
     private DrugAdapter() {
     }
@@ -27,14 +27,14 @@ public class DrugAdapter {
     public static MedicationStatement fromJson(Reference patient, Treatment treatment) {
         MedicationStatement medicationStatement = new MedicationStatement();
         medicationStatement.getMeta()
-                .addProfile(GenomicsReportingEnum.MEDICATIONSTATEMENT.system);
+                .addProfile(GenomicsReportingEnum.MEDICATIONSTATEMENT.getSystem());
         medicationStatement.setStatus(MedicationStatementStatus.UNKNOWN).setSubject(patient);
 
         String ncitCode = treatment.getNcitCode() != null ? treatment.getNcitCode()
                 : OncoKbDrug.resolve(treatment.getName()).getNcitCode();
         if (ncitCode != null) {
             medicationStatement.getMedicationCodeableConcept().getCoding()
-                    .add(new Coding(UriEnum.NCIT_URI.uri, ncitCode, treatment.getName()));
+                    .add(new Coding(UriEnum.NCIT_URI.getUri(), ncitCode, treatment.getName()));
         } else {
             medicationStatement.getMedicationCodeableConcept().getCoding()
                     .add(new Coding(null, null, treatment.getName()));

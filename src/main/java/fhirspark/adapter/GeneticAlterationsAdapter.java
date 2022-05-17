@@ -20,7 +20,7 @@ import org.hl7.fhir.r4.model.codesystems.ObservationCategory;
 /**
  * Maps genetic mutations / CNVs to FHIR Observation.
  */
-public class GeneticAlterationsAdapter {
+public final class GeneticAlterationsAdapter {
 
     private GeneticAlterationsAdapter() {
     }
@@ -33,7 +33,7 @@ public class GeneticAlterationsAdapter {
     public static Observation fromJson(GeneticAlteration geneticAlteration) {
 
         Observation variant = new Observation();
-        variant.setMeta(new Meta().addProfile(GenomicsReportingEnum.VARIANT.system));
+        variant.setMeta(new Meta().addProfile(GenomicsReportingEnum.VARIANT.getSystem()));
 
         variant.setStatus(ObservationStatus.FINAL);
 
@@ -72,7 +72,7 @@ public class GeneticAlterationsAdapter {
             default:
                 ObservationComponentComponent hgvsp = new ObservationComponentComponent().setCode(
                         new CodeableConcept(LoincEnum.AMINO_ACID_CHANGE.toCoding()));
-                hgvsp.getValueCodeableConcept().addCoding(new Coding().setSystem(UriEnum.HGVS.uri)
+                hgvsp.getValueCodeableConcept().addCoding(new Coding().setSystem(UriEnum.HGVS.getUri())
                         .setCode("p." + geneticAlteration.getAlteration()));
                 variant.addComponent(hgvsp);
                 break;
@@ -80,15 +80,15 @@ public class GeneticAlterationsAdapter {
 
         ObservationComponentComponent variationCode = new ObservationComponentComponent()
                 .setCode(new CodeableConcept(LoincEnum.DISCRETE_GENETIC_VARIANT.toCoding()));
-        variationCode.getValueCodeableConcept().addCoding().setSystem(UriEnum.NCBI_GENE.uri)
+        variationCode.getValueCodeableConcept().addCoding().setSystem(UriEnum.NCBI_GENE.getUri())
                 .setCode(String.valueOf(geneticAlteration.getEntrezGeneId()));
         if (geneticAlteration.getClinvar() != null) {
-            variationCode.getValueCodeableConcept().addCoding().setSystem(UriEnum.CLINVAR.uri)
+            variationCode.getValueCodeableConcept().addCoding().setSystem(UriEnum.CLINVAR.getUri())
                     .setCode(String.valueOf(geneticAlteration.getClinvar()));
         }
         if (geneticAlteration.getCosmic() != null) {
             variationCode.getValueCodeableConcept().addCoding()
-                    .setSystem(UriEnum.COSMIC.uri)
+                    .setSystem(UriEnum.COSMIC.getUri())
                     .setCode(String.valueOf(geneticAlteration.getCosmic()));
         }
         variant.addComponent(variationCode);
@@ -97,7 +97,7 @@ public class GeneticAlterationsAdapter {
         ObservationComponentComponent hgnc = new ObservationComponentComponent()
                 .setCode(new CodeableConcept(LoincEnum.GENE_STUDIED.toCoding()));
         hgnc.getValueCodeableConcept()
-                .addCoding(new Coding(UriEnum.GENENAMES.uri, gn.getHgncId(), gn.getApprovedSymbol()));
+                .addCoding(new Coding(UriEnum.GENENAMES.getUri(), gn.getHgncId(), gn.getApprovedSymbol()));
         variant.addComponent(hgnc);
 
         ObservationComponentComponent startEnd = new ObservationComponentComponent().setCode(
@@ -134,7 +134,7 @@ public class GeneticAlterationsAdapter {
             ObservationComponentComponent af = new ObservationComponentComponent()
                     .setCode(new CodeableConcept(
                             LoincEnum.SAMPLE_VARIANT_ALLELE_FREQUENCY.toCoding()));
-            af.getValueQuantity().setSystem(UriEnum.UCUM.uri)
+            af.getValueQuantity().setSystem(UriEnum.UCUM.getUri())
                     .setValue(geneticAlteration.getAlleleFrequency());
             variant.addComponent(af);
         }
@@ -143,7 +143,7 @@ public class GeneticAlterationsAdapter {
             ObservationComponentComponent dbsnp = new ObservationComponentComponent()
                     .setCode(new CodeableConcept(LoincEnum.DBSNP.toCoding()));
             dbsnp.getValueCodeableConcept().addCoding(
-                    new Coding(UriEnum.DBSNP.uri, geneticAlteration.getDbsnp(), null));
+                    new Coding(UriEnum.DBSNP.getUri(), geneticAlteration.getDbsnp(), null));
             variant.addComponent(dbsnp);
         }
 

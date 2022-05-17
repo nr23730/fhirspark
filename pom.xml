@@ -117,12 +117,12 @@
                   <dependency>
                     <groupId>com.github.ngeor</groupId>
                     <artifactId>checkstyle-rules</artifactId>
-                    <version>5.3.0</version>
+                    <version>6.0.1</version>
                   </dependency>
                 </dependencies>
                 <configuration>
                     <configLocation>com/github/ngeor/checkstyle.xml</configLocation>
-                    <skip>true</skip>
+                    <skip>false</skip>
                     <excludes>fhirspark/restmodel/**,fhirspark/resolver/model/**</excludes>
                     <suppressionsLocation>checkstyle-suppressions.xml</suppressionsLocation>
                     <suppressionsFileExpression>checkstyle.suppressions.file</suppressionsFileExpression>

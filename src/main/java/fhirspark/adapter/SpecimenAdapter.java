@@ -1,17 +1,16 @@
 package fhirspark.adapter;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
+import fhirspark.definitions.GenomicsReportingEnum;
+import fhirspark.definitions.Hl7TerminologyEnum;
+import fhirspark.settings.Regex;
 import org.hl7.fhir.r4.model.IdType;
 import org.hl7.fhir.r4.model.Identifier;
 import org.hl7.fhir.r4.model.Reference;
 import org.hl7.fhir.r4.model.Specimen;
 
-import fhirspark.definitions.GenomicsReportingEnum;
-import fhirspark.definitions.Hl7TerminologyEnum;
-import fhirspark.settings.Regex;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * Builds a HL7 FHIR Speciment object with the provided specimen id.
@@ -40,7 +39,7 @@ public final class SpecimenAdapter {
     public static Specimen fromJson(Reference patient, String specimen) {
         Specimen fhirSpecimen = new Specimen();
         fhirSpecimen.setId(IdType.newRandomUuid());
-        fhirSpecimen.getMeta().addProfile(GenomicsReportingEnum.SPECIMEN.system);
+        fhirSpecimen.getMeta().addProfile(GenomicsReportingEnum.SPECIMEN.getSystem());
         fhirSpecimen.setSubject(patient);
         fhirSpecimen.addIdentifier(new Identifier().setSystem(specimenSystem).setValue(specimen));
         fhirSpecimen.getType().addCoding(Hl7TerminologyEnum.TUMOR.toCoding());

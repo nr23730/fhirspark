@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
-
 import fhirspark.adapter.SpecimenAdapter;
 import fhirspark.adapter.TherapyRecommendationAdapter;
 import fhirspark.resolver.HgncGeneName;
@@ -17,6 +16,11 @@ import fhirspark.restmodel.GeneticAlteration;
 import fhirspark.restmodel.Mtb;
 import fhirspark.settings.ConfigurationLoader;
 import fhirspark.settings.Settings;
+import org.eclipse.jetty.http.HttpStatus;
+import spark.Request;
+
+import javax.ws.rs.core.Cookie;
+
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.time.LocalDateTime;
@@ -25,9 +29,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.ws.rs.core.Cookie;
-import org.eclipse.jetty.http.HttpStatus;
-import spark.Request;
 
 import static spark.Spark.delete;
 import static spark.Spark.get;

@@ -27,16 +27,16 @@ public enum LoincEnum {
     MEDICATION_ASSESSED("51963-7", "Medication assessed [ID]"),
     EXACT_START_END("exact-start-end", "Variant exact start and end");
 
-    public final String code;
-    public final String display;
+    private final String code;
+    private final String display;
 
-    private LoincEnum(String code, String display) {
+    LoincEnum(String code, String display) {
         this.code = code;
         this.display = display;
     }
-    
+
     public Coding toCoding() {
-        return new Coding(UriEnum.LOINC_URI.uri, this.code, this.display);
+        return new Coding(UriEnum.LOINC_URI.getUri(), this.code, this.display);
     }
 
     public static LoincEnum fromCode(String s) {

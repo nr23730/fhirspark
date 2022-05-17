@@ -23,16 +23,6 @@ import fhirspark.restmodel.Reasoning;
 import fhirspark.restmodel.TherapyRecommendation;
 import fhirspark.restmodel.Treatment;
 import fhirspark.settings.Settings;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import org.hl7.fhir.instance.model.api.IAnyResource;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Bundle.BundleEntryComponent;
@@ -45,6 +35,17 @@ import org.hl7.fhir.r4.model.Practitioner;
 import org.hl7.fhir.r4.model.Reference;
 import org.hl7.fhir.r4.model.RelatedArtifact;
 import org.hl7.fhir.r4.model.RelatedArtifact.RelatedArtifactType;
+
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Fulfils the persistence in HL7 FHIR resources.
@@ -189,7 +190,8 @@ public class JsonFhirMapper {
     }
 
     /**
-     * Fetched Pubmed IDs that have been previously associated with the same alteration.
+     * Fetched Pubmed IDs that have been previously associated with the same
+     * alteration.
      *
      * @param alterations List of alterations to consider
      * @return List of matching references
@@ -203,7 +205,7 @@ public class JsonFhirMapper {
 
         Bundle bStuff = (Bundle) client.search().forResource(Observation.class)
                 .where(new TokenClientParam("component-value-concept").exactly()
-                        .systemAndValues(UriEnum.NCBI_GENE.uri, new ArrayList<>(entrez)))
+                        .systemAndValues(UriEnum.NCBI_GENE.getUri(), new ArrayList<>(entrez)))
                 .prettyPrint().revInclude(Observation.INCLUDE_DERIVED_FROM).execute();
 
         Map<Integer, fhirspark.restmodel.Reference> refMap = new HashMap<>();
@@ -211,13 +213,15 @@ public class JsonFhirMapper {
         for (BundleEntryComponent bec : bStuff.getEntry()) {
             Observation o = (Observation) bec.getResource();
             if (!o.getMeta().getProfile().get(0)
-                    .equals(GenomicsReportingEnum.MEDICATION_EFFICACY.system)) {
+                    .equals(GenomicsReportingEnum.MEDICATION_EFFICACY.getSystem())) {
                 continue;
             }
-            o.getExtensionsByUrl(GenomicsReportingEnum.RELATEDARTIFACT.system).forEach(relatedArtifact -> {
+            o.getExtensionsByUrl(GenomicsReportingEnum.RELATEDARTIFACT.getSystem()).forEach(relatedArtifact -> {
                 if (((RelatedArtifact) relatedArtifact.getValue()).getType() == RelatedArtifactType.CITATION) {
                     Integer pmid = Integer.valueOf(
-                            ((RelatedArtifact) relatedArtifact.getValue()).getUrl().replaceFirst(UriEnum.PUBMED_URI.uri, ""));
+                            ((RelatedArtifact) relatedArtifact.getValue()).getUrl().replaceFirst(
+                                    UriEnum.PUBMED_URI.getUri(),
+                                    ""));
                     refMap.put(pmid, new fhirspark.restmodel.Reference().withPmid(pmid)
                             .withName(((RelatedArtifact) relatedArtifact.getValue()).getCitation()));
                 }
@@ -245,7 +249,7 @@ public class JsonFhirMapper {
 
         Bundle bStuff = (Bundle) client.search().forResource(Observation.class)
                 .where(new TokenClientParam("component-value-concept").exactly()
-                        .systemAndValues(UriEnum.NCBI_GENE.uri, new ArrayList<>(entrez)))
+                        .systemAndValues(UriEnum.NCBI_GENE.getUri(), new ArrayList<>(entrez)))
                 .prettyPrint().revInclude(Observation.INCLUDE_DERIVED_FROM).execute();
 
         Map<String, TherapyRecommendation> tcMap = new HashMap<>();
@@ -253,7 +257,7 @@ public class JsonFhirMapper {
         for (BundleEntryComponent bec : bStuff.getEntry()) {
             Observation ob = (Observation) bec.getResource();
             if (!ob.getMeta().getProfile().get(0)
-                    .equals(GenomicsReportingEnum.MEDICATION_EFFICACY.system)) {
+                    .equals(GenomicsReportingEnum.MEDICATION_EFFICACY.getSystem())) {
                 continue;
             }
 
@@ -274,16 +278,15 @@ public class JsonFhirMapper {
 
             tcMap.put(ob.getIdentifierFirstRep().getValue(), therapyRecommendation);
 
-
             List<Treatment> treatments = new ArrayList<>();
             therapyRecommendation.setTreatments(treatments);
 
             List<fhirspark.restmodel.Reference> references = new ArrayList<>();
-            ob.getExtensionsByUrl(GenomicsReportingEnum.RELATEDARTIFACT.system).forEach(relatedArtifact -> {
+            ob.getExtensionsByUrl(GenomicsReportingEnum.RELATEDARTIFACT.getSystem()).forEach(relatedArtifact -> {
                 if (((RelatedArtifact) relatedArtifact.getValue()).getType() == RelatedArtifactType.CITATION) {
                     references.add(new fhirspark.restmodel.Reference()
                             .withPmid(Integer.valueOf(((RelatedArtifact) relatedArtifact.getValue()).getUrl()
-                                    .replaceFirst(UriEnum.PUBMED_URI.uri, "")))
+                                    .replaceFirst(UriEnum.PUBMED_URI.getUri(), "")))
                             .withName(((RelatedArtifact) relatedArtifact.getValue()).getCitation()));
                 }
             });
@@ -299,8 +302,8 @@ public class JsonFhirMapper {
                     }
                     if (evidence.length > 2) {
                         therapyRecommendation.setEvidenceLevelM3Text(
-                            String.join(" ", Arrays.asList(evidence).subList(2, evidence.length))
-                                    .replace("(", "").replace(")", ""));
+                                String.join(" ", Arrays.asList(evidence).subList(2, evidence.length))
+                                        .replace("(", "").replace(")", ""));
                     }
                 }
                 if (result.getCode().getCodingFirstRep().getCode().equals("51963-7")) {
@@ -337,7 +340,8 @@ public class JsonFhirMapper {
                             g.setHugoSymbol(variant.getValueCodeableConcept().getCodingFirstRep().getDisplay());
                             break;
                         case CHROMOSOME_COPY_NUMBER_CHANGE:
-                            switch (LoincEnum.fromCode(variant.getValueCodeableConcept().getCodingFirstRep().getCode())) {
+                            switch (LoincEnum
+                                    .fromCode(variant.getValueCodeableConcept().getCodingFirstRep().getCode())) {
                                 case COPY_NUMBER_GAIN:
                                     g.setAlteration("Amplification");
                                     break;

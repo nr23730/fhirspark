@@ -9,10 +9,6 @@ import fhirspark.restmodel.Mtb;
 import fhirspark.restmodel.TherapyRecommendation;
 import fhirspark.settings.Regex;
 import fhirspark.settings.Settings;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Coding;
 import org.hl7.fhir.r4.model.DiagnosticReport;
@@ -29,6 +25,11 @@ import org.hl7.fhir.r4.model.Specimen;
 import org.hl7.fhir.r4.model.Task;
 import org.hl7.fhir.r4.model.Task.TaskIntent;
 import org.hl7.fhir.r4.model.Task.TaskStatus;
+
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 public final class MtbAdapter {
 
@@ -87,13 +88,13 @@ public final class MtbAdapter {
         for (Reference reference : diagnosticReport.getResult()) {
 
             List<Extension> recommendedActionReferences = diagnosticReport
-                    .getExtensionsByUrl(GenomicsReportingEnum.RECOMMENDEDACTION.system);
+                    .getExtensionsByUrl(GenomicsReportingEnum.RECOMMENDEDACTION.getSystem());
 
             recommendedActionReferences.forEach(recommendedActionReference -> {
 
                 Task t = (Task) ((Reference) recommendedActionReference.getValue()).getResource();
                 if (t != null && t.getMeta().getProfile().get(0).getValue()
-                        .equals(GenomicsReportingEnum.TASK_REC_FOLLOWUP.system)) {
+                        .equals(GenomicsReportingEnum.TASK_REC_FOLLOWUP.getSystem())) {
                     Coding c = t.getCode().getCodingFirstRep();
                     switch (LoincEnum.fromCode(c.getCode())) {
                         case CONFIRMATORY_TESTING_RECOMMENDED:
@@ -122,7 +123,7 @@ public final class MtbAdapter {
 
     public static void fromJson(Bundle bundle, List<Regex> regex, Reference fhirPatient, String patientId, Mtb mtb) {
         DiagnosticReport diagnosticReport = new DiagnosticReport();
-        diagnosticReport.getMeta().addProfile(GenomicsReportingEnum.GENOMICS_REPORT.system);
+        diagnosticReport.getMeta().addProfile(GenomicsReportingEnum.GENOMICS_REPORT.getSystem());
         diagnosticReport.setId(IdType.newRandomUuid());
         diagnosticReport.setSubject(fhirPatient);
         diagnosticReport.addCategory().addCoding(Hl7TerminologyEnum.GE.toCoding());
@@ -157,12 +158,12 @@ public final class MtbAdapter {
 
         if (mtb.getGeneticCounselingRecommendation() != null && mtb.getGeneticCounselingRecommendation()) {
             Task t = new Task();
-            t.getMeta().addProfile(GenomicsReportingEnum.TASK_REC_FOLLOWUP.system);
+            t.getMeta().addProfile(GenomicsReportingEnum.TASK_REC_FOLLOWUP.getSystem());
             t.setFor(fhirPatient);
             t.setStatus(TaskStatus.REQUESTED).setIntent(TaskIntent.PROPOSAL);
             t.getCode().setText("Recommended follow-up")
                     .addCoding(LoincEnum.GENETIC_COUNSELING_RECOMMENDED.toCoding());
-            Extension ex = new Extension().setUrl(GenomicsReportingEnum.RECOMMENDEDACTION.system);
+            Extension ex = new Extension().setUrl(GenomicsReportingEnum.RECOMMENDEDACTION.getSystem());
             ex.setValue(new Reference(t));
             diagnosticReport.addExtension(ex);
         }
@@ -180,12 +181,12 @@ public final class MtbAdapter {
 
         if (mtb.getRebiopsyRecommendation() != null && mtb.getRebiopsyRecommendation()) {
             Task t = new Task();
-            t.getMeta().addProfile(GenomicsReportingEnum.TASK_REC_FOLLOWUP.system);
+            t.getMeta().addProfile(GenomicsReportingEnum.TASK_REC_FOLLOWUP.getSystem());
             t.setFor(fhirPatient);
             t.setStatus(TaskStatus.REQUESTED).setIntent(TaskIntent.PROPOSAL);
             t.getCode().setText("Recommended follow-up")
                     .addCoding(LoincEnum.CONFIRMATORY_TESTING_RECOMMENDED.toCoding());
-            Extension ex = new Extension().setUrl(GenomicsReportingEnum.RECOMMENDEDACTION.system);
+            Extension ex = new Extension().setUrl(GenomicsReportingEnum.RECOMMENDEDACTION.getSystem());
             ex.setValue(new Reference(t));
             diagnosticReport.addExtension(ex);
         }

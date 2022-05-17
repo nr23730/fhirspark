@@ -1,9 +1,11 @@
 package fhirspark.adapter;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.List;
+import fhirspark.adapter.clinicaldata.GenericAdapter;
+import fhirspark.definitions.UriEnum;
+import fhirspark.restmodel.ClinicalDatum;
+import fhirspark.restmodel.GeneticAlteration;
+import fhirspark.restmodel.Reasoning;
+import fhirspark.settings.Regex;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.IdType;
 import org.hl7.fhir.r4.model.Observation;
@@ -11,14 +13,12 @@ import org.hl7.fhir.r4.model.Reference;
 import org.hl7.fhir.r4.model.Resource;
 import org.hl7.fhir.r4.model.Specimen;
 
-import fhirspark.adapter.clinicaldata.GenericAdapter;
-import fhirspark.definitions.UriEnum;
-import fhirspark.restmodel.ClinicalDatum;
-import fhirspark.restmodel.GeneticAlteration;
-import fhirspark.restmodel.Reasoning;
-import fhirspark.settings.Regex;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
 
-public class ReasoningAdapter {
+public final class ReasoningAdapter {
 
     private ReasoningAdapter() {
     }
@@ -53,7 +53,7 @@ public class ReasoningAdapter {
 
         if (reasoning.getGeneticAlterations() != null) {
             reasoning.getGeneticAlterations().forEach(geneticAlteration -> {
-                String uniqueString = "component-value-concept=" + UriEnum.NCBI_GENE.uri + "|"
+                String uniqueString = "component-value-concept=" + UriEnum.NCBI_GENE.getUri() + "|"
                         + geneticAlteration.getEntrezGeneId() + "&subject="
                         + fhirPatient.getResource().getIdElement();
                 Observation geneticVariant = GeneticAlterationsAdapter.fromJson(geneticAlteration);

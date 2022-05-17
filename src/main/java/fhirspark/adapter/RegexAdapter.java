@@ -1,8 +1,8 @@
 package fhirspark.adapter;
 
-import java.util.List;
-
 import fhirspark.settings.Regex;
+
+import java.util.List;
 
 public final class RegexAdapter {
 

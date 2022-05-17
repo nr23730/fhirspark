@@ -13,9 +13,9 @@ public enum UriEnum {
     DBSNP("http://www.ncbi.nlm.nih.gov/projects/SNP"),
     HGVS("http://varomen.hgvs.org");
 
-    public final String uri;
+    private final String uri;
 
-    private UriEnum(String uri) {
+    UriEnum(String uri) {
         this.uri = uri;
     }
 
@@ -27,5 +27,12 @@ public enum UriEnum {
         }
         return null;
     }
-    
+
+    /**
+     * @return the uri
+     */
+    public String getUri() {
+        return uri;
+    }
+
 }
