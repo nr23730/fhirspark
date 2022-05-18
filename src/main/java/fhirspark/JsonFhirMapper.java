@@ -79,6 +79,9 @@ public class JsonFhirMapper {
     /**
      * Retrieves MTB data from FHIR server and transforms it into JSON format for
      * cBioPortal.
+     * @param patientId
+     * @return
+     * @throws JsonProcessingException
      */
     public String toJson(String patientId) throws JsonProcessingException {
         List<Mtb> mtbs = new ArrayList<Mtb>();
@@ -213,7 +216,7 @@ public class JsonFhirMapper {
         for (BundleEntryComponent bec : bStuff.getEntry()) {
             Observation o = (Observation) bec.getResource();
             if (!o.getMeta().getProfile().get(0)
-                    .equals(GenomicsReportingEnum.MEDICATION_EFFICACY.getSystem())) {
+                    .equals(GenomicsReportingEnum.THERAPEUTIC_IMPLICATION.getSystem())) {
                 continue;
             }
             o.getExtensionsByUrl(GenomicsReportingEnum.RELATEDARTIFACT.getSystem()).forEach(relatedArtifact -> {
@@ -257,7 +260,7 @@ public class JsonFhirMapper {
         for (BundleEntryComponent bec : bStuff.getEntry()) {
             Observation ob = (Observation) bec.getResource();
             if (!ob.getMeta().getProfile().get(0)
-                    .equals(GenomicsReportingEnum.MEDICATION_EFFICACY.getSystem())) {
+                    .equals(GenomicsReportingEnum.THERAPEUTIC_IMPLICATION.getSystem())) {
                 continue;
             }
 

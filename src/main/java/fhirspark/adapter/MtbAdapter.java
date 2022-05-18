@@ -109,7 +109,7 @@ public final class MtbAdapter {
                 }
             });
 
-            if (GenomicsReportingEnum.MEDICATION_EFFICACY.equals(GenomicsReportingEnum
+            if (GenomicsReportingEnum.THERAPEUTIC_IMPLICATION.equals(GenomicsReportingEnum
                     .fromSystem(reference.getResource().getMeta().getProfile().get(0).getValue()))) {
                 TherapyRecommendation therapyRecommendation = TherapyRecommendationAdapter.toJson(client,
                         regex, (Observation) reference.getResource());
