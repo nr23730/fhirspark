@@ -13,12 +13,16 @@ public enum GenomicsReportingEnum {
             null),
     RELATEDARTIFACT("http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/medicationstatement", null, null),
     THERAPEUTIC_IMPLICATION_CODING(
-                "http://hl7.org/fhir/uv/genomics-reporting/CodeSystem/TbdCodes", "therapeutic-implication",
+            "http://hl7.org/fhir/uv/genomics-reporting/CodeSystem/TbdCodes", "therapeutic-implication",
             "Therapeutic Implication"),
-            EXACT_START_END("http://hl7.org/fhir/uv/genomics-reporting/CodeSystem/TbdCodes", "exact-start-end",
+    EXACT_START_END("http://hl7.org/fhir/uv/genomics-reporting/CodeSystem/TbdCodes", "exact-start-end",
             "Variant exact start and end"),
     TASK_MED_CHG("http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/task-med-chg", null, null),
-    TASK_REC_FOLLOWUP("http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/task-rec-followup", null, null);
+    TASK_REC_FOLLOWUP("http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/task-rec-followup", null, null),
+    PREDICTED_THERAPEUTIC_IMPLICATION("http://hl7.org/fhir/uv/genomics-reporting/CodeSystem/tbd-codes-cs",
+            "predicted-therapeutic-implication", "Predicted Therapeutic Implication"),
+    ASSOCIATED_THERAPY("http://hl7.org/fhir/uv/genomics-reporting/CodeSystem/TbdCodes", "associated-therapy",
+            "Genomically linked therapy");
 
     private final String system;
     private final String code;

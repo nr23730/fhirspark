@@ -96,6 +96,11 @@ public final class TherapyRecommendationAdapter {
             });
         }
 
+        if (therapyRecommendation.getClinicalTrial() != null) {
+            therapeuticImplication.getComponent()
+                    .addAll(ClinicalTrialAdapter.fromJson(therapyRecommendation.getClinicalTrial()));
+        }
+
         return therapeuticImplication;
 
     }
@@ -160,6 +165,9 @@ public final class TherapyRecommendationAdapter {
             }
             if (result.getCode().getCodingFirstRep().getCode().equals("51963-7")) {
                 therapyRecommendation.getTreatments().add(DrugAdapter.toJson(result));
+            }
+            if (result.getCode().getCodingFirstRep().getCode().equals("associated-therapy")) {
+                therapyRecommendation.setClinicalTrial(ClinicalTrialAdapter.toJson(result));
             }
         });
 

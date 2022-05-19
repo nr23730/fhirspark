@@ -16,6 +16,12 @@
       "therapyRecommendations": [
         {
           "author": "",
+          "clinicalTrial": [
+            {
+              "id": "",
+              "name": ""
+            }
+          ],
           "comment": [
             ""
           ],
