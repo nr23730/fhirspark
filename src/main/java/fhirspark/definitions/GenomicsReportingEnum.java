@@ -17,7 +17,6 @@ public enum GenomicsReportingEnum {
             "Therapeutic Implication"),
     EXACT_START_END("http://hl7.org/fhir/uv/genomics-reporting/CodeSystem/TbdCodes", "exact-start-end",
             "Variant exact start and end"),
-    TASK_MED_CHG("http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/task-med-chg", null, null),
     TASK_REC_FOLLOWUP("http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/task-rec-followup", null, null),
     PREDICTED_THERAPEUTIC_IMPLICATION("http://hl7.org/fhir/uv/genomics-reporting/CodeSystem/tbd-codes-cs",
             "predicted-therapeutic-implication", "Predicted Therapeutic Implication"),

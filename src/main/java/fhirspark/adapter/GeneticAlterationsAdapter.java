@@ -2,6 +2,7 @@ package fhirspark.adapter;
 
 import fhirspark.definitions.GenomicsReportingEnum;
 import fhirspark.definitions.LoincEnum;
+import fhirspark.definitions.MolekulargenetischerBefundberichtEnum;
 import fhirspark.definitions.UriEnum;
 import fhirspark.resolver.HgncGeneName;
 import fhirspark.resolver.model.Genenames;
@@ -34,6 +35,7 @@ public final class GeneticAlterationsAdapter {
 
         Observation variant = new Observation();
         variant.setMeta(new Meta().addProfile(GenomicsReportingEnum.VARIANT.getSystem()));
+        variant.setMeta(new Meta().addProfile(MolekulargenetischerBefundberichtEnum.VARIANT.getSystem()));
 
         variant.setStatus(ObservationStatus.FINAL);
 

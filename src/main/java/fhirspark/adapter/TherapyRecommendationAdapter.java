@@ -4,6 +4,7 @@ import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.gclient.TokenClientParam;
 import fhirspark.definitions.GenomicsReportingEnum;
 import fhirspark.definitions.LoincEnum;
+import fhirspark.definitions.MolekulargenetischerBefundberichtEnum;
 import fhirspark.definitions.UriEnum;
 import fhirspark.resolver.PubmedPublication;
 import fhirspark.restmodel.Reasoning;
@@ -49,6 +50,8 @@ public final class TherapyRecommendationAdapter {
         Observation therapeuticImplication = new Observation();
         therapeuticImplication.setId(IdType.newRandomUuid());
         therapeuticImplication.getMeta().addProfile(GenomicsReportingEnum.THERAPEUTIC_IMPLICATION.getSystem());
+        therapeuticImplication.getMeta()
+                .addProfile(MolekulargenetischerBefundberichtEnum.THERAPEUTIC_IMPLICATION.getSystem());
         therapeuticImplication.setStatus(ObservationStatus.FINAL);
         therapeuticImplication.addCategory().addCoding(new Coding(ObservationCategory.LABORATORY.getSystem(),
                 ObservationCategory.LABORATORY.toCode(), ObservationCategory.LABORATORY.getDisplay()));
@@ -71,20 +74,25 @@ public final class TherapyRecommendationAdapter {
         therapeuticImplication.addPerformer(getOrCreatePractitioner(bundle, therapyRecommendation.getAuthor()));
 
         therapyRecommendation.getComment()
-                .forEach(comment -> therapeuticImplication.getNote().add(new Annotation().setText(comment)));
+                .forEach(comment -> therapeuticImplication.getNote()
+                        .add(new Annotation().setText(comment)));
 
         if (therapyRecommendation.getReasoning() != null) {
-            diagnosticReport.getResult().addAll(ReasoningAdapter.fromJson(bundle, therapeuticImplication, regex,
-                    fhirPatient, therapyRecommendation.getReasoning()));
+            diagnosticReport.getResult()
+                    .addAll(ReasoningAdapter.fromJson(bundle, therapeuticImplication, regex,
+                            fhirPatient, therapyRecommendation.getReasoning()));
         }
 
         if (therapyRecommendation.getReferences() != null) {
             therapyRecommendation.getReferences().forEach(reference -> {
                 String title = reference.getName() != null ? reference.getName()
                         : pubmedResolver.resolvePublication(reference.getPmid());
-                Extension ex = new Extension().setUrl(GenomicsReportingEnum.RELATEDARTIFACT.getSystem());
-                RelatedArtifact relatedArtifact = new RelatedArtifact().setType(RelatedArtifactType.CITATION)
-                        .setUrl(UriEnum.PUBMED_URI.getUri() + reference.getPmid()).setCitation(title);
+                Extension ex = new Extension()
+                        .setUrl(GenomicsReportingEnum.RELATEDARTIFACT.getSystem());
+                RelatedArtifact relatedArtifact = new RelatedArtifact()
+                        .setType(RelatedArtifactType.CITATION)
+                        .setUrl(UriEnum.PUBMED_URI.getUri() + reference.getPmid())
+                        .setCitation(title);
                 ex.setValue(relatedArtifact);
                 therapeuticImplication.addExtension(ex);
             });
@@ -98,7 +106,8 @@ public final class TherapyRecommendationAdapter {
 
         if (therapyRecommendation.getClinicalTrial() != null) {
             therapeuticImplication.getComponent()
-                    .addAll(ClinicalTrialAdapter.fromJson(therapyRecommendation.getClinicalTrial()));
+                    .addAll(ClinicalTrialAdapter
+                            .fromJson(therapyRecommendation.getClinicalTrial()));
         }
 
         return therapeuticImplication;
@@ -112,7 +121,8 @@ public final class TherapyRecommendationAdapter {
         practitioner.addIdentifier(new Identifier().setSystem(patientUri).setValue(credentials));
         b.addEntry().setFullUrl(practitioner.getIdElement().getValue()).setResource(practitioner).getRequest()
                 .setUrl("Practitioner?identifier=" + patientUri + "|" + credentials)
-                .setIfNoneExist("identifier=" + patientUri + "|" + credentials).setMethod(Bundle.HTTPVerb.PUT);
+                .setIfNoneExist("identifier=" + patientUri + "|" + credentials)
+                .setMethod(Bundle.HTTPVerb.PUT);
 
         return new Reference(practitioner);
 
@@ -142,8 +152,10 @@ public final class TherapyRecommendationAdapter {
                     .getType() == RelatedArtifactType.CITATION) {
                 references.add(new fhirspark.restmodel.Reference()
                         .withPmid(Integer.valueOf(((RelatedArtifact) relatedArtifact.getValue())
-                                .getUrl().replaceFirst(UriEnum.PUBMED_URI.getUri(), "")))
-                        .withName(((RelatedArtifact) relatedArtifact.getValue()).getCitation()));
+                                .getUrl()
+                                .replaceFirst(UriEnum.PUBMED_URI.getUri(), "")))
+                        .withName(((RelatedArtifact) relatedArtifact.getValue())
+                                .getCitation()));
             }
         });
 
@@ -159,7 +171,8 @@ public final class TherapyRecommendationAdapter {
                 }
                 if (evidence.length > 2) {
                     therapyRecommendation.setEvidenceLevelM3Text(
-                            String.join(" ", Arrays.asList(evidence).subList(2, evidence.length))
+                            String.join(" ", Arrays.asList(evidence).subList(2,
+                                    evidence.length))
                                     .replace("(", "").replace(")", ""));
                 }
             }
@@ -171,7 +184,8 @@ public final class TherapyRecommendationAdapter {
             }
         });
 
-        therapyRecommendation.setReasoning(ReasoningAdapter.toJson(regex, ob.getDerivedFrom(), ob.getHasMember()));
+        therapyRecommendation
+                .setReasoning(ReasoningAdapter.toJson(regex, ob.getDerivedFrom(), ob.getHasMember()));
 
         ob.getNote().forEach(note -> therapyRecommendation.getComment().add(note.getText()));
 

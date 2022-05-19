@@ -5,6 +5,7 @@ import ca.uhn.fhir.rest.gclient.TokenClientParam;
 import fhirspark.definitions.GenomicsReportingEnum;
 import fhirspark.definitions.Hl7TerminologyEnum;
 import fhirspark.definitions.LoincEnum;
+import fhirspark.definitions.MolekulargenetischerBefundberichtEnum;
 import fhirspark.restmodel.Mtb;
 import fhirspark.restmodel.TherapyRecommendation;
 import fhirspark.settings.Regex;
@@ -123,6 +124,7 @@ public final class MtbAdapter {
     public static void fromJson(Bundle bundle, List<Regex> regex, Reference fhirPatient, String patientId, Mtb mtb) {
         DiagnosticReport diagnosticReport = new DiagnosticReport();
         diagnosticReport.getMeta().addProfile(GenomicsReportingEnum.GENOMICS_REPORT.getSystem());
+        diagnosticReport.getMeta().addProfile(MolekulargenetischerBefundberichtEnum.GENOMICS_REPORT.getSystem());
         diagnosticReport.setId(IdType.newRandomUuid());
         diagnosticReport.setSubject(fhirPatient);
         diagnosticReport.addCategory().addCoding(Hl7TerminologyEnum.GE.toCoding());
@@ -158,6 +160,7 @@ public final class MtbAdapter {
         if (mtb.getGeneticCounselingRecommendation() != null && mtb.getGeneticCounselingRecommendation()) {
             Task t = new Task();
             t.getMeta().addProfile(GenomicsReportingEnum.TASK_REC_FOLLOWUP.getSystem());
+            t.getMeta().addProfile(MolekulargenetischerBefundberichtEnum.TASK_REC_FOLLOWUP.getSystem());
             t.setFor(fhirPatient);
             t.setStatus(TaskStatus.REQUESTED).setIntent(TaskIntent.PROPOSAL);
             t.getCode().setText("Recommended follow-up")
@@ -181,6 +184,7 @@ public final class MtbAdapter {
         if (mtb.getRebiopsyRecommendation() != null && mtb.getRebiopsyRecommendation()) {
             Task t = new Task();
             t.getMeta().addProfile(GenomicsReportingEnum.TASK_REC_FOLLOWUP.getSystem());
+            t.getMeta().addProfile(MolekulargenetischerBefundberichtEnum.TASK_REC_FOLLOWUP.getSystem());
             t.setFor(fhirPatient);
             t.setStatus(TaskStatus.REQUESTED).setIntent(TaskIntent.PROPOSAL);
             t.getCode().setText("Recommended follow-up")

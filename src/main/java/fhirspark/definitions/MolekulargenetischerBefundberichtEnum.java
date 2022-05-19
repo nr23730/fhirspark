@@ -11,9 +11,6 @@ public enum MolekulargenetischerBefundberichtEnum {
             null, null),
     VARIANT("https://www.medizininformatik-initiative.de/fhir/ext/modul-molgen/StructureDefinition/variante", null,
             null),
-    TASK_MED_CHG(
-            "https://www.medizininformatik-initiative.de/fhir/ext/modul-molgen/StructureDefinition/medikationsempfehlung",
-            null, null),
     TASK_REC_FOLLOWUP(
             "https://www.medizininformatik-initiative.de/fhir/ext/modul-molgen/StructureDefinition/empfohlene-folgemassnahme",
             null, null);
