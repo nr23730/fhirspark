@@ -11,7 +11,7 @@ public enum GenomicsReportingEnum {
     VARIANT("http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/variant", null, null),
     MEDICATIONSTATEMENT("http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/medicationstatement", null,
             null),
-    RELATEDARTIFACT("http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/medicationstatement", null, null),
+    RELATEDARTIFACT("http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/CGRelatedArtifact", null, null),
     THERAPEUTIC_IMPLICATION_CODING(
             "http://hl7.org/fhir/uv/genomics-reporting/CodeSystem/TbdCodes", "therapeutic-implication",
             "Therapeutic Implication"),

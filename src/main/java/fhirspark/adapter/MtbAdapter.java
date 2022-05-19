@@ -93,8 +93,7 @@ public final class MtbAdapter {
             recommendedActionReferences.forEach(recommendedActionReference -> {
 
                 Task t = (Task) ((Reference) recommendedActionReference.getValue()).getResource();
-                if (t != null && t.getMeta().getProfile().get(0).getValue()
-                        .equals(GenomicsReportingEnum.TASK_REC_FOLLOWUP.getSystem())) {
+                if (t != null && t.getMeta().hasProfile(GenomicsReportingEnum.TASK_REC_FOLLOWUP.getSystem())) {
                     Coding c = t.getCode().getCodingFirstRep();
                     switch (LoincEnum.fromCode(c.getCode())) {
                         case CONFIRMATORY_TESTING_RECOMMENDED:
@@ -109,8 +108,8 @@ public final class MtbAdapter {
                 }
             });
 
-            if (GenomicsReportingEnum.THERAPEUTIC_IMPLICATION.equals(GenomicsReportingEnum
-                    .fromSystem(reference.getResource().getMeta().getProfile().get(0).getValue()))) {
+            if (((Observation) reference.getResource()).getMeta()
+                    .hasProfile(GenomicsReportingEnum.THERAPEUTIC_IMPLICATION.getSystem())) {
                 TherapyRecommendation therapyRecommendation = TherapyRecommendationAdapter.toJson(client,
                         regex, (Observation) reference.getResource());
                 mtb.getTherapyRecommendations().add(therapyRecommendation);
