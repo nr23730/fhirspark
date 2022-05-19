@@ -11,7 +11,9 @@ public enum UriEnum {
     GENENAMES("http://www.genenames.org/geneId"),
     UCUM("http://unitsofmeasure.org"),
     DBSNP("http://www.ncbi.nlm.nih.gov/projects/SNP"),
-    HGVS("http://varomen.hgvs.org");
+    HGVS("http://varomen.hgvs.org"),
+    CLINICALTRIALS("http://clinicaltrials.gov/"),
+    SNOMED("http://snomed.info/sct");
 
     private final String uri;
 

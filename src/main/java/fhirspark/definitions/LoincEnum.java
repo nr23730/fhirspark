@@ -20,8 +20,6 @@ public enum LoincEnum {
     MASTER_HL7_GENETIC_VARIANT_REPORTING_PANEL("81247-9", "Master HL7 genetic variant reporting panel"),
     GENETIC_COUNSELING_RECOMMENDED("LA14020-4", "Genetic counseling recommended"),
     CONFIRMATORY_TESTING_RECOMMENDED("LA14021-2", "Confirmatory testing recommended"),
-    PRESUMED_RESPONSIVE("LA9661-5", "Presumed responsive"),
-    GENETIC_VARIATIONS_EFFECT_ON_DRUG_EFFICACY("51961-1", "Genetic variation's effect on drug efficacy"),
     LEVEL_OF_EVIDENCE("93044-6", "Level of evidence"),
     CONSIDER_ALTERNATIVE_MEDICATION("LA26421-0", "Consider alternative medication"),
     MEDICATION_ASSESSED("51963-7", "Medication assessed [ID]"),

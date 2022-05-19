@@ -123,9 +123,7 @@
                 <configuration>
                     <configLocation>com/github/ngeor/checkstyle.xml</configLocation>
                     <skip>false</skip>
-                    <excludes>fhirspark/restmodel/**,fhirspark/resolver/model/**</excludes>
-                    <suppressionsLocation>checkstyle-suppressions.xml</suppressionsLocation>
-                    <suppressionsFileExpression>checkstyle.suppressions.file</suppressionsFileExpression>
+                    <excludes>fhirspark/restmodel/**,fhirspark/resolver/model/**,fhirspark/definitions/**</excludes>
                 </configuration>
                 <executions>
                   <execution>

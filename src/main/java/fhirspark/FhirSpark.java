@@ -206,7 +206,6 @@ public final class FhirSpark {
             res.body(objectMapper.writeValueAsString(jsonFhirMapper.getPmidsByAlteration(alterations)));
             return res.body();
         });
-
     }
 
     /**
