@@ -9,7 +9,7 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "author",
-    "clinicalTrial",
+    "clinicalTrials",
     "comment",
     "evidenceLevel",
     "evidenceLevelExtension",
@@ -23,7 +23,7 @@ public class TherapyRecommendation {
 
     @JsonProperty("author")
     private String author;
-    @JsonProperty("clinicalTrial")
+    @JsonProperty("clinicalTrials")
     private List<ClinicalTrial> clinicalTrial;
     @JsonProperty("comment")
     private List<String> comment;
@@ -57,12 +57,12 @@ public class TherapyRecommendation {
         return this;
     }
 
-    @JsonProperty("clinicalTrial")
+    @JsonProperty("clinicalTrials")
     public List<ClinicalTrial> getClinicalTrial() {
         return clinicalTrial;
     }
     
-    @JsonProperty("clinicalTrial")
+    @JsonProperty("clinicalTrials")
     public void setClinicalTrial(List<ClinicalTrial> clinicalTrial) {
         this.clinicalTrial = clinicalTrial;
     }

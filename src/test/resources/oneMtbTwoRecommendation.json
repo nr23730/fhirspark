@@ -15,6 +15,7 @@
 			"therapyRecommendations": [
 				{
 					"author": "anonymousUser2",
+					"clinicalTrials": [],
 					"comment": [
 						"drei",
 						"vier"
@@ -49,6 +50,7 @@
 				},
 				{
 					"author": "anonymousUser3",
+					"clinicalTrials": [],
 					"comment": [
 						"fünf",
 						"sechs",

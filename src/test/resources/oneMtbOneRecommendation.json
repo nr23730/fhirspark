@@ -13,6 +13,7 @@
 			"therapyRecommendations": [
 				{
 					"author": "anonymousUser1",
+					"clinicalTrials": [],
 					"comment": [
 						"eins",
 						"zwei"

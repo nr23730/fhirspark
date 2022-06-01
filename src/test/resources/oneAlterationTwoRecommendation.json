@@ -10,6 +10,7 @@
             "therapyRecommendations": [
                 {
                     "author": "anonymousUser",
+                    "clinicalTrials": [],
                     "comment": [],
                     "evidenceLevel": "0",
                     "evidenceLevelExtension": "null",
@@ -32,6 +33,7 @@
                 },
                 {
                     "author": "anonymousUser",
+                    "clinicalTrials": [],
                     "comment": [],
                     "evidenceLevel": "0",
                     "evidenceLevelExtension": "null",

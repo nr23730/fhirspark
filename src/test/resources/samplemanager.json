@@ -10,6 +10,7 @@
             "therapyRecommendations": [
                 {
                     "author": "anonymousUser",
+                    "clinicalTrials": [],
                     "comment": [],
                     "evidenceLevel": "0",
                     "evidenceLevelExtension": "null",
@@ -61,6 +62,7 @@
             "therapyRecommendations": [
                 {
                     "author": "anonymousUser",
+                    "clinicalTrials": [],
                     "comment": [
                         "Recommendation imported from OncoKB."
                     ],

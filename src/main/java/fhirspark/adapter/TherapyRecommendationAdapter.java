@@ -104,7 +104,7 @@ public final class TherapyRecommendationAdapter {
             });
         }
 
-        if (therapyRecommendation.getClinicalTrial() != null) {
+        if (therapyRecommendation.getClinicalTrial() != null && !therapyRecommendation.getClinicalTrial().isEmpty()) {
             therapeuticImplication.getComponent()
                     .addAll(ClinicalTrialAdapter
                             .fromJson(therapyRecommendation.getClinicalTrial()));
@@ -130,7 +130,7 @@ public final class TherapyRecommendationAdapter {
 
     public static TherapyRecommendation toJson(IGenericClient client, List<Regex> regex, Observation ob) {
         TherapyRecommendation therapyRecommendation = new TherapyRecommendation()
-                .withComment(new ArrayList<>()).withReasoning(new Reasoning());
+                .withComment(new ArrayList<>()).withReasoning(new Reasoning()).withClinicalTrial(new ArrayList<>());
 
         if (ob.hasPerformer()) {
             Bundle b2 = (Bundle) client

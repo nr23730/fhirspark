@@ -6,6 +6,7 @@
             "therapyRecommendations": [
                 {
                     "author": "anonymousUser",
+                    "clinicalTrials": [],
                     "comment": [],
                     "evidenceLevel": "0",
                     "evidenceLevelExtension": "null",
