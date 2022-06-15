@@ -1,5 +1,5 @@
 port: ${FHIRSPARK_PORT:-3001}
-fhirDbBase: ${FHIRSPARK_FHIRBASE:-http://localhost:8080/fhir/}
+fhirDbBase: ${FHIRSPARK_FHIRBASE:-http://localhost:8080/fhir}
 specimenSystem: ${FHIRSPARK_SPECIMENSYSTEM:-https://cbioportal.org/specimen/}
 diagnosticReportSystem: ${FHIRSPARK_DIAGNOSTICREPORTSYSTEM:-https://cbioportal.org/mtb/}
 observationSystem: ${FHIRSPARK_OBSERVATIONSYSTEM:-https://cbioportal.org/therapyrecommendation/}
