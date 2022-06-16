@@ -60,10 +60,11 @@ public final class TherapyRecommendationAdapter {
         ObservationComponentComponent evidenceComponent = therapeuticImplication.addComponent();
         evidenceComponent.getCode().addCoding(LoincEnum.LEVEL_OF_EVIDENCE.toCoding());
         String m3Text = therapyRecommendation.getEvidenceLevelM3Text() != null
-                ? " (" + therapyRecommendation.getEvidenceLevelM3Text() + ")"
-                : "";
+                && !therapyRecommendation.getEvidenceLevelM3Text().isEmpty()
+                        ? " (" + therapyRecommendation.getEvidenceLevelM3Text() + ")"
+                        : "";
         evidenceComponent.getValueCodeableConcept().addCoding(new Coding("https://cbioportal.org/evidence/BW/",
-                therapyRecommendation.getEvidenceLevel() + " "
+                therapyRecommendation.getEvidenceLevel() + "_"
                         + therapyRecommendation.getEvidenceLevelExtension() + m3Text,
                 therapyRecommendation.getEvidenceLevel() + " "
                         + therapyRecommendation.getEvidenceLevelExtension() + m3Text));
@@ -163,7 +164,7 @@ public final class TherapyRecommendationAdapter {
 
         ob.getComponent().forEach(result -> {
             if (result.getCode().getCodingFirstRep().getCode().equals("93044-6")) {
-                String[] evidence = result.getValueCodeableConcept().getCodingFirstRep().getCode()
+                String[] evidence = result.getValueCodeableConcept().getCodingFirstRep().getDisplay()
                         .split(" ");
                 therapyRecommendation.setEvidenceLevel(evidence[0]);
                 if (evidence.length > 1) {
