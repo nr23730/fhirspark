@@ -9,6 +9,7 @@ import ca.uhn.fhir.rest.server.exceptions.UnprocessableEntityException;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import fhirspark.adapter.FollowUpAdapter;
 import fhirspark.adapter.MtbAdapter;
 import fhirspark.definitions.GenomicsReportingEnum;
 import fhirspark.definitions.Hl7TerminologyEnum;
@@ -17,6 +18,7 @@ import fhirspark.definitions.UriEnum;
 import fhirspark.restmodel.CbioportalRest;
 import fhirspark.restmodel.ClinicalDatum;
 import fhirspark.restmodel.Deletions;
+import fhirspark.restmodel.FollowUp;
 import fhirspark.restmodel.GeneticAlteration;
 import fhirspark.restmodel.Mtb;
 import fhirspark.restmodel.Reasoning;
@@ -29,6 +31,7 @@ import org.hl7.fhir.r4.model.Bundle.BundleEntryComponent;
 import org.hl7.fhir.r4.model.DiagnosticReport;
 import org.hl7.fhir.r4.model.IdType;
 import org.hl7.fhir.r4.model.Identifier.IdentifierUse;
+import org.hl7.fhir.r4.model.MedicationStatement;
 import org.hl7.fhir.r4.model.Observation;
 import org.hl7.fhir.r4.model.Patient;
 import org.hl7.fhir.r4.model.Practitioner;
@@ -54,6 +57,7 @@ public class JsonFhirMapper {
 
     private static String patientUri;
     private static String therapyRecommendationUri;
+    private static String followUpUri;
     private static String mtbUri;
     private static Settings settings;
 
@@ -73,7 +77,9 @@ public class JsonFhirMapper {
         MtbAdapter.initialize(settings, client);
         JsonFhirMapper.patientUri = settings.getPatientSystem();
         JsonFhirMapper.therapyRecommendationUri = settings.getObservationSystem();
+        JsonFhirMapper.followUpUri = settings.getFollowUpSystem();
         JsonFhirMapper.mtbUri = settings.getDiagnosticReportSystem();
+
     }
 
     /**
@@ -83,7 +89,7 @@ public class JsonFhirMapper {
      * @return
      * @throws JsonProcessingException
      */
-    public String toJson(String patientId) throws JsonProcessingException {
+    public String mtbToJson(String patientId) throws JsonProcessingException {
         List<Mtb> mtbs = new ArrayList<Mtb>();
         Bundle bPatient = (Bundle) client.search().forResource(Patient.class)
                 .where(new TokenClientParam("identifier").exactly().systemAndCode(patientUri, patientId)).prettyPrint()
@@ -118,7 +124,7 @@ public class JsonFhirMapper {
     /**
      * Retrieves MTB data from cBioPortal and persists it in FHIR resources.
      */
-    public void fromJson(String patientId, List<Mtb> mtbs) throws DataFormatException, IOException {
+    public void mtbFromJson(String patientId, List<Mtb> mtbs) throws DataFormatException, IOException {
 
         Bundle bundle = new Bundle();
         bundle.setType(Bundle.BundleType.TRANSACTION);
@@ -130,6 +136,82 @@ public class JsonFhirMapper {
         }
 
         try {
+            System.out.println(bundle);
+            System.out.println(ctx.newJsonParser().setPrettyPrint(true).encodeResourceToString(bundle));
+
+            Bundle resp = client.transaction().withBundle(bundle).execute();
+
+            // Log the response
+            System.out.println(ctx.newJsonParser().setPrettyPrint(true).encodeResourceToString(resp));
+        } catch (UnprocessableEntityException entityException) {
+            FileWriter f = new FileWriter("error.json");
+            f.write(entityException.getResponseBody());
+            f.close();
+        }
+
+    }
+
+    /**
+     * Retrieves MTB data from FHIR server and transforms it into JSON format for
+     * cBioPortal.
+     * @param patientId
+     * @return
+     * @throws JsonProcessingException
+     */
+    public String followUpToJson(String patientId) throws JsonProcessingException {
+        List<FollowUp> followUps = new ArrayList<FollowUp>();
+        Bundle bPatient = (Bundle) client.search().forResource(Patient.class)
+                .where(new TokenClientParam("identifier").exactly().systemAndCode(patientUri, patientId)).prettyPrint()
+                .execute();
+        Patient fhirPatient = (Patient) bPatient.getEntryFirstRep().getResource();
+
+        if (fhirPatient == null) {
+            return this.objectMapper.writeValueAsString(
+                new CbioportalRest()
+                .withId(patientId)
+                .withFollowUps(followUps)
+            );
+        }
+
+        Bundle bMedicationStatements = (Bundle) client.search().forResource(MedicationStatement.class)
+                .where(new ReferenceClientParam("subject").hasId(harmonizeId(fhirPatient))).prettyPrint()
+                .include(MedicationStatement.INCLUDE_PART_OF)
+                .include(MedicationStatement.INCLUDE_CONTEXT.asRecursive())
+                .execute();
+
+        List<BundleEntryComponent> medicationStatements = bMedicationStatements.getEntry();
+
+        for (int i = 0; i < medicationStatements.size(); i++) {
+            if (!(medicationStatements.get(i).getResource() instanceof MedicationStatement)) {
+                continue;
+            }
+            MedicationStatement medicationStatement = (MedicationStatement) medicationStatements.get(i).getResource();
+            followUps.add(FollowUpAdapter.toJson(settings.getRegex(), patientId, medicationStatement));
+
+        }
+
+        return this.objectMapper.writeValueAsString(new CbioportalRest().withId(patientId).withFollowUps(followUps));
+
+    }
+
+    /**
+     * Retrieves FollowUp data from cBioPortal and persists it in FHIR resources.
+     */
+    public void followUpFromJson(String patientId, List<FollowUp> followUps) throws DataFormatException, IOException {
+
+        Bundle bundle = new Bundle();
+        bundle.setType(Bundle.BundleType.TRANSACTION);
+
+        Reference fhirPatient = getOrCreatePatient(bundle, patientId);
+
+        for (FollowUp followUp : followUps) {
+            FollowUpAdapter.fromJson(bundle, settings.getRegex(), fhirPatient, patientId, followUp);
+        }
+
+        try {
+            System.out.println(bundle);
+            System.out.println(ctx.newJsonParser().setPrettyPrint(true).encodeResourceToString(bundle));
+
             Bundle resp = client.transaction().withBundle(bundle).execute();
 
             // Log the response

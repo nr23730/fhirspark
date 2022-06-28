@@ -12,6 +12,7 @@ import fhirspark.resolver.HgncGeneName;
 import fhirspark.resolver.OncoKbDrug;
 import fhirspark.restmodel.CbioportalRest;
 import fhirspark.restmodel.Deletions;
+import fhirspark.restmodel.FollowUp;
 import fhirspark.restmodel.GeneticAlteration;
 import fhirspark.restmodel.Mtb;
 import fhirspark.settings.ConfigurationLoader;
@@ -93,6 +94,7 @@ public final class FhirSpark {
         * @return FORBIDDEN_403 if not authorized
         * @return ACCEPTED_202 if authorized
         */
+
         get("/mtb/:patientId/permission", (req, res) -> {
             if (settings.getLoginRequired()
                 && (!validateRequest(req) || !validateManipulation(req))) {
@@ -116,7 +118,7 @@ public final class FhirSpark {
             res.header("Access-Control-Allow-Origin", req.headers("Origin"));
             res.type("application/json");
             res.header("Vary", "Origin, Access-Control-Request-Headers");
-            res.body(jsonFhirMapper.toJson(req.params(":patientId")));
+            res.body(jsonFhirMapper.mtbToJson(req.params(":patientId")));
             return res.body();
         });
 
@@ -132,8 +134,9 @@ public final class FhirSpark {
             res.type("application/json");
             res.header("Vary", "Origin, Access-Control-Request-Headers");
 
+            System.out.println(req.body());
             List<Mtb> mtbs = objectMapper.readValue(req.body(), CbioportalRest.class).getMtbs();
-            jsonFhirMapper.fromJson(req.params(":patientId"), mtbs);
+            jsonFhirMapper.mtbFromJson(req.params(":patientId"), mtbs);
             res.body(req.body());
             return res.body();
         });
@@ -204,6 +207,71 @@ public final class FhirSpark {
                     new TypeReference<List<GeneticAlteration>>() {
                     });
             res.body(objectMapper.writeValueAsString(jsonFhirMapper.getPmidsByAlteration(alterations)));
+            return res.body();
+        });
+
+        get("/followup/:patientId/permission", (req, res) -> {
+            System.out.println(req.body());
+            if (settings.getLoginRequired()
+                && (!validateRequest(req) || !validateManipulation(req))) {
+                res.status(HttpStatus.FORBIDDEN_403);
+                return res;
+            }
+            res.status(HttpStatus.ACCEPTED_202);
+            res.header("Access-Control-Allow-Credentials", "true");
+            res.header("Access-Control-Allow-Origin", req.headers("Origin"));
+            res.header("Cache-Control", "no-cache, no-store, max-age=0");
+            return res;
+        });
+
+        get("/followup/:patientId", (req, res) -> {
+            System.out.println(req.body());
+            /*if (settings.getLoginRequired() && !validateRequest(req)) {
+                res.status(HttpStatus.FORBIDDEN_403);
+                return res;
+            }*/
+            res.status(HttpStatus.OK_200);
+            res.header("Access-Control-Allow-Credentials", "true");
+            res.header("Access-Control-Allow-Origin", req.headers("Origin"));
+            res.type("application/json");
+            res.header("Vary", "Origin, Access-Control-Request-Headers");
+            res.body(jsonFhirMapper.followUpToJson(req.params(":patientId")));
+            return res.body();
+        });
+
+        put("/followup/:patientId", (req, res) -> {
+            System.out.println(req.body());
+            /*if (settings.getLoginRequired()
+                && (!validateRequest(req) || !validateManipulation(req))) {
+                res.status(HttpStatus.FORBIDDEN_403);
+                return res;
+            }*/
+            res.status(HttpStatus.CREATED_201);
+            res.header("Access-Control-Allow-Credentials", "true");
+            res.header("Access-Control-Allow-Origin", req.headers("Origin"));
+            res.type("application/json");
+            res.header("Vary", "Origin, Access-Control-Request-Headers");
+            List<FollowUp> followUps = objectMapper.readValue(req.body(), CbioportalRest.class).getFollowUps();
+            jsonFhirMapper.followUpFromJson(req.params(":patientId"), followUps);
+            res.body(req.body());
+            return res.body();
+        });
+
+        delete("/followup/:patientId", (req, res) -> {
+            System.out.println(req.body());
+            if (settings.getLoginRequired()
+                && (!validateRequest(req) || !validateManipulation(req))) {
+                res.status(HttpStatus.FORBIDDEN_403);
+                return res;
+            }
+            res.status(HttpStatus.OK_200);
+            res.header("Access-Control-Allow-Credentials", "true");
+            res.header("Access-Control-Allow-Origin", req.headers("Origin"));
+            res.type("application/json");
+            res.header("Vary", "Origin, Access-Control-Request-Headers");
+            Deletions deletions = objectMapper.readValue(req.body(), Deletions.class);
+            jsonFhirMapper.deleteEntries(req.params(":patientId"), deletions);
+            res.body(req.body());
             return res.body();
         });
     }

@@ -1,11 +1,12 @@
 port: ${FHIRSPARK_PORT:-3001}
-fhirDbBase: ${FHIRSPARK_FHIRBASE:-http://localhost:8080/fhir}
+fhirDbBase: ${FHIRSPARK_FHIRBASE:-http://host.docker.internal:8080/fhir/}
 specimenSystem: ${FHIRSPARK_SPECIMENSYSTEM:-https://cbioportal.org/specimen/}
 diagnosticReportSystem: ${FHIRSPARK_DIAGNOSTICREPORTSYSTEM:-https://cbioportal.org/mtb/}
 observationSystem: ${FHIRSPARK_OBSERVATIONSYSTEM:-https://cbioportal.org/therapyrecommendation/}
+followUpSystem: ${FHIRSPARK_FOLLOWUPSYSTEM:-https://cbioportal.org/followup/}
 patientSystem: ${FHIRSPARK_PATIENTSYSTEM:-https://cbioportal.org/patient/}
 serviceRequestSystem: ${FHIRSPARK_SERVICEREQUESTSYSTEM:-https://cbioportal.org/servicerequest/}
-portalUrl: ${FHIRSPARK_PORTALURL:-http://localhost:8080/}
+portalUrl: ${FHIRSPARK_PORTALURL:-http://host.docker.internal:8080/fhir/}
 loginRequired: ${FHIRSPARK_LOGINREQUIRED:-false}
 hgncPath: ${FHIRSPARK_HGNCPATH:-hgnc.csv}
 oncokbPath: ${FHIRSPARK_ONCOKBPATH:-drugs.json}

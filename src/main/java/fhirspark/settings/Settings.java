@@ -37,6 +37,8 @@ public final class Settings {
     private String diagnosticReportSystem;
     @JsonProperty("observationSystem")
     private String observationSystem;
+    @JsonProperty("followUpSystem")
+    private String followUpSystem;
     @JsonProperty("patientSystem")
     private String patientSystem;
     @JsonProperty("serviceRequestSystem")
@@ -170,6 +172,16 @@ public final class Settings {
     @JsonProperty("regex")
     public void setRegex(List<Regex> newRegex) {
         regex = newRegex;
+    }
+
+    @JsonProperty("followUpSystem")
+    public String getFollowUpSystem() {
+        return followUpSystem;
+    }
+
+    @JsonProperty("followUpSystem")
+    public void setFollowUpSystem(String followUpSystem) {
+        this.followUpSystem = followUpSystem;
     }
 
 }
