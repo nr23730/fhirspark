@@ -263,7 +263,7 @@ public class JsonFhirMapper {
             }
 
             TherapyRecommendation therapyRecommendation = new TherapyRecommendation()
-                    .withComment(new ArrayList<>()).withReasoning(new Reasoning());
+                    .withComment(new ArrayList<>()).withReasoning(new Reasoning()).withClinicalTrial(new ArrayList<>());
             List<ClinicalDatum> clinicalData = new ArrayList<>();
             List<GeneticAlteration> geneticAlterations = new ArrayList<>();
             therapyRecommendation.getReasoning().withClinicalData(clinicalData)
