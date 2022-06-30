@@ -270,6 +270,9 @@ public class JsonFhirMapper {
             therapyRecommendation.getReasoning().withClinicalData(clinicalData)
                     .withGeneticAlterations(geneticAlterations);
 
+            String[] id = ob.getIdentifierFirstRep().getValueElement().getValue().split("_");
+            therapyRecommendation.setId(id[id.length - 1]);
+
             if (ob.hasPerformer()) {
                 Bundle b2 = (Bundle) client.search().forResource(Practitioner.class)
                         .where(new TokenClientParam("_id").exactly().code(ob.getPerformerFirstRep().getReference()))
