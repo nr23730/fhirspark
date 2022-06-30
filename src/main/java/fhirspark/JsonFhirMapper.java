@@ -242,6 +242,7 @@ public class JsonFhirMapper {
         // .forEach(recommendation -> deleteTherapyRecommendation(patientId,
         // recommendation));
         deletions.getMtb().forEach(mtb -> deleteMtb(patientId, mtb));
+        deletions.getFollowUp().forEach(followUp -> deleteFollowUps(patientId, followUp));
         deletions.getTherapyRecommendation()
             .forEach(therapyRecommendationId -> deleteTherapyRecommendation(patientId, therapyRecommendationId));
     }
@@ -259,6 +260,14 @@ public class JsonFhirMapper {
             throw new IllegalArgumentException("Invalid patientId!");
         }
         client.delete().resourceConditionalByUrl("DiagnosticReport?identifier=" + mtbUri + "|" + mtbId).execute();
+    }
+
+    private void deleteFollowUps(String patientId, String followUpId) {
+        if (!followUpId.startsWith("followUp_" + patientId + "_")) {
+            throw new IllegalArgumentException("Invalid patientId!");
+        }
+        client.delete().resourceConditionalByUrl("MedicationStatement?identifier="
+            + followUpUri + "|" + followUpId).execute();
     }
 
     private Reference getOrCreatePatient(Bundle b, String patientId) {
