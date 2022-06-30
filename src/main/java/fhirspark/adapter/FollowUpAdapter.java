@@ -75,7 +75,8 @@ public final class FollowUpAdapter {
         }
 
 
-        followUp.setTherapyRecommendationRealized(medicationStatement.getStatus().getDisplay().equals("completed"));
+        followUp.setTherapyRecommendationRealized(medicationStatement.getStatus()
+            .compareTo(MedicationStatement.MedicationStatementStatus.fromCode("completed")) == 0);
         followUp.setSideEffect(medicationStatement.hasStatusReason());
 
 

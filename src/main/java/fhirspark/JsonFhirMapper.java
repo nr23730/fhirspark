@@ -243,7 +243,7 @@ public class JsonFhirMapper {
         // recommendation));
         deletions.getMtb().forEach(mtb -> deleteMtb(patientId, mtb));
         deletions.getTherapyRecommendation()
-        .forEach(therapyRecommendationId -> deleteTherapyRecommendation(patientId, therapyRecommendationId));
+            .forEach(therapyRecommendationId -> deleteTherapyRecommendation(patientId, therapyRecommendationId));
     }
 
     private void deleteTherapyRecommendation(String patientId, String therapyRecommendationId) {
