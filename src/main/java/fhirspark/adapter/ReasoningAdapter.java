@@ -1,5 +1,7 @@
 package fhirspark.adapter;
 
+import ca.uhn.fhir.rest.client.api.IGenericClient;
+import ca.uhn.fhir.rest.gclient.TokenClientParam;
 import fhirspark.adapter.clinicaldata.GenericAdapter;
 import fhirspark.definitions.UriEnum;
 import fhirspark.restmodel.ClinicalDatum;
@@ -20,7 +22,13 @@ import java.util.List;
 
 public final class ReasoningAdapter {
 
+    private static IGenericClient client;
+
     private ReasoningAdapter() {
+    }
+
+    public static void initialize(IGenericClient fhirClient) {
+        client = fhirClient;
     }
 
     public static List<Reference> fromJson(Bundle bundle, Observation efficacyObservation, List<Regex> regex,
@@ -77,12 +85,23 @@ public final class ReasoningAdapter {
         List<ClinicalDatum> clinicalData = new ArrayList<>();
         List<GeneticAlteration> geneticAlterations = new ArrayList<>();
 
-        genetic.forEach(reference -> geneticAlterations
-                .add(GeneticAlterationsAdapter.toJson((Observation) reference.getResource())));
+        genetic.forEach(reference -> {
+            Bundle b1 = (Bundle) client.search().forResource(Observation.class)
+                    .where(new TokenClientParam("_id")
+                    .exactly().code(reference.getReference())).prettyPrint()
+                    .execute();
+            geneticAlterations
+                .add(GeneticAlterationsAdapter.toJson((Observation) b1.getEntryFirstRep().getResource()));
+            }
+        );
 
         clinical.forEach(member -> {
             GenericAdapter genericAdapter = new GenericAdapter();
-            ClinicalDatum cd = genericAdapter.toJson(regex, (Observation) member.getResource());
+            Bundle b1 = (Bundle) client.search().forResource(Observation.class)
+                    .where(new TokenClientParam("_id")
+                    .exactly().code(member.getReference())).prettyPrint()
+                    .execute();
+            ClinicalDatum cd = genericAdapter.toJson(regex, (Observation) b1.getEntryFirstRep().getResource());
             clinicalData.add(cd);
         });
 

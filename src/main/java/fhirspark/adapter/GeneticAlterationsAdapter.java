@@ -155,81 +155,82 @@ public final class GeneticAlterationsAdapter {
 
     public static GeneticAlteration toJson(Observation o) {
         GeneticAlteration g = new GeneticAlteration();
-        o.getComponent().forEach(variant -> {
-            switch (LoincEnum.fromCode(variant.getCode().getCodingFirstRep().getCode())) {
-                case AMINO_ACID_CHANGE:
-                    g.setAlteration(variant.getValueCodeableConcept().getCodingFirstRep().getCode()
-                            .replaceFirst("p.", ""));
-                    break;
-                case DISCRETE_GENETIC_VARIANT:
-                    variant.getValueCodeableConcept().getCoding().forEach(coding -> {
-                        switch (UriEnum.fromUri(coding.getSystem())) {
-                            case NCBI_GENE:
-                                g.setEntrezGeneId(Integer.valueOf(coding.getCode()));
+        if (o.hasComponent()) {
+            o.getComponent().forEach(variant -> {
+                switch (LoincEnum.fromCode(variant.getCode().getCodingFirstRep().getCode())) {
+                    case AMINO_ACID_CHANGE:
+                        g.setAlteration(variant.getValueCodeableConcept().getCodingFirstRep().getCode()
+                                .replaceFirst("p.", ""));
+                        break;
+                    case DISCRETE_GENETIC_VARIANT:
+                        variant.getValueCodeableConcept().getCoding().forEach(coding -> {
+                            switch (UriEnum.fromUri(coding.getSystem())) {
+                                case NCBI_GENE:
+                                    g.setEntrezGeneId(Integer.valueOf(coding.getCode()));
+                                    break;
+                                case CLINVAR:
+                                    g.setClinvar(Integer.valueOf(coding.getCode()));
+                                    break;
+                                case COSMIC:
+                                    g.setCosmic(coding.getCode());
+                                    break;
+                                default:
+                                    break;
+                            }
+                        });
+                        break;
+                    case GENE_STUDIED:
+                        g.setHugoSymbol(
+                                variant.getValueCodeableConcept().getCodingFirstRep()
+                                        .getDisplay());
+                        break;
+                    case CYTOGENETIC_CHROMOSOME_LOCATION:
+                        g.setChromosome(
+                                variant.getValueCodeableConcept().getCodingFirstRep()
+                                        .getCode());
+                        break;
+                    case SAMPLE_VARIANT_ALLELE_FREQUENCY:
+                        g.setAlleleFrequency(variant.getValueQuantity().getValue().doubleValue());
+                        break;
+                    case DBSNP:
+                        g.setDbsnp(variant.getValueCodeableConcept().getCodingFirstRep().getCode());
+                        break;
+                    case CHROMOSOME_COPY_NUMBER_CHANGE:
+                        switch (LoincEnum.fromCode(variant.getValueCodeableConcept().getCodingFirstRep()
+                                .getCode())) {
+                            case COPY_NUMBER_GAIN:
+                                g.setAlteration("Amplification");
                                 break;
-                            case CLINVAR:
-                                g.setClinvar(Integer.valueOf(coding.getCode()));
-                                break;
-                            case COSMIC:
-                                g.setCosmic(coding.getCode());
+                            case COPY_NUMBER_LOSS:
+                                g.setAlteration("Deletion");
                                 break;
                             default:
                                 break;
                         }
-                    });
-                    break;
-                case GENE_STUDIED:
-                    g.setHugoSymbol(
-                            variant.getValueCodeableConcept().getCodingFirstRep()
-                                    .getDisplay());
-                    break;
-                case CYTOGENETIC_CHROMOSOME_LOCATION:
-                    g.setChromosome(
-                            variant.getValueCodeableConcept().getCodingFirstRep()
-                                    .getCode());
-                    break;
-                case SAMPLE_VARIANT_ALLELE_FREQUENCY:
-                    g.setAlleleFrequency(variant.getValueQuantity().getValue().doubleValue());
-                    break;
-                case DBSNP:
-                    g.setDbsnp(variant.getValueCodeableConcept().getCodingFirstRep().getCode());
-                    break;
-                case CHROMOSOME_COPY_NUMBER_CHANGE:
-                    switch (LoincEnum.fromCode(variant.getValueCodeableConcept().getCodingFirstRep()
-                            .getCode())) {
-                        case COPY_NUMBER_GAIN:
-                            g.setAlteration("Amplification");
-                            break;
-                        case COPY_NUMBER_LOSS:
-                            g.setAlteration("Deletion");
-                            break;
-                        default:
-                            break;
-                    }
-                    break;
-                case GENOMIC_ALT_ALLELE:
-                    g.setAlt(variant.getValueStringType().getValue());
-                    break;
-                case GENOMIC_REF_ALLELE:
-                    g.setRef(variant.getValueStringType().getValue());
-                    break;
-                case EXACT_START_END:
-                    if (variant.getValueRange().getLow().getValue() != null) {
-                        g.setStart(Integer
-                                .valueOf(variant.getValueRange().getLow().getValue()
-                                        .toString()));
-                    }
-                    if (variant.getValueRange().getHigh().getValue() != null) {
-                        g.setEnd(Integer
-                                .valueOf(variant.getValueRange().getHigh().getValue()
-                                        .toString()));
-                    }
-                    break;
-                default:
-                    break;
-            }
-        });
-
+                        break;
+                    case GENOMIC_ALT_ALLELE:
+                        g.setAlt(variant.getValueStringType().getValue());
+                        break;
+                    case GENOMIC_REF_ALLELE:
+                        g.setRef(variant.getValueStringType().getValue());
+                        break;
+                    case EXACT_START_END:
+                        if (variant.getValueRange().getLow().getValue() != null) {
+                            g.setStart(Integer
+                                    .valueOf(variant.getValueRange().getLow().getValue()
+                                            .toString()));
+                        }
+                        if (variant.getValueRange().getHigh().getValue() != null) {
+                            g.setEnd(Integer
+                                    .valueOf(variant.getValueRange().getHigh().getValue()
+                                            .toString()));
+                        }
+                        break;
+                    default:
+                        break;
+                }
+            });
+        }
         return g;
     }
 

@@ -22,29 +22,29 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 public class ResponseCriteria {
 
     @JsonProperty("pd3")
-    private Boolean pd3;
+    private Boolean pd3 = false;
     @JsonProperty("sd3")
-    private Boolean sd3;
+    private Boolean sd3 = false;
     @JsonProperty("pr3")
-    private Boolean pr3;
+    private Boolean pr3 = false;
     @JsonProperty("cr3")
-    private Boolean cr3;
+    private Boolean cr3 = false;
     @JsonProperty("pd3")
-    private Boolean pd6;
+    private Boolean pd6 = false;
     @JsonProperty("sd3")
-    private Boolean sd6;
+    private Boolean sd6 = false;
     @JsonProperty("pr3")
-    private Boolean pr6;
+    private Boolean pr6 = false;
     @JsonProperty("cr3")
-    private Boolean cr6;
+    private Boolean cr6 = false;
     @JsonProperty("pd3")
-    private Boolean pd12;
+    private Boolean pd12 = false;
     @JsonProperty("sd3")
-    private Boolean sd12;
+    private Boolean sd12 = false;
     @JsonProperty("pr3")
-    private Boolean pr12;
+    private Boolean pr12 = false;
     @JsonProperty("cr3")
-    private Boolean cr12;
+    private Boolean cr12 = false;
 
 
     //3 Month Response

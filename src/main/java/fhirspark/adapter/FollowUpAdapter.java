@@ -6,11 +6,15 @@ import fhirspark.definitions.GenomicsReportingEnum;
 import fhirspark.definitions.MolekulargenetischerBefundberichtEnum;
 import fhirspark.restmodel.FollowUp;
 import fhirspark.restmodel.ResponseCriteria;
+import fhirspark.restmodel.TherapyRecommendation;
 import fhirspark.settings.Regex;
 import fhirspark.settings.Settings;
 import org.hl7.fhir.r4.model.Annotation;
+import org.hl7.fhir.r4.model.BooleanType;
 import org.hl7.fhir.r4.model.Bundle;
-import org.hl7.fhir.r4.model.DiagnosticReport;
+import org.hl7.fhir.r4.model.CodeableConcept;
+import org.hl7.fhir.r4.model.Coding;
+import org.hl7.fhir.r4.model.DateTimeType;
 import org.hl7.fhir.r4.model.IdType;
 import org.hl7.fhir.r4.model.Identifier;
 import org.hl7.fhir.r4.model.MedicationStatement;
@@ -18,6 +22,7 @@ import org.hl7.fhir.r4.model.Observation;
 import org.hl7.fhir.r4.model.Practitioner;
 import org.hl7.fhir.r4.model.Reference;
 
+import java.lang.reflect.InvocationTargetException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -65,10 +70,54 @@ public final class FollowUpAdapter {
             .toCalendar()
             .getTimeInMillis()
         );
-        followUp.setComment(medicationStatement.getNote().get(0).getText());
+        if (medicationStatement.getNote().size() > 0) {
+            followUp.setComment(medicationStatement.getNote().get(0).getText());
+        }
 
-        followUp.setTherapyRecommendationRealized(medicationStatement.getStatus().getDisplay().equals("COMPLETED"));
-        followUp.setSideEffect(medicationStatement.getStatusReasonFirstRep().getText().equals(""));
+
+        followUp.setTherapyRecommendationRealized(medicationStatement.getStatus().getDisplay().equals("completed"));
+        followUp.setSideEffect(medicationStatement.hasStatusReason());
+
+
+        ResponseCriteria respCrit = new ResponseCriteria();
+        TherapyRecommendation therapyRecommendation = new TherapyRecommendation();
+
+        for (Reference reference : medicationStatement.getReasonReference()) {
+
+            Bundle b1 = (Bundle) client.search().forResource(Observation.class)
+                .where(new TokenClientParam("_id")
+                .exactly().code(reference.getReference())).prettyPrint()
+                .execute();
+
+            Observation obs = (Observation) b1.getEntryFirstRep().getResource();
+
+            if (obs.getIdentifierFirstRep().getValue().startsWith("response_")) {
+                String tag = obs.getNoteFirstRep().getText();
+                Boolean val = obs.getValueBooleanType().getValue();
+
+                try {
+                    ResponseCriteria.class
+                        .getDeclaredMethod("set" + tag, Boolean.class)
+                        .invoke(respCrit, val);
+                } catch (NoSuchMethodException e) {
+                    e.printStackTrace();
+                } catch (IllegalAccessException e) {
+                    e.printStackTrace();
+                } catch (InvocationTargetException e) {
+                    e.printStackTrace();
+                }
+
+            } else if (obs.getIdentifierFirstRep().getValue().startsWith(patientId + "_")) {
+
+                therapyRecommendation = TherapyRecommendationAdapter.toJson(client,
+                        regex, obs);
+
+            }
+
+        }
+
+        followUp.setTherapyRecommendation(therapyRecommendation);
+        followUp.setResponse(respCrit);
 
         return followUp;
     }
@@ -79,6 +128,7 @@ public final class FollowUpAdapter {
         MedicationStatement medicationStatement = new MedicationStatement();
         medicationStatement.getMeta().addProfile(GenomicsReportingEnum.GENOMICS_REPORT.getSystem());
         medicationStatement.getMeta().addProfile(MolekulargenetischerBefundberichtEnum.GENOMICS_REPORT.getSystem());
+        medicationStatement.addIdentifier().setSystem(followUpUri).setValue(followUp.getId());
         medicationStatement.setId(IdType.newRandomUuid());
         medicationStatement.setSubject(fhirPatient);
 
@@ -106,7 +156,17 @@ public final class FollowUpAdapter {
             medicationStatement.setStatus(MedicationStatement.MedicationStatementStatus.fromCode("not-taken"));
         }
 
-        if (!followUp.getId().startsWith("followup_" + patientId + "_")) {
+        if (followUp.getSideEffect()) {
+            Coding coding = new Coding();
+            CodeableConcept cc = new CodeableConcept();
+            coding.setSystem("http://hl7.org/fhir/ValueSet/reason-medication-status-codes");
+            coding.setCode("395009001");
+            coding.setDisplay("Medication stopped - side effect");
+            cc.addCoding(coding);
+            medicationStatement.addStatusReason(cc);
+        }
+
+        if (!followUp.getId().startsWith("followUp_" + patientId + "_")) {
             throw new IllegalArgumentException("Invalid followUp id!");
         }
 
@@ -114,25 +174,71 @@ public final class FollowUpAdapter {
 
         if (followUp.getResponse() != null) {
             ResponseCriteria response = followUp.getResponse();
-            Observation responseObs = new Observation();
-            responseObs.getCode()
-                .addCoding(GenomicsReportingEnum.THERAPEUTIC_IMPLICATION_CODING.toCoding());
-            Annotation note = new Annotation();
-            note.setText(response.getPd3().toString());
-            ArrayList<Annotation> notes = new ArrayList<Annotation>();
-            notes.add(note);
-            responseObs.setNote(notes);
-            responseObs.setId(IdType.newRandomUuid());
-            responseObs.setStatus(Observation.ObservationStatus.FINAL);
-            bundle.addEntry().setFullUrl(responseObs.getIdElement().getValue()).setResource(responseObs)
-                    .getRequest().setUrl("Observation?identifier=" + "response_" + followUp.getId())
-                    .setIfNoneExist("identifier=" + "response_" + followUp.getId())
-                    .setMethod(Bundle.HTTPVerb.PUT);
-            medicationStatement.addReasonReference(new Reference(responseObs));
+            ArrayList<String> responseTags = new ArrayList<String>();
+            ArrayList<Boolean> responseValues = new ArrayList<Boolean>();
+            final int respCount = 12;
+
+            responseTags.add("Pd3");
+            responseValues.add(response.getPd3());
+            responseTags.add("Pr3");
+            responseValues.add(response.getPr3());
+            responseTags.add("Cr3");
+            responseValues.add(response.getCr3());
+            responseTags.add("Sd3");
+            responseValues.add(response.getSd3());
+            responseTags.add("Pd6");
+            responseValues.add(response.getPd6());
+            responseTags.add("Pr6");
+            responseValues.add(response.getPr6());
+            responseTags.add("Cr6");
+            responseValues.add(response.getCr6());
+            responseTags.add("Sd6");
+            responseValues.add(response.getSd6());
+            responseTags.add("Pd12");
+            responseValues.add(response.getPd12());
+            responseTags.add("Pr12");
+            responseValues.add(response.getPr12());
+            responseTags.add("Cr12");
+            responseValues.add(response.getCr12());
+            responseTags.add("Sd12");
+            responseValues.add(response.getSd12());
+
+            for (int i = 0; i < respCount; i++) {
+
+                Observation responseObs = new Observation();
+
+                responseObs.getCode()
+                    .addCoding(GenomicsReportingEnum.THERAPEUTIC_IMPLICATION_CODING.toCoding());
+
+                Annotation note = new Annotation();
+                note.setText(responseTags.get(i));
+                ArrayList<Annotation> notes = new ArrayList<Annotation>();
+                notes.add(note);
+                responseObs.setNote(notes);
+
+                BooleanType bType = new BooleanType(responseValues.get(i));
+                responseObs.setValue(bType);
+
+                DateTimeType dTime = new DateTimeType(followUp.getDate());
+                responseObs.setEffective(dTime);
+
+                responseObs.setId(IdType.newRandomUuid());
+                responseObs.setStatus(Observation.ObservationStatus.FINAL);
+                responseObs.addIdentifier().setSystem("https://cbioportal.org/followUpResponse/")
+                    .setValue("response_" + responseTags.get(i) + "_" + followUp.getId());
+                bundle.addEntry().setFullUrl(responseObs.getIdElement().getValue()).setResource(responseObs)
+                        .getRequest().setUrl(
+                            "Observation?identifier=" + "response_" + responseTags.get(i) + "_" + followUp.getId()
+                        )
+                        .setIfNoneExist("identifier=" + "response_" + responseTags.get(i) + "_" + followUp.getId())
+                        .setMethod(Bundle.HTTPVerb.PUT);
+                medicationStatement.addReasonReference(new Reference(responseObs)
+                    .setDisplay("TherapyResponse" + responseTags.get(i)));
+            }
         }
 
         bundle.addEntry().setFullUrl(medicationStatement.getIdElement().getValue()).setResource(medicationStatement)
-                .getRequest().setUrl("medicationStatement?identifier=" + followUpUri + "|" + followUp.getId())
+                .getRequest().setUrl("MedicationStatement?identifier=" + followUpUri + "|" + followUp.getId())
                 .setIfNoneExist("identifier=" + followUpUri + "|" + followUp.getId()).setMethod(Bundle.HTTPVerb.PUT);
 
     }
@@ -150,18 +256,17 @@ public final class FollowUpAdapter {
 
     }
 
-    private static Reference getTherapyRecommendationReference(Bundle b, String credentials, String mtbIdentifier) {
+    private static Reference getTherapyRecommendationReference(Bundle b, String credentials, String trIdentifier) {
 
-        DiagnosticReport therapyRecommendation = new DiagnosticReport();
-        therapyRecommendation.setId(IdType.newRandomUuid());
-        therapyRecommendation.addIdentifier(new Identifier().setSystem(patientUri).setValue(credentials));
-        b.addEntry().setFullUrl(therapyRecommendation.getIdElement().getValue())
-            .setResource(therapyRecommendation)
-            .getRequest()
-            .setUrl("DiagnosticReport?identifier=" + mtbIdentifier + "|" + credentials)
-            .setIfNoneExist("identifier=" + mtbIdentifier + "|" + credentials).setMethod(Bundle.HTTPVerb.PUT);
+        Bundle b1 = (Bundle) client.search().forResource(Observation.class)
+                .where(new TokenClientParam("identifier")
+                .exactly().code(trIdentifier)).prettyPrint()
+                .execute();
 
-        return new Reference(therapyRecommendation);
+        Observation obs = (Observation) b1.getEntryFirstRep().getResource();
+        String id = obs.getIdElement().getIdPart();
+
+        return new Reference("Observation/" + id).setDisplay("BaseTherapyRecommendation");
 
     }
 

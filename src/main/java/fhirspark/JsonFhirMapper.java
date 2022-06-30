@@ -11,6 +11,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fhirspark.adapter.FollowUpAdapter;
 import fhirspark.adapter.MtbAdapter;
+import fhirspark.adapter.ReasoningAdapter;
 import fhirspark.definitions.GenomicsReportingEnum;
 import fhirspark.definitions.Hl7TerminologyEnum;
 import fhirspark.definitions.LoincEnum;
@@ -73,8 +74,13 @@ public class JsonFhirMapper {
      */
     public JsonFhirMapper(Settings settings) {
         JsonFhirMapper.settings = settings;
+        final int timeout = 200000; //ms
+        ctx.getRestfulClientFactory().setConnectTimeout(timeout);
+        ctx.getRestfulClientFactory().setSocketTimeout(timeout);
         this.client = ctx.newRestfulGenericClient(settings.getFhirDbBase());
-        MtbAdapter.initialize(settings, client);
+        MtbAdapter.initialize(settings, this.client);
+        FollowUpAdapter.initialize(settings, this.client);
+        ReasoningAdapter.initialize(this.client);
         JsonFhirMapper.patientUri = settings.getPatientSystem();
         JsonFhirMapper.therapyRecommendationUri = settings.getObservationSystem();
         JsonFhirMapper.followUpUri = settings.getFollowUpSystem();

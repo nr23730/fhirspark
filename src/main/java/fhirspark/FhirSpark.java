@@ -210,6 +210,18 @@ public final class FhirSpark {
             return res.body();
         });
 
+        options("/followup/:patientId", (req, res) -> {
+            res.status(HttpStatus.NO_CONTENT_204);
+            res.header("Access-Control-Allow-Credentials", "true");
+            res.header("Access-Control-Allow-Headers", req.headers("Access-Control-Request-Headers"));
+            res.header("Access-Control-Allow-Methods", "GET, PUT, DELETE");
+            res.header("Access-Control-Allow-Origin", req.headers("Origin"));
+            res.header("Content-Length", "0");
+            res.header("Vary", "Origin, Access-Control-Request-Headers");
+            res.header("Content-Type", "");
+            return res;
+        });
+
         get("/followup/:patientId/permission", (req, res) -> {
             System.out.println(req.body());
             if (settings.getLoginRequired()
