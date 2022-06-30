@@ -38,12 +38,17 @@ public class GenericAdapter implements ClinicalDataAdapter {
 
     @Override
     public ClinicalDatum toJson(List<Regex> regex, Observation obs) {
-        String[] attr = obs.getValueStringType().asStringValue().split(": ");
-        ClinicalDatum cd = new ClinicalDatum().withAttributeName(attr[0]).withValue(attr[1]);
-        if (obs.getSpecimen().getResource() != null) {
-            cd.setSampleId(SpecimenAdapter.toJson(regex, obs.getSpecimen()));
+        if (obs != null) {
+            String[] attr = obs.getValueStringType().asStringValue().split(": ");
+            ClinicalDatum cd = new ClinicalDatum().withAttributeName(attr[0]).withValue(attr[1]);
+            if (obs.getSpecimen().getResource() != null) {
+                cd.setSampleId(SpecimenAdapter.toJson(regex, obs.getSpecimen()));
+            }
+            return cd;
+        } else {
+            return new ClinicalDatum();
         }
-        return cd;
+
     }
 
 }

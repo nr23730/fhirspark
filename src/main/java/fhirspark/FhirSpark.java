@@ -134,7 +134,6 @@ public final class FhirSpark {
             res.type("application/json");
             res.header("Vary", "Origin, Access-Control-Request-Headers");
 
-            System.out.println(req.body());
             List<Mtb> mtbs = objectMapper.readValue(req.body(), CbioportalRest.class).getMtbs();
             jsonFhirMapper.mtbFromJson(req.params(":patientId"), mtbs);
             res.body(req.body());
@@ -223,7 +222,6 @@ public final class FhirSpark {
         });
 
         get("/followup/:patientId/permission", (req, res) -> {
-            System.out.println(req.body());
             if (settings.getLoginRequired()
                 && (!validateRequest(req) || !validateManipulation(req))) {
                 res.status(HttpStatus.FORBIDDEN_403);
@@ -237,11 +235,10 @@ public final class FhirSpark {
         });
 
         get("/followup/:patientId", (req, res) -> {
-            System.out.println(req.body());
-            /*if (settings.getLoginRequired() && !validateRequest(req)) {
+            if (settings.getLoginRequired() && !validateRequest(req)) {
                 res.status(HttpStatus.FORBIDDEN_403);
                 return res;
-            }*/
+            }
             res.status(HttpStatus.OK_200);
             res.header("Access-Control-Allow-Credentials", "true");
             res.header("Access-Control-Allow-Origin", req.headers("Origin"));
@@ -252,12 +249,11 @@ public final class FhirSpark {
         });
 
         put("/followup/:patientId", (req, res) -> {
-            System.out.println(req.body());
-            /*if (settings.getLoginRequired()
+            if (settings.getLoginRequired()
                 && (!validateRequest(req) || !validateManipulation(req))) {
                 res.status(HttpStatus.FORBIDDEN_403);
                 return res;
-            }*/
+            }
             res.status(HttpStatus.CREATED_201);
             res.header("Access-Control-Allow-Credentials", "true");
             res.header("Access-Control-Allow-Origin", req.headers("Origin"));
@@ -270,7 +266,6 @@ public final class FhirSpark {
         });
 
         delete("/followup/:patientId", (req, res) -> {
-            System.out.println(req.body());
             if (settings.getLoginRequired()
                 && (!validateRequest(req) || !validateManipulation(req))) {
                 res.status(HttpStatus.FORBIDDEN_403);
