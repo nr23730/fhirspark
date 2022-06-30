@@ -9,6 +9,7 @@ import ca.uhn.fhir.rest.server.exceptions.UnprocessableEntityException;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import fhirspark.adapter.ClinicalTrialAdapter;
 import fhirspark.adapter.FollowUpAdapter;
 import fhirspark.adapter.MtbAdapter;
 import fhirspark.adapter.ReasoningAdapter;
@@ -241,6 +242,8 @@ public class JsonFhirMapper {
         // .forEach(recommendation -> deleteTherapyRecommendation(patientId,
         // recommendation));
         deletions.getMtb().forEach(mtb -> deleteMtb(patientId, mtb));
+        deletions.getTherapyRecommendation()
+        .forEach(therapyRecommendationId -> deleteTherapyRecommendation(patientId, therapyRecommendationId));
     }
 
     private void deleteTherapyRecommendation(String patientId, String therapyRecommendationId) {
@@ -351,11 +354,14 @@ public class JsonFhirMapper {
             }
 
             TherapyRecommendation therapyRecommendation = new TherapyRecommendation()
-                    .withComment(new ArrayList<>()).withReasoning(new Reasoning());
+                    .withComment(new ArrayList<>()).withReasoning(new Reasoning()).withClinicalTrial(new ArrayList<>());
             List<ClinicalDatum> clinicalData = new ArrayList<>();
             List<GeneticAlteration> geneticAlterations = new ArrayList<>();
             therapyRecommendation.getReasoning().withClinicalData(clinicalData)
                     .withGeneticAlterations(geneticAlterations);
+
+            String[] id = ob.getIdentifierFirstRep().getValueElement().getValue().split("_");
+            therapyRecommendation.setId(id[id.length - 1]);
 
             if (ob.hasPerformer()) {
                 Bundle b2 = (Bundle) client.search().forResource(Practitioner.class)
@@ -400,6 +406,9 @@ public class JsonFhirMapper {
                             .add(new Treatment()
                                     .withNcitCode(result.getValueCodeableConcept().getCodingFirstRep().getCode())
                                     .withName(result.getValueCodeableConcept().getCodingFirstRep().getDisplay()));
+                }
+                if (result.getCode().getCodingFirstRep().getCode().equals("associated-therapy")) {
+                    therapyRecommendation.setClinicalTrial(ClinicalTrialAdapter.toJson(result));
                 }
             });
 
