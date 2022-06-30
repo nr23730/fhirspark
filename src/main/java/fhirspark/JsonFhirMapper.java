@@ -80,6 +80,7 @@ public class JsonFhirMapper {
     /**
      * Retrieves MTB data from FHIR server and transforms it into JSON format for
      * cBioPortal.
+     *
      * @param patientId
      * @return
      * @throws JsonProcessingException
@@ -154,6 +155,8 @@ public class JsonFhirMapper {
         // .forEach(recommendation -> deleteTherapyRecommendation(patientId,
         // recommendation));
         deletions.getMtb().forEach(mtb -> deleteMtb(patientId, mtb));
+        deletions.getTherapyRecommendation()
+                .forEach(therapyRecommendationId -> deleteTherapyRecommendation(patientId, therapyRecommendationId));
     }
 
     private void deleteTherapyRecommendation(String patientId, String therapyRecommendationId) {
