@@ -9,6 +9,7 @@ import ca.uhn.fhir.rest.server.exceptions.UnprocessableEntityException;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import fhirspark.adapter.ClinicalTrialAdapter;
 import fhirspark.adapter.MtbAdapter;
 import fhirspark.definitions.GenomicsReportingEnum;
 import fhirspark.definitions.Hl7TerminologyEnum;
@@ -312,6 +313,9 @@ public class JsonFhirMapper {
                             .add(new Treatment()
                                     .withNcitCode(result.getValueCodeableConcept().getCodingFirstRep().getCode())
                                     .withName(result.getValueCodeableConcept().getCodingFirstRep().getDisplay()));
+                }
+                if (result.getCode().getCodingFirstRep().getCode().equals("associated-therapy")) {
+                    therapyRecommendation.setClinicalTrial(ClinicalTrialAdapter.toJson(result));
                 }
             });
 
