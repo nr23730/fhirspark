@@ -25,6 +25,7 @@
 					"evidenceLevelExtension": "null",
 					"id": "Testpatient22_1590601827090",
 					"reasoning": {
+						"clinicalData": [],
 						"geneticAlterations": [
 							{
 								"alteration": "R248",

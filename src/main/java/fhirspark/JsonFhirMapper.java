@@ -42,6 +42,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -112,6 +113,8 @@ public class JsonFhirMapper {
             mtbs.add(MtbAdapter.toJson(settings.getRegex(), patientId, diagnosticReport));
 
         }
+
+        mtbs.sort(Comparator.comparing(Mtb::getId).reversed());
 
         return this.objectMapper.writeValueAsString(new CbioportalRest().withId(patientId).withMtbs(mtbs));
 
