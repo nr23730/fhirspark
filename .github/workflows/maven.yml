@@ -27,4 +27,4 @@ jobs:
         distribution: 'adopt'
         java-version: '11'
     - name: Build with Maven
-      run: sleep 30 && mvn -B -Dfhir.test.url="http://localhost:8080/fhir/" package --file pom.xml
+      run: sleep 45 && mvn -B -Dfhir.test.url="http://localhost:8080/fhir/" package --file pom.xml

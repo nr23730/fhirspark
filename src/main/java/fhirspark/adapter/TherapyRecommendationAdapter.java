@@ -30,6 +30,7 @@ import org.hl7.fhir.r4.model.codesystems.ObservationCategory;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 public final class TherapyRecommendationAdapter {
 
@@ -46,7 +47,7 @@ public final class TherapyRecommendationAdapter {
     }
 
     public static Observation fromJson(Bundle bundle, List<Regex> regex, DiagnosticReport diagnosticReport,
-            Reference fhirPatient, TherapyRecommendation therapyRecommendation) {
+            Reference fhirPatient, TherapyRecommendation therapyRecommendation, Map<String, Observation> unique) {
         Observation therapeuticImplication = new Observation();
         therapeuticImplication.setId(IdType.newRandomUuid());
         therapeuticImplication.getMeta().addProfile(GenomicsReportingEnum.THERAPEUTIC_IMPLICATION.getSystem());
@@ -79,9 +80,8 @@ public final class TherapyRecommendationAdapter {
                         .add(new Annotation().setText(comment)));
 
         if (therapyRecommendation.getReasoning() != null) {
-            diagnosticReport.getResult()
-                    .addAll(ReasoningAdapter.fromJson(bundle, therapeuticImplication, regex,
-                            fhirPatient, therapyRecommendation.getReasoning()));
+            ReasoningAdapter.fromJson(bundle, therapeuticImplication, regex,
+                            fhirPatient, therapyRecommendation.getReasoning(), unique);
         }
 
         if (therapyRecommendation.getReferences() != null) {
