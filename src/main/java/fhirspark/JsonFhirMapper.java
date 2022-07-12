@@ -54,6 +54,8 @@ import java.util.Set;
  */
 public class JsonFhirMapper {
 
+    public static final int TIMEOUT = 60000;
+
     private static String patientUri;
     private static String therapyRecommendationUri;
     private static String mtbUri;
@@ -71,6 +73,7 @@ public class JsonFhirMapper {
      */
     public JsonFhirMapper(Settings settings) {
         JsonFhirMapper.settings = settings;
+        ctx.getRestfulClientFactory().setSocketTimeout(TIMEOUT);
         this.client = ctx.newRestfulGenericClient(settings.getFhirDbBase());
         MtbAdapter.initialize(settings, client);
         JsonFhirMapper.patientUri = settings.getPatientSystem();
