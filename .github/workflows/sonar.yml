@@ -11,6 +11,7 @@ on:
 jobs:
   sonar:
       name: Test - SonarCloud Scan
+      if: github.repository == 'nr23730/fhirspark'
       runs-on: ubuntu-latest
 
       steps:

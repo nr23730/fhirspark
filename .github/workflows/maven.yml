@@ -5,10 +5,11 @@ name: Java CI with Maven
 
 on:
   push:
+  pull_request:
 
 jobs:
   build:
-
+    if: github.repository == 'nr23730/fhirspark'
     services:
       hapiserver:
         image: hapiproject/hapi:v6.0.1
@@ -26,5 +27,7 @@ jobs:
       with:
         distribution: 'adopt'
         java-version: '11'
+    - name: Run first query on FHIR server
+      run: sleep 45 && curl http://localhost:8080/fhir/Patient
     - name: Build with Maven
-      run: sleep 45 && mvn -B -Dfhir.test.url="http://localhost:8080/fhir/" package --file pom.xml
+      run: mvn -B -Dfhir.test.url="http://localhost:8080/fhir/" package --file pom.xml
