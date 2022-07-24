@@ -18,7 +18,7 @@ public class CbioportalRest {
     private String id;
     @JsonProperty("mtbs")
     private List<Mtb> mtbs;
-    @JsonProperty("mtbs")
+    @JsonProperty("followUps")
     private List<FollowUp> followUps;
     
     @JsonProperty("id")

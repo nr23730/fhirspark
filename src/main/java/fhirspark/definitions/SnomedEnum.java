@@ -3,7 +3,8 @@ package fhirspark.definitions;
 import org.hl7.fhir.r4.model.Coding;
 
 public enum SnomedEnum {
-    PATIENT_ELIGIBLE_FOR_CLINICAL_TRIAL("399223003", "Patient eligible for clinical trial");
+    PATIENT_ELIGIBLE_FOR_CLINICAL_TRIAL("399223003", "Patient eligible for clinical trial"),
+    SIDE_EFFECT("395009001", "Medication stopped - side effect");
 
     private final String code;
     private final String display;

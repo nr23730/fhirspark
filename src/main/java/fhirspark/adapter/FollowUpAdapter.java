@@ -4,17 +4,18 @@ import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.gclient.TokenClientParam;
 import fhirspark.definitions.GenomicsReportingEnum;
 import fhirspark.definitions.MolekulargenetischerBefundberichtEnum;
+import fhirspark.definitions.ResponseEnum;
+import fhirspark.definitions.SnomedEnum;
 import fhirspark.restmodel.FollowUp;
 import fhirspark.restmodel.ResponseCriteria;
 import fhirspark.restmodel.TherapyRecommendation;
 import fhirspark.settings.Regex;
 import fhirspark.settings.Settings;
 import org.hl7.fhir.r4.model.Annotation;
-import org.hl7.fhir.r4.model.BooleanType;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.CodeableConcept;
-import org.hl7.fhir.r4.model.Coding;
 import org.hl7.fhir.r4.model.DateTimeType;
+import org.hl7.fhir.r4.model.DiagnosticReport;
 import org.hl7.fhir.r4.model.IdType;
 import org.hl7.fhir.r4.model.Identifier;
 import org.hl7.fhir.r4.model.MedicationStatement;
@@ -25,16 +26,15 @@ import org.hl7.fhir.r4.model.Reference;
 import java.lang.reflect.InvocationTargetException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 
 public final class FollowUpAdapter {
 
     private static IGenericClient client;
     private static String patientUri;
-    private static String therapyRecommendationUri;
-    private static String mtbUri;
     private static String followUpUri;
-    private static String serviceRequestUri;
+    private static String responseUri;
 
     private FollowUpAdapter() {
     }
@@ -42,11 +42,8 @@ public final class FollowUpAdapter {
     public static void initialize(Settings settings, IGenericClient fhirClient) {
         FollowUpAdapter.client = fhirClient;
         FollowUpAdapter.patientUri = settings.getPatientSystem();
-        FollowUpAdapter.therapyRecommendationUri = settings.getObservationSystem();
         FollowUpAdapter.followUpUri = settings.getFollowUpSystem();
-        FollowUpAdapter.mtbUri = settings.getDiagnosticReportSystem();
-        FollowUpAdapter.serviceRequestUri = settings.getServiceRequestSystem();
-        FollowUpAdapter.serviceRequestUri = settings.getFollowUpSystem();
+        FollowUpAdapter.responseUri = settings.getResponseSystem();
     }
 
     public static FollowUp toJson(List<Regex> regex, String patientId, MedicationStatement medicationStatement) {
@@ -93,13 +90,12 @@ public final class FollowUpAdapter {
             Observation obs = (Observation) b1.getEntryFirstRep().getResource();
 
             if (obs.getIdentifierFirstRep().getValue().startsWith("response_")) {
-                String tag = obs.getNoteFirstRep().getText();
-                Boolean val = obs.getValueBooleanType().getValue();
+                String tag = obs.getIdentifierFirstRep().getValue().split("_")[1];
 
                 try {
                     ResponseCriteria.class
                         .getDeclaredMethod("set" + tag, Boolean.class)
-                        .invoke(respCrit, val);
+                        .invoke(respCrit, true);
                 } catch (NoSuchMethodException e) {
                     e.printStackTrace();
                 } catch (IllegalAccessException e) {
@@ -136,7 +132,7 @@ public final class FollowUpAdapter {
         medicationStatement.setInformationSource(getOrCreatePractitioner(bundle, followUp.getAuthor()));
 
         medicationStatement.addReasonReference(
-            getTherapyRecommendationReference(bundle, followUp.getAuthor(), followUp.getTherapyRecommendation().getId())
+            getTherapyRecommendationReference(followUp.getAuthor(), followUp.getTherapyRecommendation().getId())
         );
 
         medicationStatement.getEffectiveDateTimeType().fromStringValue(followUp.getDate());
@@ -158,12 +154,8 @@ public final class FollowUpAdapter {
         }
 
         if (followUp.getSideEffect()) {
-            Coding coding = new Coding();
             CodeableConcept cc = new CodeableConcept();
-            coding.setSystem("http://hl7.org/fhir/ValueSet/reason-medication-status-codes");
-            coding.setCode("395009001");
-            coding.setDisplay("Medication stopped - side effect");
-            cc.addCoding(coding);
+            cc.addCoding(SnomedEnum.SIDE_EFFECT.toCoding());
             medicationStatement.addStatusReason(cc);
         }
 
@@ -171,13 +163,12 @@ public final class FollowUpAdapter {
             throw new IllegalArgumentException("Invalid followUp id!");
         }
 
-        //medicationStatement.setIssued(new Date(Long.valueOf(mtb.getId().replace("mtb_" + patientId + "_", ""))));
-
         if (followUp.getResponse() != null) {
             ResponseCriteria response = followUp.getResponse();
             ArrayList<String> responseTags = new ArrayList<String>();
             ArrayList<Boolean> responseValues = new ArrayList<Boolean>();
             final int respCount = 12;
+            final int numOfResp = 4;
 
             responseTags.add("Pd3");
             responseValues.add(response.getPd3());
@@ -206,27 +197,35 @@ public final class FollowUpAdapter {
 
             for (int i = 0; i < respCount; i++) {
 
+                if (!responseValues.get(i)) {
+                    continue;
+                }
+
+                String[] months = {"3", "6", "12"};
+
                 Observation responseObs = new Observation();
 
                 responseObs.getCode()
                     .addCoding(GenomicsReportingEnum.THERAPEUTIC_IMPLICATION_CODING.toCoding());
 
-                Annotation note = new Annotation();
-                note.setText(responseTags.get(i));
-                ArrayList<Annotation> notes = new ArrayList<Annotation>();
-                notes.add(note);
-                responseObs.setNote(notes);
-
-                BooleanType bType = new BooleanType(responseValues.get(i));
-                responseObs.setValue(bType);
+                CodeableConcept codeConc = new CodeableConcept();
+                codeConc.addCoding(ResponseEnum.valueOf(responseTags.get(i).substring(0, 2).toUpperCase()).toCoding());
+                responseObs.setValue(codeConc);
 
                 DateTimeType dTime = new DateTimeType(followUp.getDate());
-                responseObs.setEffective(dTime);
+                DateTimeType respTime = getMTBDate(followUp.getAuthor(), followUp.getTherapyRecommendation().getId());
+                respTime.add(Calendar.MONTH, Integer.valueOf(months[(int) Math.floor(i / numOfResp)]));
+
+                responseObs.setEffective(respTime);
+                responseObs.setIssued(dTime.getValue());
+
+                dTime.add(Calendar.MONTH, Integer.valueOf(months[(int) Math.floor(i / numOfResp)]));
 
                 responseObs.setId(IdType.newRandomUuid());
                 responseObs.setStatus(Observation.ObservationStatus.FINAL);
-                responseObs.addIdentifier().setSystem("https://cbioportal.org/followUpResponse/")
+                responseObs.addIdentifier().setSystem(responseUri)
                     .setValue("response_" + responseTags.get(i) + "_" + followUp.getId());
+
                 bundle.addEntry().setFullUrl(responseObs.getIdElement().getValue()).setResource(responseObs)
                         .getRequest().setUrl(
                             "Observation?identifier=" + "response_" + responseTags.get(i) + "_" + followUp.getId()
@@ -234,7 +233,7 @@ public final class FollowUpAdapter {
                         .setIfNoneExist("identifier=" + "response_" + responseTags.get(i) + "_" + followUp.getId())
                         .setMethod(Bundle.HTTPVerb.PUT);
                 medicationStatement.addReasonReference(new Reference(responseObs)
-                    .setDisplay("TherapyResponse" + responseTags.get(i)));
+                    .setDisplay("TherapyResponse_" + months[(int) Math.floor(i / numOfResp)] + "_ Months"));
             }
         }
 
@@ -257,7 +256,7 @@ public final class FollowUpAdapter {
 
     }
 
-    private static Reference getTherapyRecommendationReference(Bundle b, String credentials, String trIdentifier) {
+    private static Reference getTherapyRecommendationReference(String credentials, String trIdentifier) {
 
         Bundle b1 = (Bundle) client.search().forResource(Observation.class)
                 .where(new TokenClientParam("identifier")
@@ -268,6 +267,20 @@ public final class FollowUpAdapter {
         String id = obs.getIdElement().getIdPart();
 
         return new Reference("Observation/" + id).setDisplay("BaseTherapyRecommendation");
+
+    }
+
+    private static DateTimeType getMTBDate(String credentials, String trIdentifier) {
+
+        Bundle b1 = (Bundle) client.search().forResource(DiagnosticReport.class)
+                .where(new TokenClientParam("result")
+                .exactly().code(getTherapyRecommendationReference(credentials, trIdentifier).getId()))
+                .prettyPrint()
+                .execute();
+
+        DiagnosticReport dr = (DiagnosticReport) b1.getEntryFirstRep().getResource();
+
+        return dr.getEffectiveDateTimeType();
 
     }
 

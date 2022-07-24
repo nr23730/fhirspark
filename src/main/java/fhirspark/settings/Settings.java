@@ -17,6 +17,7 @@ import java.util.List;
     "specimenSystem",
     "diagnosticReportSystem",
     "observationSystem",
+    "responseSystem",
     "patientSystem",
     "serviceRequestSystem",
     "hgncPath",
@@ -37,6 +38,8 @@ public final class Settings {
     private String diagnosticReportSystem;
     @JsonProperty("observationSystem")
     private String observationSystem;
+    @JsonProperty("responseSystem")
+    private String responseSystem;
     @JsonProperty("followUpSystem")
     private String followUpSystem;
     @JsonProperty("patientSystem")
@@ -102,6 +105,16 @@ public final class Settings {
     @JsonProperty("observationSystem")
     public void setObservationSystem(String observationSystem) {
         this.observationSystem = observationSystem;
+    }
+
+    @JsonProperty("responseSystem")
+    public String getResponseSystem() {
+        return responseSystem;
+    }
+
+    @JsonProperty("responseSystem")
+    public void setResponseSystem(String responseSystem) {
+        this.responseSystem = responseSystem;
     }
 
     @JsonProperty("patientSystem")

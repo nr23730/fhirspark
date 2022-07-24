@@ -5,6 +5,4 @@ RUN mvn -DskipTests clean package
 
 FROM gcr.io/distroless/java-debian10:11
 COPY --from=build /fhirspark/target/fhirspark-*-jar-with-dependencies.jar /app/fhirspark.jar
-COPY drugs.json /app/
-COPY hgnc.csv /app/
 CMD ["/app/fhirspark.jar"]
