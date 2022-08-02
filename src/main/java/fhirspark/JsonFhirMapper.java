@@ -311,7 +311,7 @@ public class JsonFhirMapper {
                 if (result.getCode().getCodingFirstRep().getCode().equals("93044-6")) {
                     String[] evidence = result.getValueCodeableConcept().getCodingFirstRep().getDisplay().split(" ");
                     therapyRecommendation.setEvidenceLevel(evidence[0]);
-                    if (evidence.length > 1) {
+                    if (evidence.length > 1 && !"null".equals(evidence[1])) {
                         therapyRecommendation.setEvidenceLevelExtension(evidence[1]);
                     }
                     if (evidence.length > 2) {

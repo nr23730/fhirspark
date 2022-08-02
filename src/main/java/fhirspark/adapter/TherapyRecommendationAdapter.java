@@ -64,11 +64,16 @@ public final class TherapyRecommendationAdapter {
                 && !therapyRecommendation.getEvidenceLevelM3Text().isEmpty()
                         ? " (" + therapyRecommendation.getEvidenceLevelM3Text() + ")"
                         : "";
+        String evidenceLevelCode = therapyRecommendation.getEvidenceLevel();
+        String evidenceLevelDisplay = therapyRecommendation.getEvidenceLevel();
+        if (therapyRecommendation.getEvidenceLevelExtension() != null
+                && !"null".equals(therapyRecommendation.getEvidenceLevelExtension())) {
+            evidenceLevelCode += "_" + therapyRecommendation.getEvidenceLevelExtension() + m3Text;
+            evidenceLevelDisplay += " " + therapyRecommendation.getEvidenceLevelExtension() + m3Text;
+        }
+
         evidenceComponent.getValueCodeableConcept().addCoding(new Coding("https://cbioportal.org/evidence/BW/",
-                therapyRecommendation.getEvidenceLevel() + "_"
-                        + therapyRecommendation.getEvidenceLevelExtension() + m3Text,
-                therapyRecommendation.getEvidenceLevel() + " "
-                        + therapyRecommendation.getEvidenceLevelExtension() + m3Text));
+                evidenceLevelCode, evidenceLevelDisplay));
 
         therapeuticImplication.addIdentifier().setSystem(therapyRecommendationUri)
                 .setValue(therapyRecommendation.getId());
@@ -81,7 +86,7 @@ public final class TherapyRecommendationAdapter {
 
         if (therapyRecommendation.getReasoning() != null) {
             ReasoningAdapter.fromJson(bundle, therapeuticImplication, regex,
-                            fhirPatient, therapyRecommendation.getReasoning(), unique);
+                    fhirPatient, therapyRecommendation.getReasoning(), unique);
         }
 
         if (therapyRecommendation.getReferences() != null) {
@@ -167,7 +172,7 @@ public final class TherapyRecommendationAdapter {
                 String[] evidence = result.getValueCodeableConcept().getCodingFirstRep().getDisplay()
                         .split(" ");
                 therapyRecommendation.setEvidenceLevel(evidence[0]);
-                if (evidence.length > 1) {
+                if (evidence.length > 1 && !"null".equals(evidence[1])) {
                     therapyRecommendation.setEvidenceLevelExtension(evidence[1]);
                 }
                 if (evidence.length > 2) {

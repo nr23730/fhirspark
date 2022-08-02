@@ -19,7 +19,6 @@
 						"zwei"
 					],
 					"evidenceLevel": "m1a",
-					"evidenceLevelExtension": "null",
 					"id": "Testpatient1R2A_1590601800979",
 					"reasoning": {
 						"clinicalData": [],
@@ -48,7 +47,6 @@
 						"vier"
 					],
 					"evidenceLevel": "m1a",
-					"evidenceLevelExtension": "null",
 					"id": "Testpatient1R2A_1590601800975",
 					"reasoning": {
 						"clinicalData": [],
