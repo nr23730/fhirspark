@@ -21,7 +21,6 @@
 						"vier"
 					],
 					"evidenceLevel": "m2a",
-					"evidenceLevelExtension": "null",
 					"id": "Testpatient12_1590601812873",
 					"reasoning": {
 						"clinicalData": [],
@@ -58,7 +57,6 @@
 					],
 					"id": "Testpatient12_1590601827090",
 					"evidenceLevel": "m1a",
-					"evidenceLevelExtension": "null",
 					"reasoning": {
 						"clinicalData": [],
 						"geneticAlterations": [

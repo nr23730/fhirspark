@@ -13,7 +13,6 @@
                     "clinicalTrials": [],
                     "comment": [],
                     "evidenceLevel": "0",
-                    "evidenceLevelExtension": "null",
                     "id": "1021536548_1615722447910",
                     "reasoning": {
                         "clinicalData": [
@@ -67,7 +66,6 @@
                         "Recommendation imported from OncoKB."
                     ],
                     "evidenceLevel": "0",
-                    "evidenceLevelExtension": "null",
                     "id": "1021536548_1615504806083",
                     "reasoning": {
                         "clinicalData": [
