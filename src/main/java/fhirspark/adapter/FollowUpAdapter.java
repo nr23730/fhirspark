@@ -62,11 +62,8 @@ public final class FollowUpAdapter {
         SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd");
         followUp.setDate(f.format(medicationStatement.getEffectiveDateTimeType().toCalendar().getTime()));
 
-        followUp.setId("followUp_" + patientId + "_"
-            + medicationStatement.getEffectiveDateTimeType()
-            .toCalendar()
-            .getTimeInMillis()
-        );
+        followUp.setId(medicationStatement.getIdentifierFirstRep().getValue());
+
         if (medicationStatement.getNote().size() > 0) {
             followUp.setComment(medicationStatement.getNote().get(0).getText());
         }
