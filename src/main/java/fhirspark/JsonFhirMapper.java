@@ -46,6 +46,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -56,6 +57,8 @@ import java.util.Set;
  * Fulfils the persistence in HL7 FHIR resources.
  */
 public class JsonFhirMapper {
+
+    public static final int TIMEOUT = 60000;
 
     private static String patientUri;
     private static String therapyRecommendationUri;
@@ -75,9 +78,8 @@ public class JsonFhirMapper {
      */
     public JsonFhirMapper(Settings settings) {
         JsonFhirMapper.settings = settings;
-        final int timeout = 200000; //ms
-        ctx.getRestfulClientFactory().setConnectTimeout(timeout);
-        ctx.getRestfulClientFactory().setSocketTimeout(timeout);
+        ctx.getRestfulClientFactory().setConnectTimeout(TIMEOUT);
+        ctx.getRestfulClientFactory().setSocketTimeout(TIMEOUT);
         this.client = ctx.newRestfulGenericClient(settings.getFhirDbBase());
         MtbAdapter.initialize(settings, this.client);
         FollowUpAdapter.initialize(settings, this.client);
@@ -92,6 +94,7 @@ public class JsonFhirMapper {
     /**
      * Retrieves MTB data from FHIR server and transforms it into JSON format for
      * cBioPortal.
+     *
      * @param patientId
      * @return
      * @throws JsonProcessingException
@@ -123,6 +126,8 @@ public class JsonFhirMapper {
             mtbs.add(MtbAdapter.toJson(settings.getRegex(), patientId, diagnosticReport));
 
         }
+
+        mtbs.sort(Comparator.comparing(Mtb::getId).reversed());
 
         return this.objectMapper.writeValueAsString(new CbioportalRest().withId(patientId).withMtbs(mtbs));
 
@@ -244,7 +249,7 @@ public class JsonFhirMapper {
         deletions.getMtb().forEach(mtb -> deleteMtb(patientId, mtb));
         deletions.getFollowUp().forEach(followUp -> deleteFollowUps(patientId, followUp));
         deletions.getTherapyRecommendation()
-            .forEach(therapyRecommendationId -> deleteTherapyRecommendation(patientId, therapyRecommendationId));
+                .forEach(therapyRecommendationId -> deleteTherapyRecommendation(patientId, therapyRecommendationId));
     }
 
     private void deleteTherapyRecommendation(String patientId, String therapyRecommendationId) {
@@ -401,7 +406,7 @@ public class JsonFhirMapper {
                 if (result.getCode().getCodingFirstRep().getCode().equals("93044-6")) {
                     String[] evidence = result.getValueCodeableConcept().getCodingFirstRep().getDisplay().split(" ");
                     therapyRecommendation.setEvidenceLevel(evidence[0]);
-                    if (evidence.length > 1) {
+                    if (evidence.length > 1 && !"null".equals(evidence[1])) {
                         therapyRecommendation.setEvidenceLevelExtension(evidence[1]);
                     }
                     if (evidence.length > 2) {

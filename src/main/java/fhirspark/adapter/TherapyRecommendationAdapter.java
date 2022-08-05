@@ -30,6 +30,7 @@ import org.hl7.fhir.r4.model.codesystems.ObservationCategory;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 public final class TherapyRecommendationAdapter {
 
@@ -46,7 +47,7 @@ public final class TherapyRecommendationAdapter {
     }
 
     public static Observation fromJson(Bundle bundle, List<Regex> regex, DiagnosticReport diagnosticReport,
-            Reference fhirPatient, TherapyRecommendation therapyRecommendation) {
+            Reference fhirPatient, TherapyRecommendation therapyRecommendation, Map<String, Observation> unique) {
         Observation therapeuticImplication = new Observation();
         therapeuticImplication.setId(IdType.newRandomUuid());
         therapeuticImplication.getMeta().addProfile(GenomicsReportingEnum.THERAPEUTIC_IMPLICATION.getSystem());
@@ -63,11 +64,16 @@ public final class TherapyRecommendationAdapter {
                 && !therapyRecommendation.getEvidenceLevelM3Text().isEmpty()
                         ? " (" + therapyRecommendation.getEvidenceLevelM3Text() + ")"
                         : "";
+        String evidenceLevelCode = therapyRecommendation.getEvidenceLevel();
+        String evidenceLevelDisplay = therapyRecommendation.getEvidenceLevel();
+        if (therapyRecommendation.getEvidenceLevelExtension() != null
+                && !"null".equals(therapyRecommendation.getEvidenceLevelExtension())) {
+            evidenceLevelCode += "_" + therapyRecommendation.getEvidenceLevelExtension() + m3Text;
+            evidenceLevelDisplay += " " + therapyRecommendation.getEvidenceLevelExtension() + m3Text;
+        }
+
         evidenceComponent.getValueCodeableConcept().addCoding(new Coding("https://cbioportal.org/evidence/BW/",
-                therapyRecommendation.getEvidenceLevel() + "_"
-                        + therapyRecommendation.getEvidenceLevelExtension() + m3Text,
-                therapyRecommendation.getEvidenceLevel() + " "
-                        + therapyRecommendation.getEvidenceLevelExtension() + m3Text));
+                evidenceLevelCode, evidenceLevelDisplay));
 
         therapeuticImplication.addIdentifier().setSystem(therapyRecommendationUri)
                 .setValue(therapyRecommendation.getId());
@@ -79,9 +85,8 @@ public final class TherapyRecommendationAdapter {
                         .add(new Annotation().setText(comment)));
 
         if (therapyRecommendation.getReasoning() != null) {
-            diagnosticReport.getResult()
-                    .addAll(ReasoningAdapter.fromJson(bundle, therapeuticImplication, regex,
-                            fhirPatient, therapyRecommendation.getReasoning()));
+            ReasoningAdapter.fromJson(bundle, therapeuticImplication, regex,
+                    fhirPatient, therapyRecommendation.getReasoning(), unique);
         }
 
         if (therapyRecommendation.getReferences() != null) {
@@ -167,7 +172,7 @@ public final class TherapyRecommendationAdapter {
                 String[] evidence = result.getValueCodeableConcept().getCodingFirstRep().getDisplay()
                         .split(" ");
                 therapyRecommendation.setEvidenceLevel(evidence[0]);
-                if (evidence.length > 1) {
+                if (evidence.length > 1 && !"null".equals(evidence[1])) {
                     therapyRecommendation.setEvidenceLevelExtension(evidence[1]);
                 }
                 if (evidence.length > 2) {

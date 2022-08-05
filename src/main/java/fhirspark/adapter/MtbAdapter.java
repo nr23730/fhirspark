@@ -30,7 +30,9 @@ import org.hl7.fhir.r4.model.Task.TaskStatus;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public final class MtbAdapter {
 
@@ -204,9 +206,10 @@ public final class MtbAdapter {
             diagnosticReport.addSpecimen(new Reference(s));
         });
 
+        Map<String, Observation> unique = new HashMap<>();
         for (TherapyRecommendation therapyRecommendation : mtb.getTherapyRecommendations()) {
             Observation efficacyObservation = TherapyRecommendationAdapter.fromJson(bundle, regex, diagnosticReport,
-                    fhirPatient, therapyRecommendation);
+                    fhirPatient, therapyRecommendation, unique);
             bundle.addEntry().setFullUrl(efficacyObservation.getIdElement().getValue())
                     .setResource(efficacyObservation).getRequest()
                     .setUrl("Observation?identifier=" + therapyRecommendationUri + "|"
@@ -215,6 +218,9 @@ public final class MtbAdapter {
                     .setMethod(Bundle.HTTPVerb.PUT);
             diagnosticReport.addResult(new Reference(efficacyObservation));
         }
+        List<Reference> variants = new ArrayList<>();
+        unique.values().forEach(v -> variants.add(new Reference(v)));
+        diagnosticReport.getResult().addAll(variants);
 
         bundle.addEntry().setFullUrl(diagnosticReport.getIdElement().getValue()).setResource(diagnosticReport)
                 .getRequest().setUrl("DiagnosticReport?identifier=" + mtbUri + "|" + mtb.getId())

@@ -19,6 +19,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public final class ReasoningAdapter {
 
@@ -32,7 +33,7 @@ public final class ReasoningAdapter {
     }
 
     public static List<Reference> fromJson(Bundle bundle, Observation efficacyObservation, List<Regex> regex,
-            Reference fhirPatient, Reasoning reasoning) {
+            Reference fhirPatient, Reasoning reasoning, Map<String, Observation> unique) {
         if (reasoning.getClinicalData() != null) {
             reasoning.getClinicalData().forEach(clinical -> {
                 Specimen s = null;
@@ -65,13 +66,18 @@ public final class ReasoningAdapter {
                         + geneticAlteration.getEntrezGeneId() + "&subject="
                         + fhirPatient.getResource().getIdElement();
                 Observation geneticVariant = GeneticAlterationsAdapter.fromJson(geneticAlteration);
-                geneticVariant.setId(IdType.newRandomUuid());
                 geneticVariant.setSubject(fhirPatient);
-                bundle.addEntry().setFullUrl(geneticVariant.getIdElement().getValue())
-                        .setResource(geneticVariant).getRequest()
-                        .setUrl("Observation?" + uniqueString)
-                        .setIfNoneExist(uniqueString)
-                        .setMethod(Bundle.HTTPVerb.PUT);
+                if (!unique.containsKey(uniqueString)) {
+                    unique.put(uniqueString, geneticVariant);
+                    geneticVariant.setId(IdType.newRandomUuid());
+                    bundle.addEntry().setFullUrl(geneticVariant.getIdElement().getValue())
+                    .setResource(geneticVariant).getRequest()
+                    .setUrl("Observation?" + uniqueString)
+                    .setIfNoneExist(uniqueString)
+                    .setMethod(Bundle.HTTPVerb.PUT);
+                } else {
+                    geneticVariant = unique.get(uniqueString);
+                }
                 efficacyObservation.addDerivedFrom(new Reference(geneticVariant));
 
             });

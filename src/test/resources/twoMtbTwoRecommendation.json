@@ -22,9 +22,9 @@
 						"sieben"
 					],
 					"evidenceLevel": "m55a",
-					"evidenceLevelExtension": "null",
 					"id": "Testpatient22_1590601827090",
 					"reasoning": {
+						"clinicalData": [],
 						"geneticAlterations": [
 							{
 								"alteration": "R248",
@@ -62,7 +62,6 @@
 						"zwei"
 					],
 					"evidenceLevel": "m1a",
-					"evidenceLevelExtension": "null",
 					"id": "Testpatient22_1590601800979",
 					"reasoning": {
 						"clinicalData": [],

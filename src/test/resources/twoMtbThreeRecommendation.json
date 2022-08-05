@@ -3,47 +3,6 @@
 	"mtbs": [
 		{
 			"author": "anonymousUser1",
-			"date": "2020-05-20",
-			"generalRecommendation": "asdf1",
-			"id": "mtb_Testpatient23_1590601794804",
-			"mtbState": "FINAL",
-			"samples": [
-				"Testpatient_01"
-			],
-			"therapyRecommendations": [
-				{
-					"author": "anonymousUser1",
-					"clinicalTrials": [],
-					"comment": [
-						"eins",
-						"zwei"
-					],
-					"evidenceLevel": "m1a",
-					"evidenceLevelExtension": "null",
-					"id": "Testpatient23_1590601800979",
-					"reasoning": {
-						"clinicalData": [],
-						"geneticAlterations": [
-							{
-								"alteration": "V600E",
-								"chromosome": "2",
-								"entrezGeneId": 673,
-								"hugoSymbol": "BRAF"
-							}
-						]
-					},
-					"references": [],
-					"treatments": [
-						{
-							"name": "Afatinib",
-							"ncit_code": "C66940"
-						}
-					]
-				}
-			]
-		},
-		{
-			"author": "anonymousUser1",
 			"date": "2020-05-27",
 			"generalRecommendation": "ghjk2",
 			"id": "mtb_Testpatient23_1590601799440",
@@ -62,7 +21,6 @@
 						"vier"
 					],
 					"evidenceLevel": "m2a",
-					"evidenceLevelExtension": "null",
 					"id": "Testpatient23_1590601812873",
 					"reasoning": {
 						"clinicalData": [],
@@ -91,13 +49,13 @@
 				},
 				{
 					"author": "anonymousUser1",
+					"clinicalTrials": [],
 					"comment": [
 						"fünf",
 						"sechs",
 						"sieben"
 					],
 					"evidenceLevel": "m55a",
-					"evidenceLevelExtension": "null",
 					"id": "Testpatient23_1590601827090",
 					"reasoning": {
 						"clinicalData": [],
@@ -115,6 +73,46 @@
 						{
 							"name": "Asciminib",
 							"ncit_code": "C114494"
+						}
+					]
+				}
+			]
+		},
+		{
+			"author": "anonymousUser1",
+			"date": "2020-05-20",
+			"generalRecommendation": "asdf1",
+			"id": "mtb_Testpatient23_1590601794804",
+			"mtbState": "FINAL",
+			"samples": [
+				"Testpatient_01"
+			],
+			"therapyRecommendations": [
+				{
+					"author": "anonymousUser1",
+					"clinicalTrials": [],
+					"comment": [
+						"eins",
+						"zwei"
+					],
+					"evidenceLevel": "m1a",
+					"id": "Testpatient23_1590601800979",
+					"reasoning": {
+						"clinicalData": [],
+						"geneticAlterations": [
+							{
+								"alteration": "V600E",
+								"chromosome": "2",
+								"entrezGeneId": 673,
+								"hugoSymbol": "BRAF"
+							}
+						]
+					},
+					"references": [],
+					"treatments": [
+						{
+							"name": "Afatinib",
+							"ncit_code": "C66940"
 						}
 					]
 				}
