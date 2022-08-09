@@ -1,7 +1,6 @@
 package fhirspark.adapter;
 
 import ca.uhn.fhir.rest.client.api.IGenericClient;
-import ca.uhn.fhir.rest.gclient.TokenClientParam;
 import fhirspark.adapter.clinicaldata.GenericAdapter;
 import fhirspark.definitions.UriEnum;
 import fhirspark.restmodel.ClinicalDatum;
@@ -23,13 +22,7 @@ import java.util.Map;
 
 public final class ReasoningAdapter {
 
-    private static IGenericClient client;
-
     private ReasoningAdapter() {
-    }
-
-    public static void initialize(IGenericClient fhirClient) {
-        client = fhirClient;
     }
 
     public static List<Reference> fromJson(Bundle bundle, Observation efficacyObservation, List<Regex> regex,
@@ -87,27 +80,17 @@ public final class ReasoningAdapter {
 
     }
 
-    public static Reasoning toJson(List<Regex> regex, List<Reference> genetic, List<Reference> clinical) {
+    public static Reasoning toJson(List<Regex> regex,
+        List<Reference> genetic, List<Reference> clinical, IGenericClient client) {
         List<ClinicalDatum> clinicalData = new ArrayList<>();
         List<GeneticAlteration> geneticAlterations = new ArrayList<>();
 
-        genetic.forEach(reference -> {
-            Bundle b1 = (Bundle) client.search().forResource(Observation.class)
-                    .where(new TokenClientParam("_id")
-                    .exactly().code(reference.getReference())).prettyPrint()
-                    .execute();
-            geneticAlterations
-                .add(GeneticAlterationsAdapter.toJson((Observation) b1.getEntryFirstRep().getResource()));
-            }
-        );
+        genetic.forEach(reference -> geneticAlterations
+                .add(GeneticAlterationsAdapter.toJson((Observation) reference.getResource())));
 
         clinical.forEach(member -> {
             GenericAdapter genericAdapter = new GenericAdapter();
-            Bundle b1 = (Bundle) client.search().forResource(Observation.class)
-                    .where(new TokenClientParam("_id")
-                    .exactly().code(member.getReference())).prettyPrint()
-                    .execute();
-            ClinicalDatum cd = genericAdapter.toJson(regex, (Observation) b1.getEntryFirstRep().getResource());
+            ClinicalDatum cd = genericAdapter.toJson(regex, (Observation) member.getResource(), client);
             clinicalData.add(cd);
         });
 

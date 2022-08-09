@@ -1,5 +1,6 @@
 package fhirspark.adapter.clinicaldata;
 
+import ca.uhn.fhir.rest.client.api.IGenericClient;
 import fhirspark.restmodel.ClinicalDatum;
 import fhirspark.settings.Regex;
 import org.hl7.fhir.r4.model.Observation;
@@ -17,6 +18,6 @@ public interface ClinicalDataAdapter {
 
     Resource fromJson(ClinicalDatum clinicalData, Reference specimen);
 
-    ClinicalDatum toJson(List<Regex> regex, Observation fhirResource);
+    ClinicalDatum toJson(List<Regex> regex, Observation fhirResource, IGenericClient client);
 
 }

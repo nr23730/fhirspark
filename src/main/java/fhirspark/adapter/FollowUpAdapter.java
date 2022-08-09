@@ -82,6 +82,8 @@ public final class FollowUpAdapter {
             Bundle b1 = (Bundle) client.search().forResource(Observation.class)
                 .where(new TokenClientParam("_id")
                 .exactly().code(reference.getReference())).prettyPrint()
+                .include(Observation.INCLUDE_DERIVED_FROM)
+                .include(Observation.INCLUDE_SPECIMEN.asRecursive())
                 .execute();
 
             Observation obs = (Observation) b1.getEntryFirstRep().getResource();
