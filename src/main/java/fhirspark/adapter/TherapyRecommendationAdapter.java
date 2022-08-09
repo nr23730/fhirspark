@@ -191,7 +191,7 @@ public final class TherapyRecommendationAdapter {
         });
 
         therapyRecommendation
-                .setReasoning(ReasoningAdapter.toJson(regex, ob.getDerivedFrom(), ob.getHasMember()));
+                .setReasoning(ReasoningAdapter.toJson(regex, ob.getDerivedFrom(), ob.getHasMember(), client));
 
         ob.getNote().forEach(note -> therapyRecommendation.getComment().add(note.getText()));
 

@@ -9,7 +9,8 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "mtb",
-    "therapyRecommendation"
+    "therapyRecommendation",
+    "followUp"
 })
 public class Deletions {
 
@@ -17,6 +18,8 @@ public class Deletions {
     private List<String> mtb;
     @JsonProperty("therapyRecommendation")
     private List<String> therapyRecommendation;
+    @JsonProperty("followUp")
+    private List<String> followUp;
 
     @JsonProperty("mtb")
     public List<String> getMtb() {
@@ -26,6 +29,16 @@ public class Deletions {
     @JsonProperty("mtb")
     public void setMtb(List<String> mtb) {
         this.mtb = mtb;
+    }
+
+    @JsonProperty("followUp")
+    public List<String> getFollowUp() {
+        return followUp;
+    }
+
+    @JsonProperty("followUp")
+    public void setFollowUps(List<String> followUp) {
+        this.followUp = followUp;
     }
 
     @JsonProperty("therapyRecommendation")

@@ -1,5 +1,6 @@
 package fhirspark.adapter;
 
+import ca.uhn.fhir.rest.client.api.IGenericClient;
 import fhirspark.adapter.clinicaldata.GenericAdapter;
 import fhirspark.definitions.UriEnum;
 import fhirspark.restmodel.ClinicalDatum;
@@ -79,7 +80,8 @@ public final class ReasoningAdapter {
 
     }
 
-    public static Reasoning toJson(List<Regex> regex, List<Reference> genetic, List<Reference> clinical) {
+    public static Reasoning toJson(List<Regex> regex,
+        List<Reference> genetic, List<Reference> clinical, IGenericClient client) {
         List<ClinicalDatum> clinicalData = new ArrayList<>();
         List<GeneticAlteration> geneticAlterations = new ArrayList<>();
 
@@ -88,7 +90,7 @@ public final class ReasoningAdapter {
 
         clinical.forEach(member -> {
             GenericAdapter genericAdapter = new GenericAdapter();
-            ClinicalDatum cd = genericAdapter.toJson(regex, (Observation) member.getResource());
+            ClinicalDatum cd = genericAdapter.toJson(regex, (Observation) member.getResource(), client);
             clinicalData.add(cd);
         });
 
