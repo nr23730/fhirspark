@@ -2,20 +2,23 @@ name: Docker Image CI
 
 on:
   push:
-    branches: [ latest-docker ]
 
 jobs:
 
   build:
-    if: github.repository == 'nr23730/fhirspark'
+    if: github.repository == 'buschlab/fhirspark'
 
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v3
     - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag ${{ secrets.DOCKER_URL }}/cbioportal/fhirspark:latest --label maintainer="Niklas Reimer <${{ secrets.EMAIL }}>"
+      run: docker build . --file Dockerfile --tag ghcr.io/buschlab/fhirspark:latest --label maintainer="Niklas Reimer <${{ secrets.EMAIL }}>"
     - name: Login to Docker registry
-      run: echo ${{ secrets.ROBOT_TOKEN }} | docker login -u ${{ secrets.ROBOT_NAME }} --password-stdin ${{ secrets.DOCKER_URL }}
+      uses: docker/login-action@v2
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     - name: Upload Docker image
-      run: docker push ${{ secrets.DOCKER_URL }}/cbioportal/fhirspark:latest
+      run: docker push ghcr.io/buschlab/fhirspark:latest
