@@ -349,7 +349,7 @@ public final class FhirSpark {
         }
 
         for (String s : roleList) {
-            if (s.equals(requestedStudyId) || s.equals(requestedPatientId)) {
+            if ((requestedStudyId != null && requestedStudyId.matches(s)) || s.equals(requestedPatientId)) {
                 System.out.println("permission granted with role: " + s + "\n");
                 return true;
             }
