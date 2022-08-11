@@ -167,7 +167,7 @@ public final class FollowUpAdapter {
             ArrayList<String> responseTags = new ArrayList<String>();
             ArrayList<Boolean> responseValues = new ArrayList<Boolean>();
             final int respCount = 12;
-            final int numOfResp = 4;
+            final Double numOfResp = 4.0;
 
             responseTags.add("Pd3");
             responseValues.add(response.getPd3());

@@ -154,9 +154,9 @@ public class JsonFhirMapper {
             // Log the response
             System.out.println(ctx.newJsonParser().setPrettyPrint(true).encodeResourceToString(resp));
         } catch (UnprocessableEntityException entityException) {
-            FileWriter f = new FileWriter("error.json");
-            f.write(entityException.getResponseBody());
-            f.close();
+            try (FileWriter f = new FileWriter("error.json")) {
+                f.write(entityException.getResponseBody());
+            }
         }
 
     }
@@ -227,9 +227,9 @@ public class JsonFhirMapper {
             // Log the response
             System.out.println(ctx.newJsonParser().setPrettyPrint(true).encodeResourceToString(resp));
         } catch (UnprocessableEntityException entityException) {
-            FileWriter f = new FileWriter("error.json");
-            f.write(entityException.getResponseBody());
-            f.close();
+            try (FileWriter f = new FileWriter("error.json")) {
+                f.write(entityException.getResponseBody());
+            }
         }
 
     }
