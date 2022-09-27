@@ -54,6 +54,7 @@ public final class TherapyRecommendationAdapter {
         therapeuticImplication.getMeta()
                 .addProfile(MolekulargenetischerBefundberichtEnum.THERAPEUTIC_IMPLICATION.getSystem());
         therapeuticImplication.setStatus(ObservationStatus.FINAL);
+        therapeuticImplication.setSubject(fhirPatient);
         therapeuticImplication.addCategory().addCoding(new Coding(ObservationCategory.LABORATORY.getSystem(),
                 ObservationCategory.LABORATORY.toCode(), ObservationCategory.LABORATORY.getDisplay()));
         therapeuticImplication.getCode()
