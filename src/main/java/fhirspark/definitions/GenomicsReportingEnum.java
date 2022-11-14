@@ -5,6 +5,7 @@ import org.hl7.fhir.r4.model.Coding;
 public enum GenomicsReportingEnum {
     THERAPEUTIC_IMPLICATION(
             "http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/therapeutic-implication", null, null),
+    MEDICATION_EFFICACY("http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/medication-efficacy", null, null),
     SPECIMEN("http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/specimen", null, null),
     GENOMICS_REPORT("http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/genomics-report", null, null),
     RECOMMENDEDACTION("http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/RecommendedAction", null, null),
