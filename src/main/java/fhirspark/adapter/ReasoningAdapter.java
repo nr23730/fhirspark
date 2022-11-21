@@ -29,6 +29,9 @@ public final class ReasoningAdapter {
             Reference fhirPatient, Reasoning reasoning, Map<String, Observation> unique) {
         if (reasoning.getClinicalData() != null) {
             reasoning.getClinicalData().forEach(clinical -> {
+                if (clinical == null) {
+                    return;
+                }
                 Specimen s = null;
                 if (clinical.getSampleId() != null && clinical.getSampleId().length() > 0) {
                     String sampleId = RegexAdapter.applyRegexFromCbioportal(regex, clinical.getSampleId());
