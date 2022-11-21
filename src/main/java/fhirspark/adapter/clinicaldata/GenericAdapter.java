@@ -17,7 +17,8 @@ import org.hl7.fhir.r4.model.Specimen;
 import java.util.List;
 
 /**
- * Generic adapter for clinical data. Also fallback if other adapter was not found.
+ * Generic adapter for clinical data. Also fallback if other adapter was not
+ * found.
  */
 public class GenericAdapter implements ClinicalDataAdapter {
 
@@ -27,7 +28,9 @@ public class GenericAdapter implements ClinicalDataAdapter {
         obs.setStatus(ObservationStatus.UNKNOWN);
         obs.setCode(new CodeableConcept().addCoding(LoincEnum.CLINICAL_FINDING.toCoding()));
 
-        obs.getValueStringType().setValue(clinicalData.getAttributeName() + ": " + clinicalData.getValue());
+        obs.getValueStringType().setValue(clinicalData.getAttributeName()
+                + (clinicalData.getValue() == null || clinicalData.getValue().equals("null") ? ""
+                        : ": " + clinicalData.getValue()));
 
         return obs;
     }
@@ -42,23 +45,29 @@ public class GenericAdapter implements ClinicalDataAdapter {
 
     @Override
     public ClinicalDatum toJson(List<Regex> regex, Observation obs, IGenericClient client) {
+        if (obs.getValueStringType().asStringValue() == null) {
+            return null;
+        }
         String[] attr = obs.getValueStringType().asStringValue().split(": ");
-        ClinicalDatum cd = new ClinicalDatum().withAttributeName(attr[0]).withValue(attr[1]);
+        ClinicalDatum cd = new ClinicalDatum().withAttributeName(attr[0]);
+        if (attr.length == 2) {
+            cd.setValue(attr[1]);
+        }
         if (obs.getSpecimen().getReference() != null && obs.getSpecimen().getResource() == null) {
 
             Bundle b1 = (Bundle) client.search().forResource(Specimen.class)
-                .where(new TokenClientParam("_id")
-                .exactly().code(obs.getSpecimen().getReference()))
-                .prettyPrint()
-                .execute();
+                    .where(new TokenClientParam("_id")
+                            .exactly().code(obs.getSpecimen().getReference()))
+                    .prettyPrint()
+                    .execute();
 
             cd.setSampleId(((Specimen) b1.getEntryFirstRep().getResource())
-                .getIdentifierFirstRep().getValue());
+                    .getIdentifierFirstRep().getValue());
 
         }
         if (obs.getSpecimen().getResource() != null) {
             System.out.println(((Specimen) obs.getSpecimen().getResource())
-                .getIdentifierFirstRep().getValue());
+                    .getIdentifierFirstRep().getValue());
             cd.setSampleId(SpecimenAdapter.toJson(regex, obs.getSpecimen()));
         }
         return cd;
