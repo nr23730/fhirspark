@@ -112,7 +112,9 @@ public final class MtbAdapter {
             });
 
             if (((Observation) reference.getResource()).getMeta()
-                    .hasProfile(GenomicsReportingEnum.THERAPEUTIC_IMPLICATION.getSystem())) {
+                    .hasProfile(GenomicsReportingEnum.THERAPEUTIC_IMPLICATION.getSystem())
+                    || ((Observation) reference.getResource()).getMeta()
+                            .hasProfile(GenomicsReportingEnum.MEDICATION_EFFICACY.getSystem())) {
                 TherapyRecommendation therapyRecommendation = TherapyRecommendationAdapter.toJson(client,
                         regex, (Observation) reference.getResource());
                 mtb.getTherapyRecommendations().add(therapyRecommendation);

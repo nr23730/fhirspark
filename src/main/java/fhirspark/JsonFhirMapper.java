@@ -319,7 +319,7 @@ public class JsonFhirMapper {
         for (BundleEntryComponent bec : bStuff.getEntry()) {
             Observation o = (Observation) bec.getResource();
             if (!o.getMeta().hasProfile(GenomicsReportingEnum.THERAPEUTIC_IMPLICATION.getSystem())
-                || o.getMeta().hasProfile(GenomicsReportingEnum.MEDICATION_EFFICACY.getSystem())) {
+                && !o.getMeta().hasProfile(GenomicsReportingEnum.MEDICATION_EFFICACY.getSystem())) {
                 continue;
             }
             o.getExtensionsByUrl(GenomicsReportingEnum.RELATEDARTIFACT.getSystem()).forEach(relatedArtifact -> {
@@ -362,7 +362,8 @@ public class JsonFhirMapper {
 
         for (BundleEntryComponent bec : bStuff.getEntry()) {
             Observation ob = (Observation) bec.getResource();
-            if (!ob.getMeta().hasProfile(GenomicsReportingEnum.THERAPEUTIC_IMPLICATION.getSystem())) {
+            if (!ob.getMeta().hasProfile(GenomicsReportingEnum.THERAPEUTIC_IMPLICATION.getSystem())
+                && !ob.getMeta().hasProfile(GenomicsReportingEnum.MEDICATION_EFFICACY.getSystem())) {
                 continue;
             }
 
