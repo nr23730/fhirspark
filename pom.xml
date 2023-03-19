@@ -117,7 +117,7 @@
                   <dependency>
                     <groupId>com.github.ngeor</groupId>
                     <artifactId>checkstyle-rules</artifactId>
-                    <version>6.6.0-28</version>
+                    <version>6.6.0-29</version>
                   </dependency>
                 </dependencies>
                 <configuration>
