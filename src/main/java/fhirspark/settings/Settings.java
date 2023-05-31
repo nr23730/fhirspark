@@ -18,11 +18,14 @@ import java.util.List;
     "diagnosticReportSystem",
     "observationSystem",
     "responseSystem",
+    "followUpSystem",
     "patientSystem",
     "serviceRequestSystem",
     "hgncPath",
     "portalUrl",
     "loginRequired",
+    "basicAuthUsername",
+    "basicAuthPassword",
     "oncokbPath",
     "regex"
 })
@@ -52,6 +55,10 @@ public final class Settings {
     private String portalUrl;
     @JsonProperty("loginRequired")
     private Boolean loginRequired;
+    @JsonProperty("basicAuthUsername")
+    private String basicAuthUsername;
+    @JsonProperty("basicAuthPassword")
+    private String basicAuthPassword;
     @JsonProperty("oncokbPath")
     private String oncokbPath;
     @JsonProperty("regex")
@@ -165,6 +172,26 @@ public final class Settings {
     @JsonProperty("loginRequired")
     public void setLoginRequired(Boolean loginRequired) {
         this.loginRequired = loginRequired;
+    }
+
+    @JsonProperty("basicAuthUsername")
+    public String getBasicAuthUsername() {
+        return basicAuthUsername;
+    }
+
+    @JsonProperty("basicAuthUsername")
+    public void setBasicAuthUsername(String basicAuthUsername) {
+        this.basicAuthUsername = basicAuthUsername;
+    }
+
+    @JsonProperty("basicAuthPassword")
+    public String getBasicAuthPassword() {
+        return basicAuthPassword;
+    }
+
+    @JsonProperty("basicAuthPassword")
+    public void setBasicAuthPassword(String basicAuthPassword) {
+        this.basicAuthPassword = basicAuthPassword;
     }
 
     @JsonProperty("oncokbPath")

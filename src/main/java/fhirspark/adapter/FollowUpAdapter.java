@@ -35,6 +35,7 @@ public final class FollowUpAdapter {
     private static String patientUri;
     private static String followUpUri;
     private static String responseUri;
+    private static String therapyRecommendationUri;
 
     private FollowUpAdapter() {
     }
@@ -44,9 +45,10 @@ public final class FollowUpAdapter {
         FollowUpAdapter.patientUri = settings.getPatientSystem();
         FollowUpAdapter.followUpUri = settings.getFollowUpSystem();
         FollowUpAdapter.responseUri = settings.getResponseSystem();
+        FollowUpAdapter.therapyRecommendationUri = settings.getObservationSystem();
     }
 
-    public static FollowUp toJson(List<Regex> regex, String patientId, MedicationStatement medicationStatement) {
+    public static FollowUp toJson(List<Regex> regex, MedicationStatement medicationStatement) {
         FollowUp followUp = new FollowUp();
 
         if (medicationStatement.hasInformationSource()) {
@@ -103,7 +105,7 @@ public final class FollowUpAdapter {
                     e.printStackTrace();
                 }
 
-            } else if (obs.getIdentifierFirstRep().getValue().startsWith(patientId + "_")) {
+            } else if (obs.getIdentifierFirstRep().getSystem().equals(therapyRecommendationUri)) {
 
                 therapyRecommendation = TherapyRecommendationAdapter.toJson(client,
                         regex, obs);

@@ -9,8 +9,10 @@ patientSystem: ${FHIRSPARK_PATIENTSYSTEM:-https://cbioportal.org/patient/}
 serviceRequestSystem: ${FHIRSPARK_SERVICEREQUESTSYSTEM:-https://cbioportal.org/servicerequest/}
 portalUrl: ${FHIRSPARK_PORTALURL:-http://localhost:8080/}
 loginRequired: ${FHIRSPARK_LOGINREQUIRED:-false}
-hgncPath: ${FHIRSPARK_HGNCPATH:-hgnc.csv}
-oncokbPath: ${FHIRSPARK_ONCOKBPATH:-drugs.json}
+basicAuthUsername: ${FHIRSPARK_BASICAUTHUSERNAME:-}
+basicAuthPassword: ${FHIRSPARK_BASICAUTHPASSWORD:-}
+hgncPath: ${FHIRSPARK_HGNCPATH:-/app/hgnc.csv}
+oncokbPath: ${FHIRSPARK_ONCOKBPATH:-/app/drugs.json}
 regex:
   -
     cbio: ${FHIRSPARK_REGEX_CBIO:-/}

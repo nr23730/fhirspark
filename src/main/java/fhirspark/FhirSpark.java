@@ -281,6 +281,33 @@ public final class FhirSpark {
             res.body(req.body());
             return res.body();
         });
+
+        options("/followUp/alteration", (req, res) -> {
+            res.status(HttpStatus.NO_CONTENT_204);
+            res.header("Access-Control-Allow-Credentials", "true");
+            res.header("Access-Control-Allow-Headers", req.headers("Access-Control-Request-Headers"));
+            res.header("Access-Control-Allow-Methods", "POST");
+            res.header("Access-Control-Allow-Origin", req.headers("Origin"));
+            res.header("Content-Length", "0");
+            res.header("Vary", "Origin, Access-Control-Request-Headers");
+            res.header("Content-Type", "");
+            return res;
+        });
+
+        post("/followup/alteration", (req, res) -> {
+            res.status(HttpStatus.OK_200);
+            res.header("Access-Control-Allow-Credentials", "true");
+            res.header("Access-Control-Allow-Origin", req.headers("Origin"));
+            res.type("application/json");
+            res.header("Vary", "Origin, Access-Control-Request-Headers");
+            List<GeneticAlteration> alterations = objectMapper.readValue(req.body(),
+                    new TypeReference<List<GeneticAlteration>>() {
+                    });
+            res.body(
+                    objectMapper.writeValueAsString(jsonFhirMapper
+                        .getFollowUpsByAlteration(alterations)));
+            return res.body();
+        });
     }
 
     /**

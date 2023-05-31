@@ -3,39 +3,36 @@ package fhirspark;
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.DataFormatException;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
+import ca.uhn.fhir.rest.client.interceptor.BasicAuthInterceptor;
 import ca.uhn.fhir.rest.gclient.ReferenceClientParam;
 import ca.uhn.fhir.rest.gclient.TokenClientParam;
 import ca.uhn.fhir.rest.server.exceptions.UnprocessableEntityException;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import fhirspark.adapter.ClinicalTrialAdapter;
 import fhirspark.adapter.FollowUpAdapter;
 import fhirspark.adapter.MtbAdapter;
+import fhirspark.adapter.TherapyRecommendationAdapter;
 import fhirspark.definitions.GenomicsReportingEnum;
 import fhirspark.definitions.Hl7TerminologyEnum;
-import fhirspark.definitions.LoincEnum;
 import fhirspark.definitions.UriEnum;
 import fhirspark.restmodel.CbioportalRest;
-import fhirspark.restmodel.ClinicalDatum;
 import fhirspark.restmodel.Deletions;
 import fhirspark.restmodel.FollowUp;
 import fhirspark.restmodel.GeneticAlteration;
 import fhirspark.restmodel.Mtb;
-import fhirspark.restmodel.Reasoning;
 import fhirspark.restmodel.TherapyRecommendation;
-import fhirspark.restmodel.Treatment;
 import fhirspark.settings.Settings;
 import org.hl7.fhir.instance.model.api.IAnyResource;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Bundle.BundleEntryComponent;
 import org.hl7.fhir.r4.model.DiagnosticReport;
 import org.hl7.fhir.r4.model.IdType;
+import org.hl7.fhir.r4.model.Identifier;
 import org.hl7.fhir.r4.model.Identifier.IdentifierUse;
 import org.hl7.fhir.r4.model.MedicationStatement;
 import org.hl7.fhir.r4.model.Observation;
 import org.hl7.fhir.r4.model.Patient;
-import org.hl7.fhir.r4.model.Practitioner;
 import org.hl7.fhir.r4.model.Reference;
 import org.hl7.fhir.r4.model.RelatedArtifact;
 import org.hl7.fhir.r4.model.RelatedArtifact.RelatedArtifactType;
@@ -43,7 +40,6 @@ import org.hl7.fhir.r4.model.RelatedArtifact.RelatedArtifactType;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -80,6 +76,9 @@ public class JsonFhirMapper {
         ctx.getRestfulClientFactory().setConnectTimeout(TIMEOUT);
         ctx.getRestfulClientFactory().setSocketTimeout(TIMEOUT);
         this.client = ctx.newRestfulGenericClient(settings.getFhirDbBase());
+        client.registerInterceptor(
+            new BasicAuthInterceptor(settings.getBasicAuthUsername(), settings.getBasicAuthPassword())
+        );
         MtbAdapter.initialize(settings, client);
         FollowUpAdapter.initialize(settings, client);
         JsonFhirMapper.patientUri = settings.getPatientSystem();
@@ -196,7 +195,7 @@ public class JsonFhirMapper {
                 continue;
             }
             MedicationStatement medicationStatement = (MedicationStatement) medicationStatements.get(i).getResource();
-            followUps.add(FollowUpAdapter.toJson(settings.getRegex(), patientId, medicationStatement));
+            followUps.add(FollowUpAdapter.toJson(settings.getRegex(), medicationStatement));
 
         }
 
@@ -367,111 +366,10 @@ public class JsonFhirMapper {
                 continue;
             }
 
-            TherapyRecommendation therapyRecommendation = new TherapyRecommendation()
-                    .withComment(new ArrayList<>()).withReasoning(new Reasoning()).withClinicalTrial(new ArrayList<>());
-            List<ClinicalDatum> clinicalData = new ArrayList<>();
-            List<GeneticAlteration> geneticAlterations = new ArrayList<>();
-            therapyRecommendation.getReasoning().withClinicalData(clinicalData)
-                    .withGeneticAlterations(geneticAlterations);
-
-            String[] id = ob.getIdentifierFirstRep().getValueElement().getValue().split("_");
-            therapyRecommendation.setId(id[id.length - 1]);
-
-            if (ob.hasPerformer()) {
-                Bundle b2 = (Bundle) client.search().forResource(Practitioner.class)
-                        .where(new TokenClientParam("_id").exactly().code(ob.getPerformerFirstRep().getReference()))
-                        .prettyPrint().execute();
-                Practitioner author = (Practitioner) b2.getEntryFirstRep().getResource();
-                therapyRecommendation.setAuthor(author.getIdentifierFirstRep().getValue());
-            }
+            TherapyRecommendation therapyRecommendation =
+                TherapyRecommendationAdapter.toJson(client, settings.getRegex(), ob);
 
             tcMap.put(ob.getIdentifierFirstRep().getValue(), therapyRecommendation);
-
-            List<Treatment> treatments = new ArrayList<>();
-            therapyRecommendation.setTreatments(treatments);
-
-            List<fhirspark.restmodel.Reference> references = new ArrayList<>();
-            ob.getExtensionsByUrl(GenomicsReportingEnum.RELATEDARTIFACT.getSystem()).forEach(relatedArtifact -> {
-                if (((RelatedArtifact) relatedArtifact.getValue()).getType() == RelatedArtifactType.CITATION) {
-                    references.add(new fhirspark.restmodel.Reference()
-                            .withPmid(Integer.valueOf(((RelatedArtifact) relatedArtifact.getValue()).getUrl()
-                                    .replaceFirst(UriEnum.PUBMED_URI.getUri(), "")))
-                            .withName(((RelatedArtifact) relatedArtifact.getValue()).getCitation()));
-                }
-            });
-
-            therapyRecommendation.setReferences(references);
-
-            ob.getComponent().forEach(result -> {
-                if (result.getCode().getCodingFirstRep().getCode().equals("93044-6")) {
-                    String[] evidence = result.getValueCodeableConcept().getCodingFirstRep().getDisplay().split(" ");
-                    therapyRecommendation.setEvidenceLevel(evidence[0]);
-                    if (evidence.length > 1 && !"null".equals(evidence[1])) {
-                        therapyRecommendation.setEvidenceLevelExtension(evidence[1]);
-                    }
-                    if (evidence.length > 2) {
-                        therapyRecommendation.setEvidenceLevelM3Text(
-                                String.join(" ", Arrays.asList(evidence).subList(2, evidence.length))
-                                        .replace("(", "").replace(")", ""));
-                    }
-                }
-                if (result.getCode().getCodingFirstRep().getCode().equals("51963-7")) {
-                    therapyRecommendation.getTreatments()
-                            .add(new Treatment()
-                                    .withNcitCode(result.getValueCodeableConcept().getCodingFirstRep().getCode())
-                                    .withName(result.getValueCodeableConcept().getCodingFirstRep().getDisplay()));
-                }
-                if (result.getCode().getCodingFirstRep().getCode().equals("associated-therapy")) {
-                    therapyRecommendation.setClinicalTrial(ClinicalTrialAdapter.toJson(result));
-                }
-            });
-
-            ob.getDerivedFrom().forEach(reference1 -> {
-                if (reference1.getResource() == null) {
-                    return;
-                }
-                GeneticAlteration g = new GeneticAlteration();
-                ((Observation) reference1.getResource()).getComponent().forEach(variant -> {
-                    switch (LoincEnum.fromCode(variant.getCode().getCodingFirstRep().getCode())) {
-                        case AMINO_ACID_CHANGE:
-                            g.setAlteration(variant.getValueCodeableConcept().getCodingFirstRep().getCode()
-                                    .replaceFirst("p.", ""));
-                            break;
-                        case DISCRETE_GENETIC_VARIANT:
-                            variant.getValueCodeableConcept().getCoding().forEach(coding -> {
-                                switch (coding.getSystem()) {
-                                    case "http://www.ncbi.nlm.nih.gov/gene":
-                                        g.setEntrezGeneId(Integer.valueOf(coding.getCode()));
-                                        break;
-                                    default:
-                                        break;
-                                }
-                            });
-                            break;
-                        case GENE_STUDIED:
-                            g.setHugoSymbol(variant.getValueCodeableConcept().getCodingFirstRep().getDisplay());
-                            break;
-                        case CHROMOSOME_COPY_NUMBER_CHANGE:
-                            switch (LoincEnum
-                                    .fromCode(variant.getValueCodeableConcept().getCodingFirstRep().getCode())) {
-                                case COPY_NUMBER_GAIN:
-                                    g.setAlteration("Amplification");
-                                    break;
-                                case COPY_NUMBER_LOSS:
-                                    g.setAlteration("Deletion");
-                                    break;
-                                default:
-                                    break;
-                            }
-                            break;
-                        default:
-                            break;
-                    }
-                });
-                geneticAlterations.add(g);
-            });
-
-            ob.getNote().forEach(note -> therapyRecommendation.getComment().add(note.getText()));
 
         }
 
@@ -479,4 +377,43 @@ public class JsonFhirMapper {
 
     }
 
+    public Collection<FollowUp> getFollowUpsByAlteration(List<GeneticAlteration> alterations) {
+
+        Set<String> entrez = new HashSet<>();
+        for (GeneticAlteration a : alterations) {
+            entrez.add(String.valueOf(a.getEntrezGeneId()));
+        }
+
+        Bundle bStuff = (Bundle) client.search().forResource(Observation.class)
+                .where(new TokenClientParam("component-value-concept").exactly()
+                        .systemAndValues(UriEnum.NCBI_GENE.getUri(), new ArrayList<>(entrez)))
+                .prettyPrint().revInclude(Observation.INCLUDE_DERIVED_FROM).execute();
+
+        Map<String, FollowUp> tcMap = new HashMap<>();
+
+        ArrayList<Identifier> idents = new ArrayList<>();
+
+        for (BundleEntryComponent bec : bStuff.getEntry()) {
+            Observation ob = (Observation) bec.getResource();
+            if (!ob.getMeta().hasProfile(GenomicsReportingEnum.THERAPEUTIC_IMPLICATION.getSystem())) {
+                continue;
+            }
+            idents.addAll(ob.getIdentifier());
+        }
+
+        Bundle bFollowUps = (Bundle) client.search().forResource(MedicationStatement.class)
+            .execute();
+
+        for (BundleEntryComponent bec : bFollowUps.getEntry()) {
+            MedicationStatement ms = (MedicationStatement) bec.getResource();
+            if (!ms.hasReasonReference()) {
+                continue;
+            }
+            FollowUp followUp = FollowUpAdapter.toJson(settings.getRegex(), ms);
+
+            tcMap.put(ms.getIdentifierFirstRep().getValue(), followUp);
+
+        }
+        return tcMap.values();
+    }
 }
