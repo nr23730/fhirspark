@@ -1,0 +1,57 @@
+{
+	"id": "Testpatient11",
+	"mtbs": [],
+	"followUp": [
+	{
+		"id": "FU_Testpatient11_1234567",
+		"therapyRecommendation": {
+			"author": "anonymousUser1",
+			"clinicalTrials": [],
+			"comment": [
+				"eins",
+				"zwei"
+			],
+			"id": "Testpatient11_1590601800979",
+			"caseId": "Testpatient11",
+			"evidenceLevel": "m1a",
+			"reasoning": {
+				"clinicalData": [],
+				"geneticAlterations": [
+					{
+						"alteration": "V600E",
+						"entrezGeneId": 673,
+						"hugoSymbol": "BRAF",
+						"chromosome": "2"
+					}
+				]
+			},
+			"references": [],
+			"treatments": [
+				{
+					"name": "Afatinib",
+					"ncit_code": "C66940"
+				}
+			]
+		},
+		"date": "1/2/2003",
+		"author": "anonymousUser1",
+		"comment": "testComment",
+		"therapyRecommendationRealized": true,
+		"sideEffect": false,
+		"response": {
+			"pd3": false,
+			"sd3": true,
+			"pr3": false,
+			"cr3": false,
+			"pd6": false,
+			"sd6": true,
+			"pr6": false,
+			"cr6": false,
+			"pd12": true,
+			"sd12": false,
+			"pr12": false,
+			"cr12": false
+		}
+	}
+	]
+}

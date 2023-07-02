@@ -17,6 +17,8 @@ import fhirspark.restmodel.GeneticAlteration;
 import fhirspark.restmodel.Mtb;
 import fhirspark.settings.ConfigurationLoader;
 import fhirspark.settings.Settings;
+
+import org.apache.log4j.BasicConfigurator;
 import org.eclipse.jetty.http.HttpStatus;
 import spark.Request;
 
@@ -45,7 +47,7 @@ import static spark.Spark.put;
  */
 public final class FhirSpark {
 
-    private static JsonFhirMapper jsonFhirMapper;
+    private static JsonFhirMapper jsonFhirMapper, sharedJsonFhirMapper;
     private static Settings settings;
     private static Client client = new Client();
     private static ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
@@ -59,6 +61,7 @@ public final class FhirSpark {
      * @throws Exception Exception if the REST API runs into issues.
      */
     public static void main(final String[] args) throws Exception {
+        BasicConfigurator.configure();
         InputStream settingsYaml = ClassLoader.getSystemClassLoader().getResourceAsStream("settings.yaml");
         if (args.length == 1) {
             settingsYaml = new FileInputStream(args[0]);
@@ -68,9 +71,11 @@ public final class FhirSpark {
         HgncGeneName.initialize(settings.getHgncPath());
         OncoKbDrug.initalize(settings.getOncokbPath());
         SpecimenAdapter.initialize(settings.getSpecimenSystem());
-        TherapyRecommendationAdapter.initialize(settings.getObservationSystem(), settings.getPatientSystem());
-        jsonFhirMapper = new JsonFhirMapper(settings);
-
+        TherapyRecommendationAdapter.initialize(settings.getObservationSystem(), settings.getPatientSystem(), settings.getStudySystem());
+        jsonFhirMapper = new JsonFhirMapper(settings, false);
+        if(settings.getExternalFhirDbBase() != null && !settings.getExternalFhirDbBase().isEmpty()) {
+            sharedJsonFhirMapper = new JsonFhirMapper(settings, true);
+        }
         port(settings.getPort());
 
         options("/mtb/:patientId", (req, res) -> {
@@ -282,7 +287,7 @@ public final class FhirSpark {
             return res.body();
         });
 
-        options("/followUp/alteration", (req, res) -> {
+        options("/followup/alteration", (req, res) -> {
             res.status(HttpStatus.NO_CONTENT_204);
             res.header("Access-Control-Allow-Credentials", "true");
             res.header("Access-Control-Allow-Headers", req.headers("Access-Control-Request-Headers"));
@@ -306,6 +311,68 @@ public final class FhirSpark {
             res.body(
                     objectMapper.writeValueAsString(jsonFhirMapper
                         .getFollowUpsByAlteration(alterations)));
+            return res.body();
+        });
+
+        options("/shared/mtb/alteration", (req, res) -> {
+            res.status(HttpStatus.NO_CONTENT_204);
+            res.header("Access-Control-Allow-Credentials", "true");
+            res.header("Access-Control-Allow-Headers", req.headers("Access-Control-Request-Headers"));
+            res.header("Access-Control-Allow-Methods", "POST");
+            res.header("Access-Control-Allow-Origin", req.headers("Origin"));
+            res.header("Content-Length", "0");
+            res.header("Vary", "Origin, Access-Control-Request-Headers");
+            res.header("Content-Type", "");
+            return res;
+        });
+
+        post("/shared/mtb/alteration", (req, res) -> {
+            res.status(HttpStatus.OK_200);
+            res.header("Access-Control-Allow-Credentials", "true");
+            res.header("Access-Control-Allow-Origin", req.headers("Origin"));
+            res.type("application/json");
+            res.header("Vary", "Origin, Access-Control-Request-Headers");
+            List<GeneticAlteration> alterations = objectMapper.readValue(req.body(),
+                    new TypeReference<List<GeneticAlteration>>() {
+                    });
+            if(sharedJsonFhirMapper != null) {
+                res.body(
+                    objectMapper.writeValueAsString(sharedJsonFhirMapper
+                        .getTherapyRecommendationsByAlteration(alterations)));
+            } else {
+                res.body("[]");
+            }
+            return res.body();
+        });
+
+        options("/shared/followup/alteration", (req, res) -> {
+            res.status(HttpStatus.NO_CONTENT_204);
+            res.header("Access-Control-Allow-Credentials", "true");
+            res.header("Access-Control-Allow-Headers", req.headers("Access-Control-Request-Headers"));
+            res.header("Access-Control-Allow-Methods", "POST");
+            res.header("Access-Control-Allow-Origin", req.headers("Origin"));
+            res.header("Content-Length", "0");
+            res.header("Vary", "Origin, Access-Control-Request-Headers");
+            res.header("Content-Type", "");
+            return res;
+        });
+
+        post("/shared/followup/alteration", (req, res) -> {
+            res.status(HttpStatus.OK_200);
+            res.header("Access-Control-Allow-Credentials", "true");
+            res.header("Access-Control-Allow-Origin", req.headers("Origin"));
+            res.type("application/json");
+            res.header("Vary", "Origin, Access-Control-Request-Headers");
+            List<GeneticAlteration> alterations = objectMapper.readValue(req.body(),
+                    new TypeReference<List<GeneticAlteration>>() {
+                    });
+            if(sharedJsonFhirMapper != null) {
+                res.body(
+                    objectMapper.writeValueAsString(sharedJsonFhirMapper
+                        .getFollowUpsByAlteration(alterations)));
+            } else {
+                res.body("[]");
+            }
             return res.body();
         });
     }

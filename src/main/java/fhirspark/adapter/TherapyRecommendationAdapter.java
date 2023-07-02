@@ -21,10 +21,12 @@ import org.hl7.fhir.r4.model.Identifier;
 import org.hl7.fhir.r4.model.Observation;
 import org.hl7.fhir.r4.model.Observation.ObservationComponentComponent;
 import org.hl7.fhir.r4.model.Observation.ObservationStatus;
+import org.hl7.fhir.r4.model.Patient;
 import org.hl7.fhir.r4.model.Practitioner;
 import org.hl7.fhir.r4.model.Reference;
 import org.hl7.fhir.r4.model.RelatedArtifact;
 import org.hl7.fhir.r4.model.RelatedArtifact.RelatedArtifactType;
+import org.hl7.fhir.r4.model.ResearchStudy;
 import org.hl7.fhir.r4.model.codesystems.ObservationCategory;
 
 import java.util.ArrayList;
@@ -37,13 +39,15 @@ public final class TherapyRecommendationAdapter {
     private static PubmedPublication pubmedResolver = new PubmedPublication();
     private static String therapyRecommendationUri;
     private static String patientUri;
+    private static String studyUri;
 
     private TherapyRecommendationAdapter() {
     }
 
-    public static void initialize(String newTherapyRecommendationUri, String newPatientUri) {
+    public static void initialize(String newTherapyRecommendationUri, String newPatientUri, String newStudyUri) {
         TherapyRecommendationAdapter.therapyRecommendationUri = newTherapyRecommendationUri;
         TherapyRecommendationAdapter.patientUri = newPatientUri;
+        TherapyRecommendationAdapter.studyUri = newStudyUri;
     }
 
     public static Observation fromJson(Bundle bundle, List<Regex> regex, DiagnosticReport diagnosticReport,
@@ -117,7 +121,26 @@ public final class TherapyRecommendationAdapter {
                             .fromJson(therapyRecommendation.getClinicalTrial()));
         }
 
+        if (therapyRecommendation.getStudyId() != null) {
+            Reference study = getOrCreateResearchStudy(bundle, therapyRecommendation.getStudyId());
+            therapeuticImplication.addFocus(study);
+        }
+
         return therapeuticImplication;
+
+    }
+
+    private static Reference getOrCreateResearchStudy(Bundle b, String studyId) {
+
+        ResearchStudy rs = new ResearchStudy();
+        rs.setId(IdType.newRandomUuid());
+        rs.addIdentifier(new Identifier().setSystem(studyUri).setValue(studyId));
+        b.addEntry().setFullUrl(rs.getIdElement().getValue()).setResource(rs).getRequest()
+                .setUrl("ResearchStudy?identifier=" + studyUri + "|" + studyId)
+                .setIfNoneExist("identifier=" + studyUri + "|" + studyId)
+                .setMethod(Bundle.HTTPVerb.PUT);
+
+        return new Reference(rs);
 
     }
 
@@ -146,6 +169,28 @@ public final class TherapyRecommendationAdapter {
                     .prettyPrint().execute();
             Practitioner author = (Practitioner) b2.getEntryFirstRep().getResource();
             therapyRecommendation.setAuthor(author.getIdentifierFirstRep().getValue());
+        }
+
+        Bundle bDiagnosticReports = (Bundle) client.search().forResource(DiagnosticReport.class)
+            .where(DiagnosticReport.RESULT.hasId(ob.getIdElement().getIdPart())).prettyPrint()
+            .include(DiagnosticReport.INCLUDE_SUBJECT).execute();
+        if (bDiagnosticReports.hasEntry()) {
+            DiagnosticReport mtb = (DiagnosticReport) bDiagnosticReports.getEntryFirstRep().getResource();
+            Bundle bPat = (Bundle) client.search().forResource(Patient.class)
+                .where(new TokenClientParam("_id")
+                .exactly().code(mtb.getSubject().getReference())).prettyPrint().execute();
+            Patient subject = (Patient) bPat.getEntryFirstRep().getResource();
+
+            therapyRecommendation.setCaseId(subject.getIdentifierFirstRep().getValue());
+        }
+
+        if (ob.hasFocus()) {
+            Bundle b2 = (Bundle) client
+                    .search().forResource(ResearchStudy.class).where(new TokenClientParam("_id")
+                            .exactly().code(ob.getFocusFirstRep().getReference()))
+                    .prettyPrint().execute();
+            ResearchStudy rs = (ResearchStudy) b2.getEntryFirstRep().getResource();
+            therapyRecommendation.setStudyId(rs.getIdentifierFirstRep().getValue());
         }
 
         therapyRecommendation.setId(ob.getIdentifierFirstRep().getValue());
@@ -188,6 +233,12 @@ public final class TherapyRecommendationAdapter {
             }
             if (result.getCode().getCodingFirstRep().getCode().equals("associated-therapy")) {
                 therapyRecommendation.setClinicalTrial(ClinicalTrialAdapter.toJson(result));
+            }
+        });
+
+        ob.getCategory().forEach(result -> {
+            if (result.getCodingFirstRep().getSystem().equals(studyUri)) {
+                therapyRecommendation.setStudyId(result.getCodingFirstRep().getCode());
             }
         });
 

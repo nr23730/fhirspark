@@ -59,8 +59,10 @@ public class JsonFhirMapper {
     private static String therapyRecommendationUri;
     private static String followUpUri;
     private static String mtbUri;
-    private static Settings settings;
 
+    private MtbAdapter mtbAdapter;
+    private FollowUpAdapter fuAdapter;
+    private Settings settings;
     private FhirContext ctx = FhirContext.forR4();
     private IGenericClient client;
     private ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
@@ -71,16 +73,22 @@ public class JsonFhirMapper {
      *
      * @param settings Settings object with containing configuration
      */
-    public JsonFhirMapper(Settings settings) {
-        JsonFhirMapper.settings = settings;
+    public JsonFhirMapper(Settings settings, Boolean external) {
+        this.settings = settings;
         ctx.getRestfulClientFactory().setConnectTimeout(TIMEOUT);
         ctx.getRestfulClientFactory().setSocketTimeout(TIMEOUT);
-        this.client = ctx.newRestfulGenericClient(settings.getFhirDbBase());
-        client.registerInterceptor(
-            new BasicAuthInterceptor(settings.getBasicAuthUsername(), settings.getBasicAuthPassword())
-        );
-        MtbAdapter.initialize(settings, client);
-        FollowUpAdapter.initialize(settings, client);
+        if (external) {
+            this.client = ctx.newRestfulGenericClient(settings.getExternalFhirDbBase());
+            this.client.registerInterceptor(
+                new BasicAuthInterceptor(settings.getBasicAuthUsername(), settings.getBasicAuthPassword())
+            );
+        } else {
+            this.client = ctx.newRestfulGenericClient(settings.getFhirDbBase());
+        }
+        mtbAdapter = new MtbAdapter();
+        mtbAdapter.initialize(settings, client);
+        fuAdapter = new FollowUpAdapter();
+        fuAdapter.initialize(settings, client);
         JsonFhirMapper.patientUri = settings.getPatientSystem();
         JsonFhirMapper.therapyRecommendationUri = settings.getObservationSystem();
         JsonFhirMapper.followUpUri = settings.getFollowUpSystem();
@@ -120,7 +128,7 @@ public class JsonFhirMapper {
                 continue;
             }
             DiagnosticReport diagnosticReport = (DiagnosticReport) diagnosticReports.get(i).getResource();
-            mtbs.add(MtbAdapter.toJson(settings.getRegex(), patientId, diagnosticReport));
+            mtbs.add(mtbAdapter.toJson(settings.getRegex(), patientId, diagnosticReport));
 
         }
 
@@ -141,7 +149,7 @@ public class JsonFhirMapper {
         Reference fhirPatient = getOrCreatePatient(bundle, patientId);
 
         for (Mtb mtb : mtbs) {
-            MtbAdapter.fromJson(bundle, settings.getRegex(), fhirPatient, patientId, mtb);
+            mtbAdapter.fromJson(bundle, settings.getRegex(), fhirPatient, patientId, mtb);
         }
 
         try {
@@ -195,7 +203,7 @@ public class JsonFhirMapper {
                 continue;
             }
             MedicationStatement medicationStatement = (MedicationStatement) medicationStatements.get(i).getResource();
-            followUps.add(FollowUpAdapter.toJson(settings.getRegex(), medicationStatement));
+            followUps.add(fuAdapter.toJson(settings.getRegex(), medicationStatement));
 
         }
 
@@ -214,7 +222,7 @@ public class JsonFhirMapper {
         Reference fhirPatient = getOrCreatePatient(bundle, patientId);
 
         for (FollowUp followUp : followUps) {
-            FollowUpAdapter.fromJson(bundle, settings.getRegex(), fhirPatient, patientId, followUp);
+            fuAdapter.fromJson(bundle, settings.getRegex(), fhirPatient, patientId, followUp);
         }
 
         try {
@@ -409,7 +417,7 @@ public class JsonFhirMapper {
             if (!ms.hasReasonReference()) {
                 continue;
             }
-            FollowUp followUp = FollowUpAdapter.toJson(settings.getRegex(), ms);
+            FollowUp followUp = fuAdapter.toJson(settings.getRegex(), ms);
 
             tcMap.put(ms.getIdentifierFirstRep().getValue(), followUp);
 

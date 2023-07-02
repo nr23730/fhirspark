@@ -19,6 +19,7 @@
 						"zwei"
 					],
 					"id": "Testpatient11_1590601800979",
+					"caseId": "Testpatient11",
 					"evidenceLevel": "m1a",
 					"reasoning": {
 						"clinicalData": [],
@@ -37,7 +38,8 @@
 							"name": "Afatinib",
 							"ncit_code": "C66940"
 						}
-					]
+					],
+					"studyId": "testStudyID"
 				}
 			]
 		}

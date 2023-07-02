@@ -15,6 +15,8 @@ import java.util.List;
     "evidenceLevelExtension",
     "evidenceLevelM3Text",
     "id",
+    "studyId",
+    "caseId",
     "reasoning",
     "references",
     "treatments"
@@ -35,6 +37,10 @@ public class TherapyRecommendation {
     private String evidenceLevelM3Text;
     @JsonProperty("id")
     private String id;
+    @JsonProperty("studyId")
+    private String studyId;
+    @JsonProperty("caseId")
+    private String caseId;
     @JsonProperty("reasoning")
     private Reasoning reasoning;
     @JsonProperty("references")
@@ -139,6 +145,32 @@ public class TherapyRecommendation {
     public TherapyRecommendation withId(String id) {
         this.id = id;
         return this;
+    }
+
+    @JsonProperty("studyId")
+    public void setStudyId(String studyId) {
+        this.studyId = studyId;
+    }
+
+    @JsonProperty("studyId")
+    public String getStudyId(){
+        return studyId;
+    }
+    
+    @JsonProperty("studyId")
+    public TherapyRecommendation withStudyId(String studyId) {
+        this.studyId = studyId;
+        return this;
+    }
+
+    @JsonProperty("caseId")
+    public void setCaseId(String caseId) {
+        this.caseId = caseId;
+    }
+
+    @JsonProperty("caseId")
+    public String getCaseId(){
+        return caseId;
     }
 
     @JsonProperty("reasoning")

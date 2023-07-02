@@ -1,18 +1,20 @@
 port: ${FHIRSPARK_PORT:-3001}
 fhirDbBase: ${FHIRSPARK_FHIRBASE:-http://localhost:8080/fhir}
+externalFhirDbBase: ${EXT_FHIRSPARK_FHIRBASE:-} 
+basicAuthUsername: ${BASIC_AUTH_USERNAME:-}
+basicAuthPassword: ${BASIC_AUTH_PASSWORD:-}
 specimenSystem: ${FHIRSPARK_SPECIMENSYSTEM:-https://cbioportal.org/specimen/}
 diagnosticReportSystem: ${FHIRSPARK_DIAGNOSTICREPORTSYSTEM:-https://cbioportal.org/mtb/}
 observationSystem: ${FHIRSPARK_OBSERVATIONSYSTEM:-https://cbioportal.org/therapyrecommendation/}
 responseSystem: ${FHIRSPARK_RESPONSESYSTEM:-https://cbioportal.org/response/}
 followUpSystem: ${FHIRSPARK_FOLLOWUPSYSTEM:-https://cbioportal.org/followup/}
 patientSystem: ${FHIRSPARK_PATIENTSYSTEM:-https://cbioportal.org/patient/}
+studySystem: ${FHIRSPARK_STUDYSYSTEM:-https://cbioportal.org/study/}
 serviceRequestSystem: ${FHIRSPARK_SERVICEREQUESTSYSTEM:-https://cbioportal.org/servicerequest/}
 portalUrl: ${FHIRSPARK_PORTALURL:-http://localhost:8080/}
 loginRequired: ${FHIRSPARK_LOGINREQUIRED:-false}
-basicAuthUsername: ${FHIRSPARK_BASICAUTHUSERNAME:-}
-basicAuthPassword: ${FHIRSPARK_BASICAUTHPASSWORD:-}
-hgncPath: ${FHIRSPARK_HGNCPATH:-/app/hgnc.csv}
-oncokbPath: ${FHIRSPARK_ONCOKBPATH:-/app/drugs.json}
+hgncPath: ${FHIRSPARK_HGNCPATH:-hgnc.csv}
+oncokbPath: ${FHIRSPARK_ONCOKBPATH:-drugs.json}
 regex:
   -
     cbio: ${FHIRSPARK_REGEX_CBIO:-/}

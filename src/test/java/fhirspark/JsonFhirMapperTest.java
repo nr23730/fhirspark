@@ -29,8 +29,8 @@ import spark.resource.ClassPathResource;
 @TestInstance(Lifecycle.PER_CLASS)
 public class JsonFhirMapperTest {
 
-    byte[] inputBytes;
-    CbioportalRest inputObject;
+    byte[] inputBytes, inputBytesMTB, inputBytesFU;
+    CbioportalRest inputObject, inputObjectMTB, inputObjectFU;
     ObjectMapper objectMapper = new ObjectMapper().configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true).configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
     TypeReference<HashMap<String, Object>> type = 
     new TypeReference<HashMap<String, Object>>() {};
@@ -49,8 +49,8 @@ public class JsonFhirMapperTest {
             HgncGeneName.initialize(settings.getHgncPath());
             OncoKbDrug.initalize(settings.getOncokbPath());
             SpecimenAdapter.initialize(settings.getSpecimenSystem());
-            TherapyRecommendationAdapter.initialize(settings.getObservationSystem(), settings.getPatientSystem());
-            this.jfm = new JsonFhirMapper(settings);
+            TherapyRecommendationAdapter.initialize(settings.getObservationSystem(), settings.getPatientSystem(), settings.getStudySystem());
+            this.jfm = new JsonFhirMapper(settings, false);
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -147,6 +147,29 @@ public class JsonFhirMapperTest {
             inputObject = objectMapper.readValue(inputBytes, CbioportalRest.class);
             jfm.mtbFromJson(inputObject.getId(), inputObject.getMtbs());
             assertEquals(objectMapper.readTree(inputBytes), objectMapper.readTree(jfm.mtbToJson(inputObject.getId())));
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    public void oneFollowUpOneRecommendationTest() {
+        System.out.println("oneFollowUpOneRecommendation.json");
+        try {
+            inputBytesMTB = ClassLoader
+                    .getSystemResourceAsStream("oneMtbOneRecommendation.json")
+                    .readAllBytes();
+            inputObjectMTB = objectMapper.readValue(inputBytesMTB, CbioportalRest.class);
+            jfm.mtbFromJson(inputObjectMTB.getId(), inputObjectMTB.getMtbs());
+
+            inputBytesFU = ClassLoader
+                    .getSystemResourceAsStream("oneFollowUpOneRecommendation.json")
+                    .readAllBytes();
+            inputObjectFU = objectMapper.readValue(inputBytesFU, CbioportalRest.class);
+            jfm.followUpFromJson(inputObjectFU.getId(), inputObjectFU.getFollowUps());
+
+            assertEquals(objectMapper.readTree(inputBytesFU), objectMapper.readTree(jfm.followUpToJson(inputObjectFU.getId())));
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();

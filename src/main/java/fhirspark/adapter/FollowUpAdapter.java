@@ -31,24 +31,24 @@ import java.util.List;
 
 public final class FollowUpAdapter {
 
-    private static IGenericClient client;
-    private static String patientUri;
-    private static String followUpUri;
-    private static String responseUri;
-    private static String therapyRecommendationUri;
+    private IGenericClient client;
+    private String patientUri;
+    private String followUpUri;
+    private String responseUri;
+    private String therapyRecommendationUri;
 
-    private FollowUpAdapter() {
+    public FollowUpAdapter() {
     }
 
-    public static void initialize(Settings settings, IGenericClient fhirClient) {
-        FollowUpAdapter.client = fhirClient;
-        FollowUpAdapter.patientUri = settings.getPatientSystem();
-        FollowUpAdapter.followUpUri = settings.getFollowUpSystem();
-        FollowUpAdapter.responseUri = settings.getResponseSystem();
-        FollowUpAdapter.therapyRecommendationUri = settings.getObservationSystem();
+    public void initialize(Settings settings, IGenericClient fhirClient) {
+        this.client = fhirClient;
+        this.patientUri = settings.getPatientSystem();
+        this.followUpUri = settings.getFollowUpSystem();
+        this.responseUri = settings.getResponseSystem();
+        this.therapyRecommendationUri = settings.getObservationSystem();
     }
 
-    public static FollowUp toJson(List<Regex> regex, MedicationStatement medicationStatement) {
+    public FollowUp toJson(List<Regex> regex, MedicationStatement medicationStatement) {
         FollowUp followUp = new FollowUp();
 
         if (medicationStatement.hasInformationSource()) {
@@ -120,7 +120,7 @@ public final class FollowUpAdapter {
         return followUp;
     }
 
-    public static void fromJson(Bundle bundle, List<Regex> regex, Reference fhirPatient,
+    public void fromJson(Bundle bundle, List<Regex> regex, Reference fhirPatient,
         String patientId, FollowUp followUp) {
 
         MedicationStatement medicationStatement = new MedicationStatement();
@@ -244,7 +244,7 @@ public final class FollowUpAdapter {
 
     }
 
-    private static Reference getOrCreatePractitioner(Bundle b, String credentials) {
+    private Reference getOrCreatePractitioner(Bundle b, String credentials) {
 
         Practitioner practitioner = new Practitioner();
         practitioner.setId(IdType.newRandomUuid());
@@ -257,7 +257,7 @@ public final class FollowUpAdapter {
 
     }
 
-    private static Reference getTherapyRecommendationReference(String credentials, String trIdentifier) {
+    private Reference getTherapyRecommendationReference(String credentials, String trIdentifier) {
 
         Bundle b1 = (Bundle) client.search().forResource(Observation.class)
                 .where(new TokenClientParam("identifier")
@@ -271,7 +271,7 @@ public final class FollowUpAdapter {
 
     }
 
-    private static DateTimeType getMTBDate(String credentials, String trIdentifier) {
+    private DateTimeType getMTBDate(String credentials, String trIdentifier) {
 
         Bundle b1 = (Bundle) client.search().forResource(DiagnosticReport.class)
                 .where(new TokenClientParam("result")

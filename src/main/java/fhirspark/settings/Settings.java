@@ -14,18 +14,20 @@ import java.util.List;
 @JsonPropertyOrder({
     "port",
     "fhirDbBase",
+    "externalFhirDbBase",
+    "basicAuthUsername",
+    "basicAuthPassword",
     "specimenSystem",
     "diagnosticReportSystem",
     "observationSystem",
     "responseSystem",
     "followUpSystem",
     "patientSystem",
+    "studySystem",
     "serviceRequestSystem",
     "hgncPath",
     "portalUrl",
     "loginRequired",
-    "basicAuthUsername",
-    "basicAuthPassword",
     "oncokbPath",
     "regex"
 })
@@ -35,6 +37,12 @@ public final class Settings {
     private Integer port;
     @JsonProperty("fhirDbBase")
     private String fhirDbBase;
+    @JsonProperty("externalFhirDbBase")
+    private String externalFhirDbBase;
+    @JsonProperty("basicAuthUsername")
+    private String basicAuthUsername;
+    @JsonProperty("basicAuthPassword")
+    private String basicAuthPassword;
     @JsonProperty("specimenSystem")
     private String specimenSystem;
     @JsonProperty("diagnosticReportSystem")
@@ -47,6 +55,8 @@ public final class Settings {
     private String followUpSystem;
     @JsonProperty("patientSystem")
     private String patientSystem;
+    @JsonProperty("studySystem")
+    private String studySystem;
     @JsonProperty("serviceRequestSystem")
     private String serviceRequestSystem;
     @JsonProperty("hgncPath")
@@ -55,10 +65,6 @@ public final class Settings {
     private String portalUrl;
     @JsonProperty("loginRequired")
     private Boolean loginRequired;
-    @JsonProperty("basicAuthUsername")
-    private String basicAuthUsername;
-    @JsonProperty("basicAuthPassword")
-    private String basicAuthPassword;
     @JsonProperty("oncokbPath")
     private String oncokbPath;
     @JsonProperty("regex")
@@ -82,6 +88,36 @@ public final class Settings {
     @JsonProperty("fhirDbBase")
     public void setFhirDbBase(String fhirDbBase) {
         this.fhirDbBase = fhirDbBase;
+    }
+
+    @JsonProperty("externalFhirDbBase")
+    public String getExternalFhirDbBase() {
+        return externalFhirDbBase;
+    }
+
+    @JsonProperty("externalFhirDbBase")
+    public void setExternalFhirDbBase(String externalFhirDbBase) {
+        this.externalFhirDbBase = externalFhirDbBase;
+    }
+
+    @JsonProperty("basicAuthUsername")
+    public String getBasicAuthUsername() {
+        return basicAuthUsername;
+    }
+
+    @JsonProperty("basicAuthUsername")
+    public void setBasicAuthUsername(String basicAuthUsername) {
+        this.basicAuthUsername = basicAuthUsername;
+    }
+
+    @JsonProperty("basicAuthPassword")
+    public String getBasicAuthPassword() {
+        return basicAuthPassword;
+    }
+
+    @JsonProperty("basicAuthPassword")
+    public void setBasicAuthPassword(String basicAuthPassword) {
+        this.basicAuthPassword = basicAuthPassword;
     }
 
     @JsonProperty("specimenSystem")
@@ -134,6 +170,16 @@ public final class Settings {
         this.patientSystem = patientSystem;
     }
 
+    @JsonProperty("studySystem")
+    public void setStudySystem(String studySystem) {
+        this.studySystem = studySystem;
+    }
+
+    @JsonProperty("studySystem")
+    public String getStudySystem() {
+        return studySystem;
+    }
+
     @JsonProperty("serviceRequestSystem")
     public String getServiceRequestSystem() {
         return serviceRequestSystem;
@@ -172,26 +218,6 @@ public final class Settings {
     @JsonProperty("loginRequired")
     public void setLoginRequired(Boolean loginRequired) {
         this.loginRequired = loginRequired;
-    }
-
-    @JsonProperty("basicAuthUsername")
-    public String getBasicAuthUsername() {
-        return basicAuthUsername;
-    }
-
-    @JsonProperty("basicAuthUsername")
-    public void setBasicAuthUsername(String basicAuthUsername) {
-        this.basicAuthUsername = basicAuthUsername;
-    }
-
-    @JsonProperty("basicAuthPassword")
-    public String getBasicAuthPassword() {
-        return basicAuthPassword;
-    }
-
-    @JsonProperty("basicAuthPassword")
-    public void setBasicAuthPassword(String basicAuthPassword) {
-        this.basicAuthPassword = basicAuthPassword;
     }
 
     @JsonProperty("oncokbPath")
