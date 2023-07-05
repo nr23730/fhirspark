@@ -58,6 +58,7 @@ public class JsonFhirMapper {
     private static String patientUri;
     private static String therapyRecommendationUri;
     private static String followUpUri;
+    private static String responseUri;
     private static String mtbUri;
 
     private MtbAdapter mtbAdapter;
@@ -93,6 +94,7 @@ public class JsonFhirMapper {
         JsonFhirMapper.therapyRecommendationUri = settings.getObservationSystem();
         JsonFhirMapper.followUpUri = settings.getFollowUpSystem();
         JsonFhirMapper.mtbUri = settings.getDiagnosticReportSystem();
+        JsonFhirMapper.responseUri = settings.getResponseSystem();
 
     }
 
@@ -263,6 +265,7 @@ public class JsonFhirMapper {
         }
         client.delete().resourceConditionalByUrl(
                 "Observation?identifier=" + therapyRecommendationUri + "|" + therapyRecommendationId).execute();
+
     }
 
     private void deleteMtb(String patientId, String mtbId) {
@@ -278,6 +281,17 @@ public class JsonFhirMapper {
         }
         client.delete().resourceConditionalByUrl("MedicationStatement?identifier="
             + followUpUri + "|" + followUpId).execute();
+
+        // Delete RECIST-response observations
+        Bundle b = (Bundle) client.search().forResource(Observation.class)
+            .where(new TokenClientParam("identifier")
+            .hasSystemWithAnyCode(responseUri))
+            .prettyPrint().execute();
+
+        for (BundleEntryComponent bec : b.getEntry()) {
+            String responseId = ((Observation) bec.getResource()).getIdentifierFirstRep().getValue();
+            client.delete().resourceById("Observation", responseId).execute();
+        }
     }
 
     private Reference getOrCreatePatient(Bundle b, String patientId) {
