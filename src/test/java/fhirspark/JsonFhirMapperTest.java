@@ -50,7 +50,7 @@ public class JsonFhirMapperTest {
             OncoKbDrug.initalize(settings.getOncokbPath());
             SpecimenAdapter.initialize(settings.getSpecimenSystem());
             TherapyRecommendationAdapter.initialize(settings.getObservationSystem(), settings.getPatientSystem(), settings.getStudySystem());
-            this.jfm = new JsonFhirMapper(settings, false);
+            this.jfm = new JsonFhirMapper(settings);
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();

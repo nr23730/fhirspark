@@ -47,7 +47,7 @@ import static spark.Spark.put;
  */
 public final class FhirSpark {
 
-    private static JsonFhirMapper jsonFhirMapper, sharedJsonFhirMapper;
+    private static JsonFhirMapper jsonFhirMapper;
     private static Settings settings;
     private static Client client = new Client();
     private static ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
@@ -72,10 +72,7 @@ public final class FhirSpark {
         OncoKbDrug.initalize(settings.getOncokbPath());
         SpecimenAdapter.initialize(settings.getSpecimenSystem());
         TherapyRecommendationAdapter.initialize(settings.getObservationSystem(), settings.getPatientSystem(), settings.getStudySystem());
-        jsonFhirMapper = new JsonFhirMapper(settings, false);
-        if(settings.getExternalFhirDbBase() != null && !settings.getExternalFhirDbBase().isEmpty()) {
-            sharedJsonFhirMapper = new JsonFhirMapper(settings, true);
-        }
+        jsonFhirMapper = new JsonFhirMapper(settings);
         port(settings.getPort());
 
         options("/mtb/:patientId", (req, res) -> {
@@ -313,70 +310,7 @@ public final class FhirSpark {
                         .getFollowUpsByAlteration(alterations)));
             return res.body();
         });
-
-        options("/shared/mtb/alteration", (req, res) -> {
-            res.status(HttpStatus.NO_CONTENT_204);
-            res.header("Access-Control-Allow-Credentials", "true");
-            res.header("Access-Control-Allow-Headers", req.headers("Access-Control-Request-Headers"));
-            res.header("Access-Control-Allow-Methods", "POST");
-            res.header("Access-Control-Allow-Origin", req.headers("Origin"));
-            res.header("Content-Length", "0");
-            res.header("Vary", "Origin, Access-Control-Request-Headers");
-            res.header("Content-Type", "");
-            return res;
-        });
-
-        post("/shared/mtb/alteration", (req, res) -> {
-            res.status(HttpStatus.OK_200);
-            res.header("Access-Control-Allow-Credentials", "true");
-            res.header("Access-Control-Allow-Origin", req.headers("Origin"));
-            res.type("application/json");
-            res.header("Vary", "Origin, Access-Control-Request-Headers");
-            List<GeneticAlteration> alterations = objectMapper.readValue(req.body(),
-                    new TypeReference<List<GeneticAlteration>>() {
-                    });
-            if(sharedJsonFhirMapper != null) {
-                res.body(
-                    objectMapper.writeValueAsString(sharedJsonFhirMapper
-                        .getTherapyRecommendationsByAlteration(alterations)));
-            } else {
-                res.body("[]");
-            }
-            return res.body();
-        });
-
-        options("/shared/followup/alteration", (req, res) -> {
-            res.status(HttpStatus.NO_CONTENT_204);
-            res.header("Access-Control-Allow-Credentials", "true");
-            res.header("Access-Control-Allow-Headers", req.headers("Access-Control-Request-Headers"));
-            res.header("Access-Control-Allow-Methods", "POST");
-            res.header("Access-Control-Allow-Origin", req.headers("Origin"));
-            res.header("Content-Length", "0");
-            res.header("Vary", "Origin, Access-Control-Request-Headers");
-            res.header("Content-Type", "");
-            return res;
-        });
-
-        post("/shared/followup/alteration", (req, res) -> {
-            res.status(HttpStatus.OK_200);
-            res.header("Access-Control-Allow-Credentials", "true");
-            res.header("Access-Control-Allow-Origin", req.headers("Origin"));
-            res.type("application/json");
-            res.header("Vary", "Origin, Access-Control-Request-Headers");
-            List<GeneticAlteration> alterations = objectMapper.readValue(req.body(),
-                    new TypeReference<List<GeneticAlteration>>() {
-                    });
-            if(sharedJsonFhirMapper != null) {
-                res.body(
-                    objectMapper.writeValueAsString(sharedJsonFhirMapper
-                        .getFollowUpsByAlteration(alterations)));
-            } else {
-                res.body("[]");
-            }
-            return res.body();
-        });
     }
-
     /**
      * Checks if the session id is authorized to access the clinical data of the patient.
      *

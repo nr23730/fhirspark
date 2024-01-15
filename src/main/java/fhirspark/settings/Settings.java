@@ -14,9 +14,6 @@ import java.util.List;
 @JsonPropertyOrder({
     "port",
     "fhirDbBase",
-    "externalFhirDbBase",
-    "basicAuthUsername",
-    "basicAuthPassword",
     "specimenSystem",
     "diagnosticReportSystem",
     "observationSystem",
@@ -37,12 +34,6 @@ public final class Settings {
     private Integer port;
     @JsonProperty("fhirDbBase")
     private String fhirDbBase;
-    @JsonProperty("externalFhirDbBase")
-    private String externalFhirDbBase;
-    @JsonProperty("basicAuthUsername")
-    private String basicAuthUsername;
-    @JsonProperty("basicAuthPassword")
-    private String basicAuthPassword;
     @JsonProperty("specimenSystem")
     private String specimenSystem;
     @JsonProperty("diagnosticReportSystem")
@@ -88,36 +79,6 @@ public final class Settings {
     @JsonProperty("fhirDbBase")
     public void setFhirDbBase(String fhirDbBase) {
         this.fhirDbBase = fhirDbBase;
-    }
-
-    @JsonProperty("externalFhirDbBase")
-    public String getExternalFhirDbBase() {
-        return externalFhirDbBase;
-    }
-
-    @JsonProperty("externalFhirDbBase")
-    public void setExternalFhirDbBase(String externalFhirDbBase) {
-        this.externalFhirDbBase = externalFhirDbBase;
-    }
-
-    @JsonProperty("basicAuthUsername")
-    public String getBasicAuthUsername() {
-        return basicAuthUsername;
-    }
-
-    @JsonProperty("basicAuthUsername")
-    public void setBasicAuthUsername(String basicAuthUsername) {
-        this.basicAuthUsername = basicAuthUsername;
-    }
-
-    @JsonProperty("basicAuthPassword")
-    public String getBasicAuthPassword() {
-        return basicAuthPassword;
-    }
-
-    @JsonProperty("basicAuthPassword")
-    public void setBasicAuthPassword(String basicAuthPassword) {
-        this.basicAuthPassword = basicAuthPassword;
     }
 
     @JsonProperty("specimenSystem")

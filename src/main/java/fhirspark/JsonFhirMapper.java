@@ -3,7 +3,6 @@ package fhirspark;
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.DataFormatException;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
-import ca.uhn.fhir.rest.client.interceptor.BasicAuthInterceptor;
 import ca.uhn.fhir.rest.gclient.ReferenceClientParam;
 import ca.uhn.fhir.rest.gclient.TokenClientParam;
 import ca.uhn.fhir.rest.server.exceptions.UnprocessableEntityException;
@@ -60,10 +59,8 @@ public class JsonFhirMapper {
     private static String followUpUri;
     private static String responseUri;
     private static String mtbUri;
+    private static Settings settings;
 
-    private MtbAdapter mtbAdapter;
-    private FollowUpAdapter fuAdapter;
-    private Settings settings;
     private FhirContext ctx = FhirContext.forR4();
     private IGenericClient client;
     private ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
@@ -74,22 +71,13 @@ public class JsonFhirMapper {
      *
      * @param settings Settings object with containing configuration
      */
-    public JsonFhirMapper(Settings settings, Boolean external) {
-        this.settings = settings;
+    public JsonFhirMapper(Settings settings) {
+        JsonFhirMapper.settings = settings;
         ctx.getRestfulClientFactory().setConnectTimeout(TIMEOUT);
         ctx.getRestfulClientFactory().setSocketTimeout(TIMEOUT);
-        if (external) {
-            this.client = ctx.newRestfulGenericClient(settings.getExternalFhirDbBase());
-            this.client.registerInterceptor(
-                new BasicAuthInterceptor(settings.getBasicAuthUsername(), settings.getBasicAuthPassword())
-            );
-        } else {
-            this.client = ctx.newRestfulGenericClient(settings.getFhirDbBase());
-        }
-        mtbAdapter = new MtbAdapter();
-        mtbAdapter.initialize(settings, client);
-        fuAdapter = new FollowUpAdapter();
-        fuAdapter.initialize(settings, client);
+        this.client = ctx.newRestfulGenericClient(settings.getFhirDbBase());
+        MtbAdapter.initialize(settings, client);
+        FollowUpAdapter.initialize(settings, client);
         JsonFhirMapper.patientUri = settings.getPatientSystem();
         JsonFhirMapper.therapyRecommendationUri = settings.getObservationSystem();
         JsonFhirMapper.followUpUri = settings.getFollowUpSystem();
@@ -102,9 +90,9 @@ public class JsonFhirMapper {
      * Retrieves MTB data from FHIR server and transforms it into JSON format for
      * cBioPortal.
      *
-     * @param patientId
-     * @return
-     * @throws JsonProcessingException
+     * @param patientId id of the patient.
+     * @return JSON representation of the MTB data.
+     * @throws JsonProcessingException if the JSON representation could not be created.
      */
     public String mtbToJson(String patientId) throws JsonProcessingException {
         List<Mtb> mtbs = new ArrayList<Mtb>();
@@ -130,7 +118,7 @@ public class JsonFhirMapper {
                 continue;
             }
             DiagnosticReport diagnosticReport = (DiagnosticReport) diagnosticReports.get(i).getResource();
-            mtbs.add(mtbAdapter.toJson(settings.getRegex(), patientId, diagnosticReport));
+            mtbs.add(MtbAdapter.toJson(settings.getRegex(), patientId, diagnosticReport));
 
         }
 
@@ -151,7 +139,7 @@ public class JsonFhirMapper {
         Reference fhirPatient = getOrCreatePatient(bundle, patientId);
 
         for (Mtb mtb : mtbs) {
-            mtbAdapter.fromJson(bundle, settings.getRegex(), fhirPatient, patientId, mtb);
+            MtbAdapter.fromJson(bundle, settings.getRegex(), fhirPatient, patientId, mtb);
         }
 
         try {
@@ -173,9 +161,9 @@ public class JsonFhirMapper {
     /**
      * Retrieves MTB data from FHIR server and transforms it into JSON format for
      * cBioPortal.
-     * @param patientId
-     * @return
-     * @throws JsonProcessingException
+     * @param patientId id of the patient.
+     * @return JSON representation of the MTB data.
+     * @throws JsonProcessingException if the JSON representation could not be created.
      */
     public String followUpToJson(String patientId) throws JsonProcessingException {
         List<FollowUp> followUps = new ArrayList<FollowUp>();
@@ -205,7 +193,7 @@ public class JsonFhirMapper {
                 continue;
             }
             MedicationStatement medicationStatement = (MedicationStatement) medicationStatements.get(i).getResource();
-            followUps.add(fuAdapter.toJson(settings.getRegex(), medicationStatement));
+            followUps.add(FollowUpAdapter.toJson(settings.getRegex(), medicationStatement));
 
         }
 
@@ -224,7 +212,7 @@ public class JsonFhirMapper {
         Reference fhirPatient = getOrCreatePatient(bundle, patientId);
 
         for (FollowUp followUp : followUps) {
-            fuAdapter.fromJson(bundle, settings.getRegex(), fhirPatient, patientId, followUp);
+            FollowUpAdapter.fromJson(bundle, settings.getRegex(), fhirPatient, patientId, followUp);
         }
 
         try {
@@ -431,7 +419,7 @@ public class JsonFhirMapper {
             if (!ms.hasReasonReference()) {
                 continue;
             }
-            FollowUp followUp = fuAdapter.toJson(settings.getRegex(), ms);
+            FollowUp followUp = FollowUpAdapter.toJson(settings.getRegex(), ms);
 
             tcMap.put(ms.getIdentifierFirstRep().getValue(), followUp);
 

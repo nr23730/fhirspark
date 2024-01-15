@@ -36,24 +36,24 @@ import java.util.Map;
 
 public final class MtbAdapter {
 
-    private IGenericClient client;
-    private String patientUri;
-    private String therapyRecommendationUri;
-    private String mtbUri;
-    private String serviceRequestUri;
+    private static IGenericClient client;
+    private static String patientUri;
+    private static String therapyRecommendationUri;
+    private static String mtbUri;
+    private static String serviceRequestUri;
 
-    public MtbAdapter() {
+    private MtbAdapter() {
     }
 
-    public void initialize(Settings settings, IGenericClient fhirClient) {
-        this.client = fhirClient;
-        this.patientUri = settings.getPatientSystem();
-        this.therapyRecommendationUri = settings.getObservationSystem();
-        this.mtbUri = settings.getDiagnosticReportSystem();
-        this.serviceRequestUri = settings.getServiceRequestSystem();
+    public static void initialize(Settings settings, IGenericClient fhirClient) {
+        MtbAdapter.client = fhirClient;
+        MtbAdapter.patientUri = settings.getPatientSystem();
+        MtbAdapter.therapyRecommendationUri = settings.getObservationSystem();
+        MtbAdapter.mtbUri = settings.getDiagnosticReportSystem();
+        MtbAdapter.serviceRequestUri = settings.getServiceRequestSystem();
     }
 
-    public Mtb toJson(List<Regex> regex, String patientId,
+    public static Mtb toJson(List<Regex> regex, String patientId,
             DiagnosticReport diagnosticReport) {
         Mtb mtb = new Mtb().withTherapyRecommendations(new ArrayList<>())
                 .withSamples(new ArrayList<>());
@@ -125,7 +125,7 @@ public final class MtbAdapter {
 
     }
 
-    public void fromJson(Bundle bundle, List<Regex> regex, Reference fhirPatient, String patientId, Mtb mtb) {
+    public static void fromJson(Bundle bundle, List<Regex> regex, Reference fhirPatient, String patientId, Mtb mtb) {
         DiagnosticReport diagnosticReport = new DiagnosticReport();
         diagnosticReport.getMeta().addProfile(GenomicsReportingEnum.GENOMICS_REPORT.getSystem());
         diagnosticReport.getMeta().addProfile(MolekulargenetischerBefundberichtEnum.GENOMICS_REPORT.getSystem());
@@ -230,7 +230,7 @@ public final class MtbAdapter {
 
     }
 
-    private Reference getOrCreatePractitioner(Bundle b, String credentials) {
+    private static Reference getOrCreatePractitioner(Bundle b, String credentials) {
 
         Practitioner practitioner = new Practitioner();
         practitioner.setId(IdType.newRandomUuid());
