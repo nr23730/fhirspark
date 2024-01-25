@@ -21,6 +21,7 @@ import fhirspark.settings.Settings;
 import org.apache.log4j.BasicConfigurator;
 import org.eclipse.jetty.http.HttpStatus;
 import spark.Request;
+import spark.Response;
 
 import javax.ws.rs.core.Cookie;
 
@@ -71,19 +72,13 @@ public final class FhirSpark {
         HgncGeneName.initialize(settings.getHgncPath());
         OncoKbDrug.initalize(settings.getOncokbPath());
         SpecimenAdapter.initialize(settings.getSpecimenSystem());
-        TherapyRecommendationAdapter.initialize(settings.getObservationSystem(), settings.getPatientSystem(), settings.getStudySystem());
+        TherapyRecommendationAdapter.initialize(settings.getObservationSystem(), settings.getStudySystem());
         jsonFhirMapper = new JsonFhirMapper(settings);
         port(settings.getPort());
 
         options("/mtb/:patientId", (req, res) -> {
-            res.status(HttpStatus.NO_CONTENT_204);
-            res.header("Access-Control-Allow-Credentials", "true");
-            res.header("Access-Control-Allow-Headers", req.headers("Access-Control-Request-Headers"));
+            addOptions(req, res);
             res.header("Access-Control-Allow-Methods", "GET, PUT, DELETE");
-            res.header("Access-Control-Allow-Origin", req.headers("Origin"));
-            res.header("Content-Length", "0");
-            res.header("Vary", "Origin, Access-Control-Request-Headers");
-            res.header("Content-Type", "");
             return res;
         });
 
@@ -104,8 +99,6 @@ public final class FhirSpark {
                 return res;
             }
             res.status(HttpStatus.ACCEPTED_202);
-            res.header("Access-Control-Allow-Credentials", "true");
-            res.header("Access-Control-Allow-Origin", req.headers("Origin"));
             res.header("Cache-Control", "no-cache, no-store, max-age=0");
             return res;
         });
@@ -116,10 +109,7 @@ public final class FhirSpark {
                 return res;
             }
             res.status(HttpStatus.OK_200);
-            res.header("Access-Control-Allow-Credentials", "true");
-            res.header("Access-Control-Allow-Origin", req.headers("Origin"));
-            res.type("application/json");
-            res.header("Vary", "Origin, Access-Control-Request-Headers");
+            addContent(req, res);
             res.body(jsonFhirMapper.mtbToJson(req.params(":patientId")));
             return res.body();
         });
@@ -131,10 +121,7 @@ public final class FhirSpark {
                 return res;
             }
             res.status(HttpStatus.CREATED_201);
-            res.header("Access-Control-Allow-Credentials", "true");
-            res.header("Access-Control-Allow-Origin", req.headers("Origin"));
-            res.type("application/json");
-            res.header("Vary", "Origin, Access-Control-Request-Headers");
+            addContent(req, res);
 
             List<Mtb> mtbs = objectMapper.readValue(req.body(), CbioportalRest.class).getMtbs();
             jsonFhirMapper.mtbFromJson(req.params(":patientId"), mtbs);
@@ -149,10 +136,7 @@ public final class FhirSpark {
                 return res;
             }
             res.status(HttpStatus.OK_200);
-            res.header("Access-Control-Allow-Credentials", "true");
-            res.header("Access-Control-Allow-Origin", req.headers("Origin"));
-            res.type("application/json");
-            res.header("Vary", "Origin, Access-Control-Request-Headers");
+            addContent(req, res);
             Deletions deletions = objectMapper.readValue(req.body(), Deletions.class);
             jsonFhirMapper.deleteEntries(req.params(":patientId"), deletions);
             res.body(req.body());
@@ -160,23 +144,14 @@ public final class FhirSpark {
         });
 
         options("/mtb/alteration", (req, res) -> {
-            res.status(HttpStatus.NO_CONTENT_204);
-            res.header("Access-Control-Allow-Credentials", "true");
-            res.header("Access-Control-Allow-Headers", req.headers("Access-Control-Request-Headers"));
+            addOptions(req, res);
             res.header("Access-Control-Allow-Methods", "POST");
-            res.header("Access-Control-Allow-Origin", req.headers("Origin"));
-            res.header("Content-Length", "0");
-            res.header("Vary", "Origin, Access-Control-Request-Headers");
-            res.header("Content-Type", "");
             return res;
         });
 
         post("/mtb/alteration", (req, res) -> {
             res.status(HttpStatus.OK_200);
-            res.header("Access-Control-Allow-Credentials", "true");
-            res.header("Access-Control-Allow-Origin", req.headers("Origin"));
-            res.type("application/json");
-            res.header("Vary", "Origin, Access-Control-Request-Headers");
+            addContent(req, res);
             List<GeneticAlteration> alterations = objectMapper.readValue(req.body(),
                     new TypeReference<List<GeneticAlteration>>() {
                     });
@@ -187,23 +162,14 @@ public final class FhirSpark {
         });
 
         options("/mtb/alteration/pmid", (req, res) -> {
-            res.status(HttpStatus.NO_CONTENT_204);
-            res.header("Access-Control-Allow-Credentials", "true");
-            res.header("Access-Control-Allow-Headers", req.headers("Access-Control-Request-Headers"));
+            addOptions(req, res);
             res.header("Access-Control-Allow-Methods", "POST");
-            res.header("Access-Control-Allow-Origin", req.headers("Origin"));
-            res.header("Content-Length", "0");
-            res.header("Vary", "Origin, Access-Control-Request-Headers");
-            res.header("Content-Type", "");
             return res;
         });
 
         post("/mtb/alteration/pmid", (req, res) -> {
             res.status(HttpStatus.OK_200);
-            res.header("Access-Control-Allow-Credentials", "true");
-            res.header("Access-Control-Allow-Origin", req.headers("Origin"));
-            res.type("application/json");
-            res.header("Vary", "Origin, Access-Control-Request-Headers");
+            addContent(req, res);
             List<GeneticAlteration> alterations = objectMapper.readValue(req.body(),
                     new TypeReference<List<GeneticAlteration>>() {
                     });
@@ -212,14 +178,8 @@ public final class FhirSpark {
         });
 
         options("/followup/:patientId", (req, res) -> {
-            res.status(HttpStatus.NO_CONTENT_204);
-            res.header("Access-Control-Allow-Credentials", "true");
-            res.header("Access-Control-Allow-Headers", req.headers("Access-Control-Request-Headers"));
+            addOptions(req, res);
             res.header("Access-Control-Allow-Methods", "GET, PUT, DELETE");
-            res.header("Access-Control-Allow-Origin", req.headers("Origin"));
-            res.header("Content-Length", "0");
-            res.header("Vary", "Origin, Access-Control-Request-Headers");
-            res.header("Content-Type", "");
             return res;
         });
 
@@ -230,8 +190,6 @@ public final class FhirSpark {
                 return res;
             }
             res.status(HttpStatus.ACCEPTED_202);
-            res.header("Access-Control-Allow-Credentials", "true");
-            res.header("Access-Control-Allow-Origin", req.headers("Origin"));
             res.header("Cache-Control", "no-cache, no-store, max-age=0");
             return res;
         });
@@ -242,10 +200,7 @@ public final class FhirSpark {
                 return res;
             }
             res.status(HttpStatus.OK_200);
-            res.header("Access-Control-Allow-Credentials", "true");
-            res.header("Access-Control-Allow-Origin", req.headers("Origin"));
-            res.type("application/json");
-            res.header("Vary", "Origin, Access-Control-Request-Headers");
+            addContent(req, res);
             res.body(jsonFhirMapper.followUpToJson(req.params(":patientId")));
             return res.body();
         });
@@ -257,10 +212,7 @@ public final class FhirSpark {
                 return res;
             }
             res.status(HttpStatus.CREATED_201);
-            res.header("Access-Control-Allow-Credentials", "true");
-            res.header("Access-Control-Allow-Origin", req.headers("Origin"));
-            res.type("application/json");
-            res.header("Vary", "Origin, Access-Control-Request-Headers");
+            addContent(req, res);
             List<FollowUp> followUps = objectMapper.readValue(req.body(), CbioportalRest.class).getFollowUps();
             jsonFhirMapper.followUpFromJson(req.params(":patientId"), followUps);
             res.body(req.body());
@@ -274,10 +226,7 @@ public final class FhirSpark {
                 return res;
             }
             res.status(HttpStatus.OK_200);
-            res.header("Access-Control-Allow-Credentials", "true");
-            res.header("Access-Control-Allow-Origin", req.headers("Origin"));
-            res.type("application/json");
-            res.header("Vary", "Origin, Access-Control-Request-Headers");
+            addContent(req, res);
             Deletions deletions = objectMapper.readValue(req.body(), Deletions.class);
             jsonFhirMapper.deleteEntries(req.params(":patientId"), deletions);
             res.body(req.body());
@@ -285,23 +234,14 @@ public final class FhirSpark {
         });
 
         options("/followup/alteration", (req, res) -> {
-            res.status(HttpStatus.NO_CONTENT_204);
-            res.header("Access-Control-Allow-Credentials", "true");
-            res.header("Access-Control-Allow-Headers", req.headers("Access-Control-Request-Headers"));
+            addOptions(req, res);
             res.header("Access-Control-Allow-Methods", "POST");
-            res.header("Access-Control-Allow-Origin", req.headers("Origin"));
-            res.header("Content-Length", "0");
-            res.header("Vary", "Origin, Access-Control-Request-Headers");
-            res.header("Content-Type", "");
             return res;
         });
 
         post("/followup/alteration", (req, res) -> {
-            res.status(HttpStatus.OK_200);
-            res.header("Access-Control-Allow-Credentials", "true");
-            res.header("Access-Control-Allow-Origin", req.headers("Origin"));
-            res.type("application/json");
-            res.header("Vary", "Origin, Access-Control-Request-Headers");
+            addOptions(req, res);
+            addContent(req, res);
             List<GeneticAlteration> alterations = objectMapper.readValue(req.body(),
                     new TypeReference<List<GeneticAlteration>>() {
                     });
@@ -386,6 +326,26 @@ public final class FhirSpark {
         System.out.println("no matching role could be found - returning false\n");
         return false;
 
+    }
+
+    private static void addRes(Request req, Response res) {
+        res.header("Access-Control-Allow-Origin", req.headers("Origin"));
+        res.header("Vary", "Origin, Access-Control-Request-Headers");
+    }
+
+    private static void addOptions(Request req, Response res) {
+        addRes(req, res);
+        res.status(HttpStatus.NO_CONTENT_204);
+        res.header("Access-Control-Allow-Credentials", "true");
+        res.header("Access-Control-Allow-Headers", req.headers("Access-Control-Request-Headers"));
+        res.header("Content-Length", "0");
+        res.header("Content-Type", "");
+    }
+
+    private static void addContent(Request req, Response res) {
+        addRes(req, res);
+        res.type("application/json");
+        res.header("Vary", "Origin, Access-Control-Request-Headers");
     }
 
 }

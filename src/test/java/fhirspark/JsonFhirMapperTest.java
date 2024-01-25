@@ -49,7 +49,7 @@ public class JsonFhirMapperTest {
             HgncGeneName.initialize(settings.getHgncPath());
             OncoKbDrug.initalize(settings.getOncokbPath());
             SpecimenAdapter.initialize(settings.getSpecimenSystem());
-            TherapyRecommendationAdapter.initialize(settings.getObservationSystem(), settings.getPatientSystem(), settings.getStudySystem());
+            TherapyRecommendationAdapter.initialize(settings.getObservationSystem(), settings.getStudySystem());
             this.jfm = new JsonFhirMapper(settings);
         } catch (IOException e) {
             // TODO Auto-generated catch block
