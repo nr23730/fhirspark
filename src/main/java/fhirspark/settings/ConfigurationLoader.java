@@ -35,6 +35,9 @@ public class ConfigurationLoader {
         try {
             String contents = this.stringSubstitutor
                     .replace(new String(ByteStreams.toByteArray(config), StandardCharsets.UTF_8));
+            if (contents.contains("$")) {
+                System.out.println("WARNING: Some environment variables were not replaced in the settings.yaml file.");
+            }
 
             return this.objectMapper.readValue(contents, cls);
         } catch (IOException e) {

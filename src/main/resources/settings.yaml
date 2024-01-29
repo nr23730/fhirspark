@@ -6,6 +6,7 @@ observationSystem: ${FHIRSPARK_OBSERVATIONSYSTEM:-https://cbioportal.org/therapy
 responseSystem: ${FHIRSPARK_RESPONSESYSTEM:-https://cbioportal.org/response/}
 followUpSystem: ${FHIRSPARK_FOLLOWUPSYSTEM:-https://cbioportal.org/followup/}
 patientSystem: ${FHIRSPARK_PATIENTSYSTEM:-https://cbioportal.org/patient/}
+studySystem: ${FHIRSPARK_STUDYSYSTEM:-https://cbioportal.org/study/}
 serviceRequestSystem: ${FHIRSPARK_SERVICEREQUESTSYSTEM:-https://cbioportal.org/servicerequest/}
 portalUrl: ${FHIRSPARK_PORTALURL:-http://localhost:8080/}
 loginRequired: ${FHIRSPARK_LOGINREQUIRED:-false}

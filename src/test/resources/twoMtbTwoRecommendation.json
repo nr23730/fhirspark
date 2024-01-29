@@ -23,6 +23,7 @@
 					],
 					"evidenceLevel": "m55a",
 					"id": "Testpatient22_1590601827090",
+					"caseId": "Testpatient22",
 					"reasoning": {
 						"clinicalData": [],
 						"geneticAlterations": [
@@ -63,6 +64,7 @@
 					],
 					"evidenceLevel": "m1a",
 					"id": "Testpatient22_1590601800979",
+					"caseId": "Testpatient22",
 					"reasoning": {
 						"clinicalData": [],
 						"geneticAlterations": [

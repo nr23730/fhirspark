@@ -10,6 +10,7 @@
                     "comment": [],
                     "evidenceLevel": "0",
                     "id": "Testpatient42_1615228578187",
+                    "caseId": "Testpatient42",
                     "reasoning": {
                         "clinicalData": [],
                         "geneticAlterations": [

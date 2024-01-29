@@ -96,11 +96,13 @@ public final class GeneticAlterationsAdapter {
         variant.addComponent(variationCode);
 
         Genenames gn = HgncGeneName.resolve(geneticAlteration.getEntrezGeneId());
-        ObservationComponentComponent hgnc = new ObservationComponentComponent()
+        if (gn != null) {
+            ObservationComponentComponent hgnc = new ObservationComponentComponent()
                 .setCode(new CodeableConcept(LoincEnum.GENE_STUDIED.toCoding()));
-        hgnc.getValueCodeableConcept()
+            hgnc.getValueCodeableConcept()
                 .addCoding(new Coding(UriEnum.GENENAMES.getUri(), gn.getHgncId(), gn.getApprovedSymbol()));
-        variant.addComponent(hgnc);
+            variant.addComponent(hgnc);
+        }
 
         ObservationComponentComponent startEnd = new ObservationComponentComponent().setCode(
                 new CodeableConcept(GenomicsReportingEnum.EXACT_START_END.toCoding()));
