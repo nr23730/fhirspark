@@ -38,15 +38,13 @@ public final class TherapyRecommendationAdapter {
 
     private static PubmedPublication pubmedResolver = new PubmedPublication();
     private static String therapyRecommendationUri;
-    private static String patientUri;
     private static String studyUri;
 
     private TherapyRecommendationAdapter() {
     }
 
-    public static void initialize(String newTherapyRecommendationUri, String newPatientUri, String newStudyUri) {
+    public static void initialize(String newTherapyRecommendationUri, String newStudyUri) {
         TherapyRecommendationAdapter.therapyRecommendationUri = newTherapyRecommendationUri;
-        TherapyRecommendationAdapter.patientUri = newPatientUri;
         TherapyRecommendationAdapter.studyUri = newStudyUri;
     }
 
@@ -83,7 +81,8 @@ public final class TherapyRecommendationAdapter {
         therapeuticImplication.addIdentifier().setSystem(therapyRecommendationUri)
                 .setValue(therapyRecommendation.getId());
 
-        therapeuticImplication.addPerformer(getOrCreatePractitioner(bundle, therapyRecommendation.getAuthor()));
+        therapeuticImplication.addPerformer(MtbAdapter.getOrCreatePractitioner(bundle,
+                therapyRecommendation.getAuthor()));
 
         therapyRecommendation.getComment()
                 .forEach(comment -> therapeuticImplication.getNote()
@@ -141,20 +140,6 @@ public final class TherapyRecommendationAdapter {
                 .setMethod(Bundle.HTTPVerb.PUT);
 
         return new Reference(rs);
-
-    }
-
-    private static Reference getOrCreatePractitioner(Bundle b, String credentials) {
-
-        Practitioner practitioner = new Practitioner();
-        practitioner.setId(IdType.newRandomUuid());
-        practitioner.addIdentifier(new Identifier().setSystem(patientUri).setValue(credentials));
-        b.addEntry().setFullUrl(practitioner.getIdElement().getValue()).setResource(practitioner).getRequest()
-                .setUrl("Practitioner?identifier=" + patientUri + "|" + credentials)
-                .setIfNoneExist("identifier=" + patientUri + "|" + credentials)
-                .setMethod(Bundle.HTTPVerb.PUT);
-
-        return new Reference(practitioner);
 
     }
 

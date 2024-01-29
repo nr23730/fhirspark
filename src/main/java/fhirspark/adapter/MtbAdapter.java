@@ -230,7 +230,7 @@ public final class MtbAdapter {
 
     }
 
-    private static Reference getOrCreatePractitioner(Bundle b, String credentials) {
+    public static Reference getOrCreatePractitioner(Bundle b, String credentials) {
 
         Practitioner practitioner = new Practitioner();
         practitioner.setId(IdType.newRandomUuid());

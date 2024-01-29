@@ -17,7 +17,6 @@ import org.hl7.fhir.r4.model.CodeableConcept;
 import org.hl7.fhir.r4.model.DateTimeType;
 import org.hl7.fhir.r4.model.DiagnosticReport;
 import org.hl7.fhir.r4.model.IdType;
-import org.hl7.fhir.r4.model.Identifier;
 import org.hl7.fhir.r4.model.MedicationStatement;
 import org.hl7.fhir.r4.model.Observation;
 import org.hl7.fhir.r4.model.Practitioner;
@@ -32,7 +31,6 @@ import java.util.List;
 public final class FollowUpAdapter {
 
     private static IGenericClient client;
-    private static String patientUri;
     private static String followUpUri;
     private static String responseUri;
     private static String therapyRecommendationUri;
@@ -42,7 +40,6 @@ public final class FollowUpAdapter {
 
     public static void initialize(Settings settings, IGenericClient fhirClient) {
         FollowUpAdapter.client = fhirClient;
-        FollowUpAdapter.patientUri = settings.getPatientSystem();
         FollowUpAdapter.followUpUri = settings.getFollowUpSystem();
         FollowUpAdapter.responseUri = settings.getResponseSystem();
         FollowUpAdapter.therapyRecommendationUri = settings.getObservationSystem();
@@ -130,7 +127,7 @@ public final class FollowUpAdapter {
         medicationStatement.setId(IdType.newRandomUuid());
         medicationStatement.setSubject(fhirPatient);
 
-        medicationStatement.setInformationSource(getOrCreatePractitioner(bundle, followUp.getAuthor()));
+        medicationStatement.setInformationSource(MtbAdapter.getOrCreatePractitioner(bundle, followUp.getAuthor()));
 
         medicationStatement.addReasonReference(
             getTherapyRecommendationReference(followUp.getAuthor(), followUp.getTherapyRecommendation().getId())
@@ -241,19 +238,6 @@ public final class FollowUpAdapter {
         bundle.addEntry().setFullUrl(medicationStatement.getIdElement().getValue()).setResource(medicationStatement)
                 .getRequest().setUrl("MedicationStatement?identifier=" + followUpUri + "|" + followUp.getId())
                 .setIfNoneExist("identifier=" + followUpUri + "|" + followUp.getId()).setMethod(Bundle.HTTPVerb.PUT);
-
-    }
-
-    private static Reference getOrCreatePractitioner(Bundle b, String credentials) {
-
-        Practitioner practitioner = new Practitioner();
-        practitioner.setId(IdType.newRandomUuid());
-        practitioner.addIdentifier(new Identifier().setSystem(patientUri).setValue(credentials));
-        b.addEntry().setFullUrl(practitioner.getIdElement().getValue()).setResource(practitioner).getRequest()
-                .setUrl("Practitioner?identifier=" + patientUri + "|" + credentials)
-                .setIfNoneExist("identifier=" + patientUri + "|" + credentials).setMethod(Bundle.HTTPVerb.PUT);
-
-        return new Reference(practitioner);
 
     }
 
