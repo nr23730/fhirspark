@@ -345,7 +345,6 @@ public final class FhirSpark {
     private static void addContent(Request req, Response res) {
         addRes(req, res);
         res.type("application/json");
-        res.header("Vary", "Origin, Access-Control-Request-Headers");
     }
 
 }
