@@ -157,7 +157,7 @@ public final class GeneticAlterationsAdapter {
 
     public static GeneticAlteration toJson(Observation o) {
         GeneticAlteration g = new GeneticAlteration();
-        if (o.hasComponent()) {
+        if (o != null && o.hasComponent()) {
             o.getComponent().forEach(variant -> {
                 switch (LoincEnum.fromCode(variant.getCode().getCodingFirstRep().getCode())) {
                     case AMINO_ACID_CHANGE:
