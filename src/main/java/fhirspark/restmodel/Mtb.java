@@ -10,7 +10,6 @@ import java.util.List;
 @JsonPropertyOrder({
     "author",
     "date",
-    "diagnosis",
     "generalRecommendation",
     "geneticCounselingRecommendation",
     "id",
@@ -26,8 +25,6 @@ public class Mtb {
     private String author;
     @JsonProperty("date")
     private String date;
-    @JsonProperty("diagnosis")
-    private String diagnosis;
     @JsonProperty("generalRecommendation")
     private String generalRecommendation;
     @JsonProperty("geneticCounselingRecommendation")
@@ -72,21 +69,6 @@ public class Mtb {
 
     public Mtb withDate(String date) {
         this.date = date;
-        return this;
-    }
-
-    @JsonProperty("diagnosis")
-    public String getDiagnosis() {
-        return diagnosis;
-    }
-
-    @JsonProperty("diagnosis")
-    public void setDiagnosis(String diagnosis) {
-        this.diagnosis = diagnosis;
-    }
-
-    public Mtb withDiagnosis(String diagnosis) {
-        this.diagnosis = diagnosis;
         return this;
     }
 
