@@ -240,7 +240,7 @@ public final class FhirSpark {
         });
 
         post("/followup/alteration", (req, res) -> {
-            addOptions(req, res);
+            res.status(HttpStatus.OK_200);
             addContent(req, res);
             List<GeneticAlteration> alterations = objectMapper.readValue(req.body(),
                     new TypeReference<List<GeneticAlteration>>() {
